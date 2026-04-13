@@ -1,10 +1,20 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Virtual Keyboard Base Project
 
-## Getting Started
+A modern **Next.js 16** foundation built with **React 19**, **Tailwind CSS v4**, and **TypeScript**. Ready to build your next project with function components and best practices.
 
-First, run the development server:
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- npm, yarn, pnpm, or bun
+
+### Installation & Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
 # or
 yarn dev
@@ -16,21 +26,100 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── components/          # Reusable function components
+│   ├── container.tsx   # Layout wrapper
+│   ├── hero.tsx        # Hero section
+│   ├── feature-card.tsx # Feature card component
+│   └── feature-list.tsx # Feature list container
+├── layout.tsx          # Root layout
+├── page.tsx            # Home page
+└── globals.css         # Global Tailwind styles
+```
 
-## Learn More
+## ✨ Features
 
-To learn more about Next.js, take a look at the following resources:
+- ✅ **Function Components** - All components use modern React function syntax
+- ✅ **Tailwind CSS v4** - Utility-first CSS framework pre-configured
+- ✅ **TypeScript** - Full type safety out of the box
+- ✅ **Dark Mode** - Built-in dark mode support via Tailwind
+- ✅ **Next.js 16** - Latest App Router with Server Components
+- ✅ **Responsive Design** - Mobile-first approach with Tailwind
+- ✅ **ESLint Ready** - Code quality checking configured
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Available Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Development server
+npm run dev
 
-## Deploy on Vercel
+# Build for production
+npm run build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Start production server
+npm start
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Run linting
+npm run lint
+```
+
+## 📝 JSX Support
+
+You can use both `.tsx` (TypeScript JSX) and `.jsx` (JavaScript JSX) files. The project is configured to support both:
+
+- **TypeScript JSX**: `app/components/my-component.tsx`
+- **JavaScript JSX**: `app/components/my-component.jsx`
+
+## 🎨 Customization
+
+### Add New Components
+
+Create a new file in `app/components/`:
+
+```typescriptreact
+// app/components/my-component.tsx
+export default function MyComponent() {
+  return <div>Hello</div>
+}
+```
+
+Import and use in your pages or other components.
+
+### Tailwind Configuration
+
+Tailwind is pre-configured in `tailwind.config.ts`. Customize theme, colors, and extend utilities as needed.
+
+### Dark Mode
+
+Dark mode is automatically supported. Use Tailwind's `dark:` prefix:
+
+```tsx
+<div className="bg-white dark:bg-zinc-900">
+  Content
+</div>
+```
+
+## 🚀 Deployment
+
+Deploy easily on Vercel:
+
+```bash
+npm install -g vercel
+vercel
+```
+
+Or use any other Node.js hosting platform.
+
+## 📚 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [Tailwind CSS](https://tailwindcss.com)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs)
+
+## 📄 License
+
+MIT
