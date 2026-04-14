@@ -64,11 +64,11 @@
   --radius-3: 0.75rem;
 }
 
-@supports (color: light-dark(red, red)) {
-  :root {
-    color-scheme: light dark;
-  }
-}
+/*@supports (color: light-dark(red, red)) {*/
+/*  :root {*/
+/*    color-scheme: light dark;*/
+/*  }*/
+/*}*/
 
 @media (prefers-color-scheme: dark) {
   @theme {

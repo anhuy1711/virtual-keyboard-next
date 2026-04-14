@@ -17,6 +17,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
+      await login(username, password);
       // TODO: Implement actual login API call
       console.log("Login attempt:", { username, password });
       // await loginAPI(username, password);
@@ -73,7 +74,8 @@ export default function LoginForm() {
           </p>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="login-form">
+            )}
+
             {/* Email Input */}
             <div className="form-group">
               <label htmlFor="username">
