@@ -1,103 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  filterProductsAPI,
+  ProductResponse,
+} from "@/app/services/productService";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  imageAlt: string;
-  layout: string;
-  material: string;
-  status?: "In Stock" | "Best Seller" | "Pre-Order";
+interface Product extends ProductResponse {
   isHighlight?: boolean;
-  description?: string;
 }
-
-const products: Product[] = [
-  {
-    id: "1",
-    name: "Atelier Envoy 65",
-    price: 285,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt:
-      "Close-up of a minimalist mechanical keyboard with matte cream keycaps",
-    layout: "65% Layout",
-    material: "Aluminum Shell",
-    status: "In Stock",
-  },
-  {
-    id: "2",
-    name: "Monolith TKL",
-    price: 420,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Detailed macro shot of mechanical switches with polycarbonate case",
-    layout: "TKL",
-    material: "Brass Plate",
-    status: "Best Seller",
-  },
-  {
-    id: "3",
-    name: "Nostalgia Pro 60",
-    price: 195,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Top down view of a vintage inspired beige mechanical keyboard",
-    layout: "60% Layout",
-    material: "PBT Keycaps",
-  },
-  {
-    id: "4",
-    name: "Aether Gasket 75",
-    price: 340,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Sleek silver aluminum mechanical keyboard with RGB backlighting",
-    layout: "75% Layout",
-    material: "Hot-swap",
-  },
-  {
-    id: "5",
-    name: "Heirloom Walnut 80",
-    price: 890,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Handcrafted dark wood mechanical keyboard case with brass weight",
-    layout: "80% Layout",
-    material: "Walnut Wood",
-    status: "Pre-Order",
-    description:
-      "Solid North American Walnut, hand-oiled finish, with a sandblasted brass bottom weight. A legacy piece for the modern workspace.",
-  },
-  {
-    id: "6",
-    name: "Chroma Barebone",
-    price: 120,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Extreme close up of colorful custom artisan keycaps",
-    layout: "Variable",
-    material: "Barebone Kit",
-  },
-  {
-    id: "7",
-    name: "Ivory Slate 75",
-    price: 210,
-    image:
-      "https://bizweb.dktcdn.net/thumb/large/100/484/752/products/game-1989-black-with-gb65-pvd-14-1770641796154.jpg?v=1770642593683",
-    imageAlt: "Profile view of a minimalist white keyboard with gray accents",
-    layout: "75% Layout",
-    material: "FR4 Plate",
-  },
-];
 
 export default function ProductsGrid() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const ITEMS_PER_PAGE = 12;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await filterProductsAPI(
+          {
+            name: searchQuery || undefined,
+            sortBy: sortBy !== "newest" ? sortBy : undefined,
+          },
+          currentPage - 1,
+          ITEMS_PER_PAGE
+        );
+        setProducts(response.content as Product[]);
+        setTotalPages(response.totalPages);
+        setTotalElements(response.totalElements);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch products"
+        );
+        console.error("Error fetching products:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [currentPage, sortBy, searchQuery]);
 
   const sortOptions = [
     { id: "newest", label: "Mới nhất" },
@@ -107,13 +58,9 @@ export default function ProductsGrid() {
     { id: "name-desc", label: "Tên Z - A" },
   ];
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="pt-32 pb-20 px-12 max-w-[1920px] mx-auto">
+    <div className="min-h-screen" style={{ backgroundColor: "#fcf9f8" }}>
+      <div className="pt-32 pb-20 px-12 max-w-480 mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8">
           <div className="space-y-2">
@@ -125,17 +72,31 @@ export default function ProductsGrid() {
             </h1>
           </div>
           <div className="text-sm text-on-surface-variant font-medium">
-            Showing{" "}
-            <span className="text-primary font-bold">{filteredProducts.length}</span> of{" "}
-            <span className="text-primary font-bold">{products.length}</span> products
+            {isLoading ? (
+              <span>Đang tải...</span>
+            ) : (
+              <>
+                Hiển thị{" "}
+                <span className="text-primary font-bold">{products.length}</span>{" "}
+                / <span className="text-primary font-bold">{totalElements}</span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Top Sorting/Filtering Bar */}
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-8">
+            <p className="font-semibold">Lỗi</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Sorting/Filtering Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6 border-y border-outline-variant/15 mb-12">
           <div className="flex items-center gap-4 overflow-x-auto w-full sm:w-auto">
             <span className="text-xs font-bold tracking-widest text-primary/60 uppercase font-label whitespace-nowrap">
-              Sắp xếp theo:
+              Sắp xếp:
             </span>
             <div className="flex gap-2">
               {sortOptions.map((option) => (
@@ -156,10 +117,13 @@ export default function ProductsGrid() {
           <div className="relative w-full sm:w-64">
             <input
               type="text"
-              placeholder="Tìm kiếm sản phẩm..."
+              placeholder="Tìm kiếm..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-container border-none text-sm text-on-surface rounded-full px-5 py-2.5 focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full bg-surface-container border-none text-sm text-on-surface rounded-full px-5 py-2.5 focus:ring-2 focus:ring-secondary/20"
             />
             <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-xl">
               search
@@ -167,134 +131,111 @@ export default function ProductsGrid() {
           </div>
         </div>
 
-        {/* Bento-style Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16">
-          {filteredProducts.map((product) =>
-            product.isHighlight ? (
-              // Highlight Card - spans 2 columns
-              <div
-                key={product.id}
-                className="lg:col-span-2 group flex flex-col md:flex-row bg-surface-container-lowest overflow-hidden rounded-lg transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 border border-outline-variant/10"
-              >
-                <div className="w-full md:w-2/5 relative aspect-square overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.imageAlt}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-8 flex flex-col justify-center space-y-4 flex-1">
-                  <span className="text-[10px] font-black tracking-[0.3em] uppercase text-secondary">
-                    Artisan Limited Edition
-                  </span>
-                  <h2 className="text-2xl font-extrabold tracking-tighter text-primary font-headline">
-                    {product.name}
-                  </h2>
-                  <p className="text-on-surface-variant text-xs leading-relaxed line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xl font-bold text-primary font-body">
-                      ${product.price.toFixed(2)}
-                    </span>
-                    <button className="bg-gradient-to-r from-primary to-primary-container text-on-primary px-4 py-2.5 text-[10px] font-bold rounded-md tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-primary/20 hover:shadow-primary/30">
-                      Pre-Order
-                    </button>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-on-surface-variant">Đang tải sản phẩm...</p>
+            </div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-on-surface-variant text-lg">
+                Không tìm thấy sản phẩm
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16">
+              {products.map((product) => (
+                <div key={product.id} className="group flex flex-col space-y-6">
+                  <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl">
+                    <img
+                      src={product.cover}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
                   </div>
-                </div>
-              </div>
-            ) : (
-              // Regular Product Card
-              <div key={product.id} className="group flex flex-col space-y-6">
-                <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/5">
-                  <img
-                    src={product.image}
-                    alt={product.imageAlt}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  {product.status && (
-                    <div
-                      className={`absolute top-4 right-4 px-3 py-1 rounded-full backdrop-blur-sm ${
-                        product.status === "In Stock"
-                          ? "bg-surface-container-lowest/90"
-                          : product.status === "Best Seller"
-                          ? "bg-primary/90 text-white"
-                          : "bg-secondary/90 text-white"
-                      }`}
-                    >
-                      <span
-                        className={`text-[10px] font-bold tracking-widest uppercase ${
-                          product.status === "In Stock" ? "text-primary" : "text-white"
-                        }`}
-                      >
-                        {product.status}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2 px-1">
-                  <div className="flex justify-between items-start">
-                    <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors font-headline">
+                  <div className="space-y-2 px-1">
+                    <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
                       {product.name}
                     </h2>
-                    <span className="text-lg font-semibold text-primary font-body">
-                      ${product.price.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <span className="px-3 py-1 bg-tertiary-fixed text-[10px] font-bold uppercase tracking-tighter text-on-tertiary-fixed rounded-full">
-                      {product.layout}
-                    </span>
-                    <span className="px-3 py-1 bg-surface-container-high text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant rounded-full">
-                      {product.material}
-                    </span>
+                    <p className="text-sm text-on-surface-variant line-clamp-2">
+                      {product.description}
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {product.summary && (
+                        <span className="px-3 py-1 bg-tertiary-fixed text-[10px] font-bold uppercase tracking-tighter text-on-tertiary-fixed rounded-full">
+                          {product.summary}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          )}
-        </div>
+              ))}
+            </div>
 
-        {/* Pagination */}
-        <div className="mt-24 flex items-center justify-center space-x-4">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="p-3 border border-outline-variant/15 rounded-full hover:bg-surface-container transition-colors disabled:opacity-30"
-          >
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-
-          <div className="flex space-x-2">
-            {[1, 2, 3].map((pageNum) => (
+            {/* Pagination */}
+            <div className="mt-24 flex items-center justify-center space-x-4">
               <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
-                  currentPage === pageNum
-                    ? "bg-primary text-on-primary"
-                    : "hover:bg-surface-container text-on-surface"
-                }`}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-3 border border-outline-variant/15 rounded-full hover:bg-surface-container transition-colors disabled:opacity-30"
               >
-                {pageNum}
+                <span className="material-symbols-outlined">chevron_left</span>
               </button>
-            ))}
-            <span className="w-10 h-10 flex items-center justify-center text-on-surface-variant">
-              ...
-            </span>
-            <button className="w-10 h-10 rounded-full hover:bg-surface-container transition-colors text-on-surface font-bold text-xs flex items-center justify-center">
-              8
-            </button>
-          </div>
 
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="p-3 border border-outline-variant/15 rounded-full hover:bg-surface-container transition-colors"
-          >
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
+              <div className="flex space-x-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                      currentPage === i + 1
+                        ? "bg-primary text-on-primary"
+                        : "hover:bg-surface-container text-on-surface"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                {totalPages > 5 && (
+                  <>
+                    <span className="w-10 h-10 flex items-center justify-center text-on-surface-variant">
+                      ...
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-10 h-10 rounded-full text-on-surface font-bold text-xs flex items-center justify-center ${
+                        currentPage === totalPages
+                          ? "bg-primary text-on-primary"
+                          : "hover:bg-surface-container"
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="p-3 border border-outline-variant/15 rounded-full hover:bg-surface-container transition-colors disabled:opacity-30"
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
+

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginAPI } from "@/app/services/authService";
 import "./login-form.css";
 
 export default function LoginForm() {
@@ -17,11 +18,8 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await login(username, password);
-      // TODO: Implement actual login API call
-      console.log("Login attempt:", { username, password });
-      // await loginAPI(username, password);
-      // router.push("/");
+      await loginAPI(username, password);
+      router.push("/");
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -74,8 +72,7 @@ export default function LoginForm() {
           </p>
 
           {/* Login Form */}
-            )}
-
+          <form onSubmit={handleSubmit} className="login-form">
             {/* Email Input */}
             <div className="form-group">
               <label htmlFor="username">
