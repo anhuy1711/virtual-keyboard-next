@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   filterProductsAPI,
   ProductResponse,
@@ -152,30 +153,32 @@ export default function ProductsGrid() {
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16">
               {products.map((product) => (
-                <div key={product.id} className="group flex flex-col space-y-6">
-                  <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl">
-                    <img
-                      src={product.cover}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="space-y-2 px-1">
-                    <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
-                      {product.name}
-                    </h2>
-                    <p className="text-sm text-on-surface-variant line-clamp-2">
-                      {product.description}
-                    </p>
-                    <div className="flex gap-2 flex-wrap">
-                      {product.summary && (
-                        <span className="px-3 py-1 bg-tertiary-fixed text-[10px] font-bold uppercase tracking-tighter text-on-tertiary-fixed rounded-full">
-                          {product.summary}
-                        </span>
-                      )}
+                <Link key={product.id} href={`/products/${product.id}`}>
+                  <div className="group flex flex-col space-y-6 cursor-pointer">
+                    <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl">
+                      <img
+                        src={product.cover}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="space-y-2 px-1">
+                      <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
+                        {product.name}
+                      </h2>
+                      <p className="text-sm text-on-surface-variant line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {product.summary && (
+                          <span className="px-3 py-1 bg-tertiary-fixed text-[10px] font-bold uppercase tracking-tighter text-on-tertiary-fixed rounded-full">
+                            {product.summary}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
