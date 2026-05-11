@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { logoutAPI } from "@/app/services/authService";
+import { getCategoriesAPI, CategoryResponse } from "@/app/services/productService";
 import "./top-nav.css";
 
 export default function TopNav() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   // Mark component as mounted on client
   useEffect(() => {
@@ -26,6 +29,25 @@ export default function TopNav() {
     setIsLoggedIn(!!token);
   }, [isMounted]);
 
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const response = await getCategoriesAPI(0, 100);
+        setCategories(response.content || []);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        // Fallback to empty array
+        setCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const handleLogout = () => {
     logoutAPI();
     toast.success("Đã đăng xuất!");
@@ -33,11 +55,14 @@ export default function TopNav() {
     setIsLoggedIn(false);
   };
 
+  // Build nav items with Trang Chủ first, then categories
   const navItems = [
     { id: "home", label: "Trang Chủ", href: "/" },
-    { id: "products", label: "Bàn Phím", href: "/products" },
-    { id: "keycaps", label: "Keycap", href: "/products" },
-    { id: "switches", label: "Switch", href: "/products" },
+    ...categories.map((cat) => ({
+      id: `cat-${cat.id}`,
+      label: cat.name,
+      href: `/products?categoryId=${cat.id}`,
+    })),
   ];
 
   return (
@@ -81,7 +106,7 @@ export default function TopNav() {
 
           {/* Logout Button */}
           {isLoggedIn && (
-            <button 
+            <button
               className="btn-logout"
               onClick={handleLogout}
               title="Logout"

@@ -103,50 +103,66 @@ export default function CreateProductPage() {
     setSpecs(specs.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSaveClick = async () => {
+    console.log('🔵 handleSaveClick triggered!');
+    console.log('📝 Form data:', { productName, description, coverImage: coverImage ? 'Base64 loaded' : 'No image', category, specs, variants });
 
-    if (!productName.trim()) {
-      toast.error('Vui lòng nhập tên sản phẩm');
-      return;
-    }
-
-    if (!description.trim()) {
-      toast.error('Vui lòng nhập mô tả sản phẩm');
-      return;
-    }
-
-    if (!coverImage) {
-      toast.error('Vui lòng chọn ảnh bìa');
-      return;
-    }
+    // VALIDATION DISABLED FOR TESTING
 
     setIsSaving(true);
+    console.log('⏳ setIsSaving(true) called');
 
     try {
+      console.log('🔄 Creating request object...');
       const request: CreateProductRequest = {
-        name: productName,
-        description: description,
-        summary: summary || productName,
-        cover: coverImage,
-        categoryId: parseInt(category),
+        name: productName || 'Test Product',
+        description: description || 'Test Description',
+        summary: summary || productName || 'Test Summary',
+        cover: coverImage || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        categoryId: parseInt(category) || 1,
+        specifications: specs.map(spec => ({
+          name: spec.name || 'Default Spec',
+          value: spec.value || 'Default Value',
+        })),
+        skus: variants.map(variant => ({
+          price: parseFloat(variant.price) || 100,
+          quantity: parseInt(variant.quantity) || 1,
+          sizeAttributeId: 1,
+          colorAttributeId: 1,
+          layoutAttributeId: 1,
+        })),
       };
 
-      const result = await createProductAPI(request);
-      console.log('Product created:', result);
-      toast.success('Tạo sản phẩm thành công!');
+      console.log('✅ Request object created:', request);
+      console.log('🚀 About to call createProductAPI...');
       
-      // Redirect to products list or dashboard
+      const result = await createProductAPI(request);
+      
+      console.log('✅ API Response received:', result);
+      toast.success('Tạo sản phẩm thành công!');
+      alert('✅ PRODUCT CREATED SUCCESSFULLY! Redirecting...');
+
       setTimeout(() => {
+        alert('🔄 Redirecting to /admin');
         router.push('/admin');
       }, 1500);
+      }, 1500);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Có lỗi xảy ra';
+      console.error('❌ FULL ERROR OBJECT:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('❌ Error message:', errorMsg);
+      alert('❌ ERROR: ' + errorMsg);
       toast.error(errorMsg);
-      console.error('Error creating product:', error);
     } finally {
+      console.log('🏁 Finally block - setting isSaving to false');
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log('📋 handleSubmit form event triggered!');
+    await handleSaveClick();
   };
 
   const handleDiscard = () => {
@@ -246,16 +262,27 @@ export default function CreateProductPage() {
           <div className="flex items-center gap-3">
             <button
               type="button"
+              onClick={() => console.log('🧪 TEST BUTTON CLICKED')}
+              className="px-3 py-2 bg-yellow-500 text-white rounded text-xs font-bold"
+            >
+              TEST
+            </button>
+            <button
+              type="button"
               onClick={handleDiscard}
               className="px-4 py-2 text-slate-600 font-label-md hover:bg-slate-100 rounded transition-transform active:scale-95"
             >
               Discard
             </button>
             <button
-              form="product-form"
-              type="submit"
+              type="button"
               disabled={isSaving}
-              className="px-6 py-2 bg-primary text-on-primary font-label-md rounded hover:bg-primary-hover disabled:opacity-50 transition-all active:scale-95"
+              onClick={async (e) => {
+                e.preventDefault();
+                console.log('💾 Save button clicked directly!');
+                await handleSaveClick();
+              }}
+              className="px-6 py-2 bg-primary text-on-primary font-label-md rounded hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
             >
               {isSaving ? 'Saving...' : 'Save Product'}
             </button>

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
+import { createProductAPI, CreateProductRequest } from '@/app/services/productService';
+import { toast } from 'react-toastify';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function AdminDashboard() {
   ]);
   const [newSpecName, setNewSpecName] = useState('');
   const [newSpecValue, setNewSpecValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -100,10 +103,79 @@ export default function AdminDashboard() {
     setSpecs(specs.filter((_, i) => i !== index));
   };
 
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Save product:', { productName, category, description, colors, specs });
-    // TODO: Implement API call
+    console.log('🚀 Save product clicked!');
+
+    // Validation
+    if (!productName.trim()) {
+      toast.error('Vui lòng nhập tên sản phẩm');
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error('Vui lòng nhập mô tả sản phẩm');
+      return;
+    }
+
+    if (!category) {
+      toast.error('Vui lòng chọn danh mục');
+      return;
+    }
+
+    if (!coverImage) {
+      toast.error('Vui lòng chọn ảnh bìa');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Mock variants data
+      const mockVariants = [
+        { id: 1, combination: 'Midnight Navy / ANSI', price: '349.00', quantity: '10' },
+        { id: 2, combination: 'Arctic White / ANSI', price: '349.00', quantity: '5' },
+      ];
+
+      const request: CreateProductRequest = {
+        name: productName,
+        description: description,
+        summary: productName,
+        cover: coverImage,
+        categoryId: parseInt(category),
+        specifications: specs.map(spec => ({
+          name: spec.name,
+          value: spec.value,
+        })),
+        skus: mockVariants.map(variant => ({
+          price: parseFloat(variant.price),
+          quantity: parseInt(variant.quantity),
+          sizeAttributeId: 1,
+          colorAttributeId: 1,
+          layoutAttributeId: 1,
+        })),
+      };
+
+      console.log('📦 API Request:', request);
+      const result = await createProductAPI(request);
+      console.log('✅ Product created:', result);
+
+      toast.success('✅ Tạo sản phẩm thành công!');
+
+      // Reset form
+      setProductName('');
+      setCategory('');
+      setDescription('');
+      setCoverImage('');
+      setSpecs([{ name: 'Mounting Style', value: 'Gasket Mount' }]);
+      setCurrentView('dashboard');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Có lỗi xảy ra';
+      console.error('❌ Error:', errorMsg);
+      toast.error('❌ ' + errorMsg);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDiscardProduct = () => {
@@ -312,9 +384,10 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={handleSaveProduct}
-                className="px-6 py-2.5 bg-primary text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all"
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-primary text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save Product
+                {isSaving ? 'Saving...' : 'Save Product'}
               </button>
             </div>
           ) : (

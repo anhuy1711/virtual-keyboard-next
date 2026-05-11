@@ -131,4 +131,28 @@ html {
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-in;
   }
+
+  .layout-container {
+    max-width: 100%;
+    padding-left: 160px;
+    padding-right: 160px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (max-width: 1024px) {
+    .layout-container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

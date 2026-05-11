@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { getProductDetailAPI, ProductResponse } from "@/app/services/productService";
+import { getProductDetailAPI, ProductDetailResponse } from "@/app/services/productService";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
 
 // Mock data for testing UI
-const MOCK_PRODUCT: ProductResponse = {
+const MOCK_PRODUCT: ProductDetailResponse = {
   id: 1,
   name: "The Artisan VII",
   description:
@@ -16,16 +16,52 @@ const MOCK_PRODUCT: ProductResponse = {
   cover:
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDG_ybH6GhZsjF_dmJiJZlDwzF78-UQwQn5AiGkfH094cL1C923fgs6dVcdbI28Zup4Odu93UNa4NxTSFezF_9UcZ8zerolW947YZlaUNRMQ34do3FhstizT6FB_Cs3Dw9CbT08KfCyVLCcFAALOhiuDVcyRAhgd3ROz0rmYPQDF_-c5gzb_MmVMcAqeleqDJGw_pgI3tI-_Q42VlAcuGQhnmNYqzEks6UwF0W8XUz8NCRLfY5sLYHNUgOY8llXGlF8Ol2avnMTZ6Y",
   categoryId: 1,
+  specifications: [],
+  skus: [],
+  options: [
+    {
+      id: 1,
+      name: "Color",
+      values: [
+        { id: 1, value: "Midnight Navy" },
+        { id: 2, value: "Arctic White" },
+        { id: 3, value: "Obsidian Black" },
+      ],
+    },
+    {
+      id: 2,
+      name: "Switch Type",
+      values: [
+        { id: 4, value: "Tangerine V2" },
+        { id: 5, value: "Holy Panda" },
+      ],
+    },
+  ],
 };
+
+/**
+ * Get first available value for each option
+ */
+function getInitialSelectedOptions(options?: any[]): Record<number, number> {
+  if (!options || options.length === 0) return {};
+  
+  const initial: Record<number, number> = {};
+  options.forEach(option => {
+    if (option.values && option.values.length > 0) {
+      initial[option.id] = option.values[0].id;
+    }
+  });
+  
+  return initial;
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = parseInt(params.id as string);
-  const [product, setProduct] = useState<ProductResponse | null>(null);
+  const [product, setProduct] = useState<ProductDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSwitch, setSelectedSwitch] = useState("tangerine");
-  const [selectedPlate, setSelectedPlate] = useState("brass");
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
   const [activeTab, setActiveTab] = useState<"specs" | "description">("specs");
   const [useMockData] = useState(false); // Set to true to test with mock data
 
@@ -38,11 +74,13 @@ export default function ProductDetailPage() {
         if (useMockData) {
           console.log("Using mock data for testing");
           setProduct(MOCK_PRODUCT);
+          setSelectedOptions(getInitialSelectedOptions(MOCK_PRODUCT.options));
         } else {
           console.log("Fetching product with ID:", productId);
           const data = await getProductDetailAPI(productId);
           console.log("Product data received:", data);
           setProduct(data);
+          setSelectedOptions(getInitialSelectedOptions(data.options));
         }
       } catch (err) {
         const errorMsg =
@@ -127,68 +165,50 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="flex flex-col gap-8">
-            {/* Switch Options */}
-            <div>
-              <label className="block font-label text-sm font-bold tracking-widest uppercase mb-4 text-on-surface/60">
-                Switch Choice
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {["Tangerine Linear", "Holy Panda Tactile", "Silent Alpaca", "Aqua King V3"].map(
-                  (switchType) => (
-                    <button
-                      key={switchType}
-                      onClick={() =>
-                        setSelectedSwitch(switchType.toLowerCase().replace(" ", "-"))
-                      }
-                      className={`flex items-center justify-between px-5 py-4 rounded-lg transition-all ${
-                        selectedSwitch === switchType.toLowerCase().replace(" ", "-")
-                          ? "bg-surface-container-lowest border-2 border-secondary"
-                          : "bg-surface-container-low hover:bg-surface-container-high"
-                      }`}
-                    >
-                      <span className="font-medium text-primary">
-                        {switchType}
-                      </span>
-                      {selectedSwitch ===
-                        switchType.toLowerCase().replace(" ", "-") && (
-                        <span
-                          className="material-symbols-outlined text-secondary"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          check_circle
+            {/* Dynamic Options from Response */}
+            {product.options && product.options.length > 0 ? (
+              product.options.map((option) => (
+                <div key={option.id}>
+                  <label className="block font-label text-sm font-bold tracking-widest uppercase mb-4 text-on-surface/60">
+                    {option.name}
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {option.values.map((value) => (
+                      <button
+                        key={value.id}
+                        onClick={() =>
+                          setSelectedOptions((prev) => ({
+                            ...prev,
+                            [option.id]: value.id,
+                          }))
+                        }
+                        className={`flex items-center justify-between px-5 py-4 rounded-lg transition-all ${
+                          selectedOptions[option.id] === value.id
+                            ? "bg-surface-container-lowest border-2 border-secondary"
+                            : "bg-surface-container-low hover:bg-surface-container-high"
+                        }`}
+                      >
+                        <span className="font-medium text-primary">
+                          {value.value}
                         </span>
-                      )}
-                    </button>
-                  )
-                )}
+                        {selectedOptions[option.id] === value.id && (
+                          <span
+                            className="material-symbols-outlined text-secondary"
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                          >
+                            check_circle
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-on-surface-variant text-sm">
+                Không có tùy chọn sản phẩm
               </div>
-            </div>
-
-            {/* Plate Material */}
-            <div>
-              <label className="block font-label text-sm font-bold tracking-widest uppercase mb-4 text-on-surface/60">
-                Plate Material
-              </label>
-              <div className="flex flex-wrap gap-3">
-                {["Mirror Brass", "Carbon Fiber", "Polycarbonate"].map(
-                  (material) => (
-                    <button
-                      key={material}
-                      onClick={() =>
-                        setSelectedPlate(material.toLowerCase().replace(" ", "-"))
-                      }
-                      className={`px-6 py-3 rounded-full font-semibold transition-all ${
-                        selectedPlate === material.toLowerCase().replace(" ", "-")
-                          ? "bg-surface-container-lowest border-2 border-secondary text-secondary"
-                          : "bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant"
-                      }`}
-                    >
-                      {material}
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
+            )}
 
             {/* Add to Cart */}
             <div className="pt-6">
@@ -251,26 +271,23 @@ export default function ProductDetailPage() {
         {activeTab === "specs" && (
           <div className="block animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-1">
-              {[
-                { label: "Case Material", value: "6063 Aluminum" },
-                { label: "Mounting Style", value: "Gasket Mount" },
-                { label: "Typing Angle", value: "7 Degrees" },
-                { label: "Front Height", value: "18.5 mm" },
-                { label: "Weight (Built)", value: "2.4 kg" },
-                { label: "Connectivity", value: "USB-C Daughterboard" },
-                { label: "PCB", value: "QMK/VIA Compatible" },
-                { label: "Plate Material", value: "Brass / PC / Carbon" },
-              ].map((spec, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between py-5 border-b border-outline-variant/10"
-                >
-                  <span className="text-on-surface-variant font-medium">
-                    {spec.label}
-                  </span>
-                  <span className="text-primary font-semibold">{spec.value}</span>
+              {product.specifications && product.specifications.length > 0 ? (
+                product.specifications.map((spec, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between py-5 border-b border-outline-variant/10"
+                  >
+                    <span className="text-on-surface-variant font-medium">
+                      {spec.name}
+                    </span>
+                    <span className="text-primary font-semibold">{spec.value}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-8 text-center text-on-surface-variant">
+                  <p>Không có thông số kỹ thuật</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
