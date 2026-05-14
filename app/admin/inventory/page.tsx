@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import Link from 'next/link';
-import { getAllProductsAPI } from '@/app/services/productService';
+import { filterProductsAPI, ProductSearchRequest } from '@/app/services/productService';
 import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
 
@@ -24,6 +24,9 @@ export default function InventoryPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [searchName, setSearchName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
@@ -59,21 +62,39 @@ export default function InventoryPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchProducts();
+      fetchProducts(0);
     }
   }, [isAuthorized]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page: number = 0) => {
     try {
       setIsLoadingProducts(true);
-      const response = await getAllProductsAPI(0, 100);
+      const searchRequest: ProductSearchRequest = {
+        name: searchName || undefined,
+        categoryId: selectedCategory || undefined,
+      };
+      
+      const response = await filterProductsAPI(searchRequest, page, 20);
       setProducts((response.content || []) as Product[]);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       toast.error('Lỗi khi tải danh sách sản phẩm');
     } finally {
       setIsLoadingProducts(false);
     }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(0);
+    fetchProducts(0);
+  };
+
+  const handleCategoryFilter = (categoryId: number | undefined) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(0);
+    fetchProducts(0);
   };
 
   const handleLogout = () => {
@@ -229,6 +250,63 @@ export default function InventoryPage() {
             </div>
           </section>
 
+          {/* Search & Filter Bar */}
+          <section className="mb-8 bg-white p-6 rounded-lg border border-outline-variant/10 shadow-sm space-y-4">
+            <form onSubmit={handleSearch} className="flex gap-4 flex-wrap items-end">
+              <div className="flex-1 min-w-48">
+                <label className="block text-label-md font-label-md text-text-secondary mb-2">
+                  Tìm kiếm sản phẩm
+                </label>
+                <input
+                  type="text"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  placeholder="Nhập tên sản phẩm..."
+                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-body-md"
+                />
+              </div>
+
+              <div className="flex-1 min-w-48">
+                <label className="block text-label-md font-label-md text-text-secondary mb-2">
+                  Danh mục
+                </label>
+                <select
+                  value={selectedCategory || ''}
+                  onChange={(e) => handleCategoryFilter(e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-body-md bg-white"
+                >
+                  <option value="">Tất cả danh mục</option>
+                  <option value="1">Keyboards</option>
+                  <option value="2">Switches</option>
+                  <option value="3">Keycaps</option>
+                  <option value="4">Accessories</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={isLoadingProducts}
+                  className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md hover:bg-primary-hover disabled:opacity-50 transition-colors flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">search</span>
+                  Tìm kiếm
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchName('');
+                    setSelectedCategory(undefined);
+                    setCurrentPage(0);
+                  }}
+                  className="px-6 py-2 border border-outline-variant rounded-lg font-label-md hover:bg-surface-container transition-colors"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            </form>
+          </section>
+
           {/* Stats Cards */}
           <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-primary">
@@ -298,9 +376,9 @@ export default function InventoryPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right space-x-2">
-                        <button className="p-2 text-slate-400 hover:text-blue-900 transition-colors">
+                        <Link href={`/admin/products/${product.id}`} className="inline-block p-2 text-slate-400 hover:text-blue-900 transition-colors">
                           <span className="material-symbols-outlined">edit</span>
-                        </button>
+                        </Link>
                         <button className="p-2 text-slate-400 hover:text-red-500 transition-colors">
                           <span className="material-symbols-outlined">delete</span>
                         </button>

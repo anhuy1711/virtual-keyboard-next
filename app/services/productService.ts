@@ -100,9 +100,22 @@ export interface CreateProductRequest {
   description: string;
   summary?: string;
   cover: string;
+  type?: string;
   categoryId: number;
   specifications?: ProductSpecificationCreateRequest[];
-  skus?: ProductSkuCreateRequest[];
+  skus?: Array<{
+    price: number;
+    quantity: number;
+    optionValueIndexes?: number[];
+  }>;
+  options?: Array<{
+    name: string;
+    values: string[];
+  }>;
+}
+
+export interface UpdateProductRequest extends CreateProductRequest {
+  id: number;
 }
 
 export interface ApiResponse<T> {
@@ -229,24 +242,17 @@ export const getProductDetailAPI = async (
 
 /**
  * Create a new product with specifications and SKUs
- * @param request - Create product request with specifications and SKUs
+ * @param request - Create product request
  * @returns Created product response
  */
 export const createProductAPI = async (
   request: CreateProductRequest
 ): Promise<ProductDetailResponse> => {
   try {
-    console.log('🔍 [createProductAPI] Started');
-    console.log('🔍 [createProductAPI] API_BASE_URL:', API_BASE_URL);
-    
-    // Get token from localStorage (client-side only)
-    // Try both 'token' and 'accessToken' keys
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("token") || localStorage.getItem("accessToken")
         : null;
-
-    console.log('🔍 [createProductAPI] Token found:', !!token, token ? token.substring(0, 20) + '...' : 'NO TOKEN');
 
     if (!token) {
       throw new Error("Unauthorized: No authentication token found");
@@ -257,44 +263,75 @@ export const createProductAPI = async (
       Authorization: `Bearer ${token}`,
     };
 
-    console.log('🔍 [createProductAPI] Headers prepared:', { 'Content-Type': headers['Content-Type'], 'Authorization': 'Bearer [TOKEN]' });
-    console.log('🔍 [createProductAPI] Request payload:', request);
-    console.log('🔍 [createProductAPI] Fetching from:', `${API_BASE_URL}/products/create`);
-
     const response = await fetch(`${API_BASE_URL}/products/create`, {
       method: "POST",
       headers,
       body: JSON.stringify(request),
     });
 
-    console.log('🔍 [createProductAPI] Response status:', response.status, response.statusText);
-    console.log('🔍 [createProductAPI] Response headers:', {
-      'content-type': response.headers.get('content-type'),
-    });
-
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error('🔍 [createProductAPI] Error response:', error);
-      throw new Error(
-        error.message || `Failed to create product: ${response.status}`
-      );
+      throw new Error(error.message || `Failed to create product: ${response.status}`);
     }
 
     const data: ApiResponse<ProductDetailResponse> = await response.json();
-    console.log('🔍 [createProductAPI] Response data:', data);
 
     if (data.code !== 200) {
       throw new Error(data.message || "Failed to create product");
     }
 
-    if (!data.data || !data.data.id) {
-      throw new Error("Invalid product data received from server");
-    }
-
-    console.log('✅ [createProductAPI] Product created successfully:', data.data);
     return data.data;
   } catch (error) {
-    console.error('❌ [createProductAPI] Exception caught:', error);
+    console.error("Error creating product:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing product
+ * @param id - Product ID
+ * @param request - Update product request
+ * @returns Updated product response
+ */
+export const updateProductAPI = async (
+  id: number,
+  request: Omit<CreateProductRequest, 'id'>
+): Promise<ProductDetailResponse> => {
+  try {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("token") || localStorage.getItem("accessToken")
+        : null;
+
+    if (!token) {
+      throw new Error("Unauthorized: No authentication token found");
+    }
+
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = await fetch(`${API_BASE_URL}/products/update/${id}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `Failed to update product: ${response.status}`);
+    }
+
+    const data: ApiResponse<ProductDetailResponse> = await response.json();
+
+    if (data.code !== 200) {
+      throw new Error(data.message || "Failed to update product");
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error("Error updating product:", error);
     throw error;
   }
 };

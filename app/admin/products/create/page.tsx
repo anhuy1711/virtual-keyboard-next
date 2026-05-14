@@ -146,7 +146,6 @@ export default function CreateProductPage() {
         alert('🔄 Redirecting to /admin');
         router.push('/admin');
       }, 1500);
-      }, 1500);
     } catch (error) {
       console.error('❌ FULL ERROR OBJECT:', error);
       const errorMsg = error instanceof Error ? error.message : String(error);
