@@ -170,6 +170,40 @@
     border-top: 1px solid rgba(197, 197, 211, 0.15);
 }
 
+.btn-admin {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-admin:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+.btn-admin:active {
+    transform: translateY(0);
+}
+
+.btn-admin i {
+    font-size: 14px;
+}
+
 @media (max-width: 1024px) {
     .navbar-container {
         padding: 0 24px;

@@ -11,6 +11,7 @@ import "./top-nav.css";
 export default function TopNav() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
@@ -25,8 +26,21 @@ export default function TopNav() {
     if (!isMounted) return;
 
     const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("user");
+    
     console.log("TopNav checking token:", token);
     setIsLoggedIn(!!token);
+    
+    // Extract role from user object
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserRole(user.role || null);
+      } catch (e) {
+        console.error("Failed to parse user from localStorage:", e);
+        setUserRole(null);
+      }
+    }
   }, [isMounted]);
 
   // Fetch categories
@@ -101,6 +115,13 @@ export default function TopNav() {
           {isLoggedIn && (
             <Link href="/account" className="icon-btn user-icon" title="Account">
               <i className="fas fa-user-circle"></i>
+            </Link>
+          )}
+
+          {/* Admin Button - Only show if user is admin */}
+          {isLoggedIn && userRole === "admin" && (
+            <Link href="/admin" className="btn-admin" title="Admin Panel">
+              <i className="fas fa-shield-alt"></i> Admin
             </Link>
           )}
 

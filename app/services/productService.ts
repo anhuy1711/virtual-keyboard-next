@@ -362,3 +362,50 @@ export const getCategoriesAPI = async (
   }
 };
 
+/**
+ * Get all products
+ * @param page - Page number (0-indexed)
+ * @param size - Page size
+ * @returns List of products with pagination info
+ */
+export const getAllProductsAPI = async (
+  page: number = 0,
+  size: number = 100
+): Promise<SimplePage<ProductResponse>> => {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/products/list?page=${page}&size=${size}`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `Failed to fetch products: ${response.status}`);
+    }
+
+    const data: ApiResponse<SimplePage<ProductResponse>> = await response.json();
+
+    if (data.code !== 200) {
+      throw new Error(data.message || "Failed to fetch products");
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+};
