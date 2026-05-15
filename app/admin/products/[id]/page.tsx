@@ -156,9 +156,11 @@ export default function EditProductPage() {
         const loadedSkus = product.skus.map((sku) => ({
           id: sku.id,
           combination: loadedOptions
-              .map((opt, oi) => opt.values[sku.optionValueIds[oi]]?.name || '')
+              .map((opt, oi) => opt.values.find(v => v.id === sku.optionValueIds[oi])?.name || '')
               .join(' / '),
-          optionValueIndexes: sku.optionValueIds,
+          optionValueIndexes: loadedOptions.map((opt, oi) =>
+              opt.values.findIndex(v => v.id === sku.optionValueIds[oi])
+          ),
           sku: sku.sku,
           price: sku.price,
           stock: sku.quantity,
@@ -246,9 +248,13 @@ export default function EditProductPage() {
     toast.success('SKUs đã được tạo lại từ options');
   };
 
-  const updateSkuRow = (id: string | undefined, field: keyof SKURow, value: string | number | boolean) => {
+  const updateSkuRow = (
+      id: number | string | undefined,
+      field: keyof SKURow,
+      value: string | number | boolean
+  ) => {
     setSkus(skus.map((s) =>
-        (s.id?.toString() === id || (s.id === undefined && String(skus.indexOf(s)) === id))
+        (s.id?.toString() === id?.toString() || (s.id === undefined && String(skus.indexOf(s)) === id?.toString()))
             ? { ...s, [field]: (field === 'price' || field === 'stock') ? parseFloat(String(value)) : value }
             : s
     ));
@@ -274,9 +280,29 @@ export default function EditProductPage() {
         cover: coverImage || 'https://via.placeholder.com/300',
         type: productType || 'KIT',
         categoryId: 1,
-        specifications: specifications.map((spec) => ({ name: spec.name, value: spec.value })),
-        options: options.map((opt) => ({ name: opt.name, values: opt.values.map((v) => v.name) })),
-        skus: skus.map((sku) => ({ price: sku.price, quantity: sku.stock, optionValueIndexes: sku.optionValueIndexes })),
+
+        specifications: specifications.map((spec) => ({
+          name: spec.name,
+          value: spec.value,
+        })),
+
+        options: options.map((opt) => ({
+          id: opt.id,
+          name: opt.name,
+          values: opt.values.map((v) => ({
+            id: v.id,
+            value: v.name,
+          })),
+        })),
+
+        skus: skus.map((sku) => ({
+          id: sku.id,
+          price: sku.price,
+          quantity: sku.stock,
+          optionValueIds: sku.optionValueIndexes
+              .map((vi, oi) => options[oi]?.values[vi]?.id)
+              .filter((id): id is number => id !== undefined && id !== null),
+        })),
       };
       await updateProductAPI(productId, request);
       toast.success('Sản phẩm đã được cập nhật thành công!');
@@ -390,21 +416,70 @@ export default function EditProductPage() {
             </section>
 
             {/* Section 2: Specifications */}
+            {/* Section 2: Specifications */}
             <section className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-h3 font-h3 text-primary flex items-center gap-2">
                   <span className="material-symbols-outlined">list_alt</span>Thông số kỹ thuật
                 </h3>
-                <button type="button" onClick={addSpecification} className="flex items-center gap-1 text-secondary font-label-md text-label-md hover:underline">
+              </div>
+
+              {/* Input thêm mới */}
+              <div className="flex gap-3 items-end">
+                <input
+                    className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary"
+                    type="text"
+                    placeholder="Tên thông số"
+                    value={addSpecInput.name}
+                    onChange={(e) => setAddSpecInput(prev => ({ ...prev, name: e.target.value }))}
+                />
+                <input
+                    className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary"
+                    type="text"
+                    placeholder="Giá trị"
+                    value={addSpecInput.value}
+                    onChange={(e) => setAddSpecInput(prev => ({ ...prev, value: e.target.value }))}
+                />
+                <button
+                    type="button"
+                    onClick={addSpecification}
+                    className="flex items-center gap-1 text-secondary font-label-md text-label-md hover:underline whitespace-nowrap p-2"
+                >
                   <span className="material-symbols-outlined text-base">add_circle</span>Thêm cặp
                 </button>
               </div>
+
+              {/* Danh sách đã thêm */}
               <div className="space-y-3">
                 {specifications.map((spec, i) => (
                     <div key={i} className="flex gap-3 items-end">
-                      <input className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary" type="text" placeholder="Tên thông số" value={spec.name} onChange={(e) => {const next = [...specifications]; next[i].name = e.target.value; setSpecifications(next);}} />
-                      <input className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary" type="text" placeholder="Giá trị" value={spec.value} onChange={(e) => {const next = [...specifications]; next[i].value = e.target.value; setSpecifications(next);}} />
-                      <button type="button" onClick={() => removeSpecification(i)} className="text-text-light hover:text-error transition-colors p-2">
+                      <input
+                          className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary"
+                          type="text"
+                          placeholder="Tên thông số"
+                          value={spec.name}
+                          onChange={(e) =>
+                              setSpecifications(prev =>
+                                  prev.map((s, idx) => idx === i ? { ...s, name: e.target.value } : s)
+                              )
+                          }
+                      />
+                      <input
+                          className="flex-1 border border-outline-variant rounded-lg px-3 py-2 focus:border-secondary focus:ring-1 focus:ring-secondary"
+                          type="text"
+                          placeholder="Giá trị"
+                          value={spec.value}
+                          onChange={(e) =>
+                              setSpecifications(prev =>
+                                  prev.map((s, idx) => idx === i ? { ...s, value: e.target.value } : s)
+                              )
+                          }
+                      />
+                      <button
+                          type="button"
+                          onClick={() => removeSpecification(i)}
+                          className="text-text-light hover:text-error transition-colors p-2"
+                      >
                         <span className="material-symbols-outlined">close</span>
                       </button>
                     </div>

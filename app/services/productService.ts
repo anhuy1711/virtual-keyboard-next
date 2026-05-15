@@ -98,20 +98,28 @@ export interface ProductDetailResponse {
 export interface CreateProductRequest {
   name: string;
   description: string;
-  summary?: string;
+  summary: string;
   cover: string;
-  type?: string;
+  type: string;
   categoryId: number;
-  specifications?: ProductSpecificationCreateRequest[];
-  skus?: Array<{
+  specifications: {
+    name: string;
+    value: string;
+  }[];
+  options: {
+    id?: number;
+    name: string;
+    values: {
+      id?: number;
+      value: string;
+    }[];
+  }[];
+  skus: {
+    id?: number;
     price: number;
     quantity: number;
-    optionValueIndexes?: number[];
-  }>;
-  options?: Array<{
-    name: string;
-    values: string[];
-  }>;
+    optionValueIds: number[];
+  }[];
 }
 
 export interface UpdateProductRequest extends CreateProductRequest {

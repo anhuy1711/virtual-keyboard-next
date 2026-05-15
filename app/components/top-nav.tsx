@@ -98,11 +98,6 @@ export default function TopNav() {
 
         {/* Icons & Buttons */}
         <div className="navbar-icons">
-          {/* Debug: Show login status */}
-          <span style={{ fontSize: "12px", color: "#757682" }}>
-            {isLoggedIn ? "✓ Logged In" : "Not Logged"}
-          </span>
-
           <button className="icon-btn" title="Search">
             <i className="fas fa-search"></i>
           </button>

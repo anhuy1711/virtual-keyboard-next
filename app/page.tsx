@@ -1,81 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
+import {
+  BannerResponse,
+  getBannersByPositionAPI,
+} from "@/app/services/bannerService";
 
-// Mock data for keyboards
-const KEYBOARDS = [
-  {
-    id: 1,
-    name: "Atelier 65 SE",
-    price: 450,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDGwFqMhJQ5oO8hK8HOIqKPWvw_w151n_iQ6qNPrfkAVP9cCl9IPDPhkvjhQ6DVTTCaKMPFW6IVhQxEDG0YFhcRVqSasySQW_NTVmQn-9ooH-uOouYUkP9VyRkZazfm2rS5sSNWTxigvx_rDUKN7_EL2ly46zX85wLJ7mJc8ApUdLDtJZHH7T3rts-D31XNEQUC4UxU_FuvG_yg2DP4eXAOWqNXP5qfDW7upGaqbGBbBMAovbsLxzDgP6MfSaF9lcF5FEPEAEY7Ioc",
-    badge: "Ready to Ship",
-  },
-  {
-    id: 2,
-    name: "Foundation TKL",
-    price: 380,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCHlNO21wA8fimNEsyxE46agplEdBq4dmnhILplAKAdY7wvziHdPJknO4wsK8JH_qWT3EkQM1Ygp8FLHXN5Jr_TkNW3aKA7K9xtUHBbUdhTWqbdzVyhyo92F9Tg7DYmk7W8Rd1667cvtCTzz-2-cQCTeRyEwSMfFt5JuMjzEB93iv9IZ5jHtztwOfRhcY7Xd4I2fRSrz5BciH_potBs2bMdUd8ZLbvHz_9eXCYIHoNzSr_pl6s7qJRPQpHGG_e427qfCNKWpt6fBYA",
-    badge: null,
-  },
-  {
-    id: 3,
-    name: "Numpad Lite",
-    price: 120,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlaEjjy-zCn8qRRRYh6AkbnNqkIdkzUhr8RT7D2a3eOCixyzGz9_FTmk2sapno9qUfRqYBiZRBp9HOspZ5QvvMLAsCKm0Uk5-qgUcL2glT_EWGklaYdwOhgIDs8kzauXStncK51uBfwPpFAoXbUdYWDIRCb-hi26esdLupT1ANu_aA0W0fV-DK7Gmf7Jn_PtGxF9epuZkNqRe11U6WovsPHr9fsXi0gFmiHTQdmfwBj3Pa4ehoN2-yjkF0OLjpksyee5Y3o_O_oGc",
-    badge: null,
-  },
-  {
-    id: 4,
-    name: "Vertex Arc",
-    price: 320,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBz2neMSTD_YS6gHy8mUjCzDqGjzM4ELT7CUem-QwP6ypd5x5hOJFuIppAEc6C4B0WSnnddTcTyp758yVALM0PkRLQqIpHVPStHb5kcbaRr5xQmJ8NK4VOkDW1Gpqij68TtqFM5ZrpkDMwZW1-Ef6Q-rPfNrwwc8LOCwzdHwM06HUymaexBleyMktDybbdW2OabanXf8qF338yP3i3YiWanEd8dCjlpeqFqEOlATRHNhaeFFl0pm01Z-hmNKwIbYvyf9ydAhzSXy1g",
-    badge: null,
-  },
-  {
-    id: 5,
-    name: "Lunar 60",
-    price: 295,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoqaRPQrETFYzAuzX8nXryrc9vVGxIMKHxKrDGLWC8vbX5yC_fYIdOUsomo293UxcVHQvIBByZKlm6PO-KHZhyDtvIXsIWTUJ2HHM6iek3Ig1c4eVcnnFxSAOSrq21ALIKm_guwa_v5YauosQRRGkN5ILvYsvkwir1miLxB416IFZBhwu0UQDwoWb8a2hYj97YiVeLe_quy7GeMvy_b0aIXN4Ncn1RSMFlk65WvrROfb9qsrz8VwixLNgxkQGJGpTCmAaEhLBGUxM",
-    badge: null,
-  },
-  {
-    id: 6,
-    name: "Atelier Mini",
-    price: 210,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCHlNO21wA8fimNEsyxE46agplEdBq4dmnhILplAKAdY7wvziHdPJknO4wsK8JH_qWT3EkQM1Ygp8FLHXN5Jr_TkNW3aKA7K9xtUHBbUdhTWqbdzVyhyo92F9Tg7DYmk7W8Rd1667cvtCTzz-2-cQCTeRyEwSMfFt5JuMjzEB93iv9IZ5jHtztwOfRhcY7Xd4I2fRSrz5BciH_potBs2bMdUd8ZLbvHz_9eXCYIHoNzSr_pl6s7qJRPQpHGG_e427qfCNKWpt6fBYA",
-    badge: null,
-  },
-  {
-    id: 7,
-    name: "Split Studio",
-    price: 520,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDGwFqMhJQ5oO8hK8HOIqKPWvw_w151n_iQ6qNPrfkAVP9cCl9IPDPhkvjhQ6DVTTCaKMPFW6IVhQxEDG0YFhcRVqSasySQW_NTVmQn-9ooH-uOouYUkP9VyRkZazfm2rS5sSNWTxigvx_rDUKN7_EL2ly46zX85wLJ7mJc8ApUdLDtJZHH7T3rts-D31XNEQUC4UxU_FuvG_yg2DP4eXAOWqNXP5qfDW7upGaqbGBbBMAovbsLxzDgP6MfSaF9lcF5FEPEAEY7Ioc",
-    badge: null,
-  },
-  {
-    id: 8,
-    name: "Foundation Full",
-    price: 440,
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlaEjjy-zCn8qRRRYh6AkbnNqkIdkzUhr8RT7D2a3eOCixyzGz9_FTmk2sapno9qUfRqYBiZRBp9HOspZ5QvvMLAsCKm0Uk5-qgUcL2glT_EWGklaYdwOhgIDs8kzauXStncK51uBfwPpFAoXbUdYWDIRCb-hi26esdLupT1ANu_aA0W0fV-DK7Gmf7Jn_PtGxF9epuZkNqRe11U6WovsPHr9fsXi0gFmiHTQdmfwBj3Pa4ehoN2-yjkF0OLjpksyee5Y3o_O_oGc",
-    badge: null,
-  },
-];
-
-// Mock data for components
-const COMPONENTS = [
-  { id: 1, name: "Ivory PBT Set", price: 85, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCHlNO21wA8fimNEsyxE46agplEdBq4dmnhILplAKAdY7wvziHdPJknO4wsK8JH_qWT3EkQM1Ygp8FLHXN5Jr_TkNW3aKA7K9xtUHBbUdhTWqbdzVyhyo92F9Tg7DYmk7W8Rd1667cvtCTzz-2-cQCTeRyEwSMfFt5JuMjzEB93iv9IZ5jHtztwOfRhcY7Xd4I2fRSrz5BciH_potBs2bMdUd8ZLbvHz_9eXCYIHoNzSr_pl6s7qJRPQpHGG_e427qfCNKWpt6fBYA" },
-  { id: 2, name: "Silver-Plated Linears", price: 45, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlaEjjy-zCn8qRRRYh6AkbnNqkIdkzUhr8RT7D2a3eOCixyzGz9_FTmk2sapno9qUfRqYBiZRBp9HOspZ5QvvMLAsCKm0Uk5-qgUcL2glT_EWGklaYdwOhgIDs8kzauXStncK51uBfwPpFAoXbUdYWDIRCb-hi26esdLupT1ANu_aA0W0fV-DK7Gmf7Jn_PtGxF9epuZkNqRe11U6WovsPHr9fsXi0gFmiHTQdmfwBj3Pa4ehoN2-yjkF0OLjpksyee5Y3o_O_oGc" },
-  { id: 3, name: "Brass Weight Kit", price: 65, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDGwFqMhJQ5oO8hK8HOIqKPWvw_w151n_iQ6qNPrfkAVP9cCl9IPDPhkvjhQ6DVTTCaKMPFW6IVhQxEDG0YFhcRVqSasySQW_NTVmQn-9ooH-uOouYUkP9VyRkZazfm2rS5sSNWTxigvx_rDUKN7_EL2ly46zX85wLJ7mJc8ApUdLDtJZHH7T3rts-D31XNEQUC4UxU_FuvG_yg2DP4eXAOWqNXP5qfDW7upGaqbGBbBMAovbsLxzDgP6MfSaF9lcF5FEPEAEY7Ioc" },
-  { id: 4, name: "Lube Station", price: 35, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBz2neMSTD_YS6gHy8mUjCzDqGjzM4ELT7CUem-QwP6ypd5x5hOJFuIppAEc6C4B0WSnnddTcTyp758yVALM0PkRLQqIpHVPStHb5kcbaRr5xQmJ8NK4VOkDW1Gpqij68TtqFM5ZrpkDMwZW1-Ef6Q-rPfNrwwc8LOCwzdHwM06HUymaexBleyMktDybbdW2OabanXf8qF338yP3i3YiWanEd8dCjlpeqFqEOlATRHNhaeFFl0pm01Z-hmNKwIbYvyf9ydAhzSXy1g" },
-  { id: 5, name: "FR4 Plate", price: 25, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoqaRPQrETFYzAuzX8nXryrc9vVGxIMKHxKrDGLWC8vbX5yC_fYIdOUsomo293UxcVHQvIBByZKlm6PO-KHZhyDtvIXsIWTUJ2HHM6iek3Ig1c4eVcnnFxSAOSrq21ALIKm_guwa_v5YauosQRRGkN5ILvYsvkwir1miLxB416IFZBhwu0UQDwoWb8a2hYj97YiVeLe_quy7GeMvy_b0aIXN4Ncn1RSMFlk65WvrROfb9qsrz8VwixLNgxkQGJGpTCmAaEhLBGUxM" },
-  { id: 6, name: "Aviator Cable", price: 55, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBz2neMSTD_YS6gHy8mUjCzDqGjzM4ELT7CUem-QwP6ypd5x5hOJFuIppAEc6C4B0WSnnddTcTyp758yVALM0PkRLQqIpHVPStHb5kcbaRr5xQmJ8NK4VOkDW1Gpqij68TtqFM5ZrpkDMwZW1-Ef6Q-rPfNrwwc8LOCwzdHwM06HUymaexBleyMktDybbdW2OabanXf8qF338yP3i3YiWanEd8dCjlpeqFqEOlATRHNhaeFFl0pm01Z-hmNKwIbYvyf9ydAhzSXy1g" },
-  { id: 7, name: "Felt Desk Mat", price: 40, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCHlNO21wA8fimNEsyxE46agplEdBq4dmnhILplAKAdY7wvziHdPJknO4wsK8JH_qWT3EkQM1Ygp8FLHXN5Jr_TkNW3aKA7K9xtUHBbUdhTWqbdzVyhyo92F9Tg7DYmk7W8Rd1667cvtCTzz-2-cQCTeRyEwSMfFt5JuMjzEB93iv9IZ5jHtztwOfRhcY7Xd4I2fRSrz5BciH_potBs2bMdUd8ZLbvHz_9eXCYIHoNzSr_pl6s7qJRPQpHGG_e427qfCNKWpt6fBYA" },
-  { id: 8, name: "Silent Tactiles", price: 50, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlaEjjy-zCn8qRRRYh6AkbnNqkIdkzUhr8RT7D2a3eOCixyzGz9_FTmk2sapno9qUfRqYBiZRBp9HOspZ5QvvMLAsCKm0Uk5-qgUcL2glT_EWGklaYdwOhgIDs8kzauXStncK51uBfwPpFAoXbUdYWDIRCb-hi26esdLupT1ANu_aA0W0fV-DK7Gmf7Jn_PtGxF9epuZkNqRe11U6WovsPHr9fsXi0gFmiHTQdmfwBj3Pa4ehoN2-yjkF0OLjpksyee5Y3o_O_oGc" },
-];
+import {
+  HomeProductResponse,
+  getHomeKeyboardsAPI,
+  getHomeComponentsAPI,
+} from "@/app/services/homeProductService";
 
 const SPECS = [
   {
@@ -111,43 +49,136 @@ export default function Home() {
   const [keyboardTab, setKeyboardTab] = useState("in-stock");
   const [componentTab, setComponentTab] = useState("keycaps");
 
+  const [heroBanners, setHeroBanners] = useState<BannerResponse[]>([]);
+  const [secondaryBanners, setSecondaryBanners] = useState<BannerResponse[]>([]);
+  const [isBannerLoading, setIsBannerLoading] = useState(true);
+
+  const [keyboards, setKeyboards] = useState<HomeProductResponse[]>([]);
+  const [components, setComponents] = useState<HomeProductResponse[]>([]);
+  const [isKeyboardLoading, setIsKeyboardLoading] = useState(true);
+  const [isComponentLoading, setIsComponentLoading] = useState(true);
+  useEffect(() => {
+    const fetchKeyboards = async () => {
+      try {
+        setIsKeyboardLoading(true);
+        const data = await getHomeKeyboardsAPI(
+            keyboardTab as "in-stock" | "hot"
+        );
+        setKeyboards(data);
+      } catch (error) {
+        console.error(error);
+        setKeyboards([]);
+      } finally {
+        setIsKeyboardLoading(false);
+      }
+    };
+
+    fetchKeyboards();
+  }, [keyboardTab]);
+
+  useEffect(() => {
+    const fetchComponents = async () => {
+      try {
+        setIsComponentLoading(true);
+        const data = await getHomeComponentsAPI(
+            componentTab as "keycaps" | "switches"
+        );
+        setComponents(data);
+      } catch (error) {
+        console.error(error);
+        setComponents([]);
+      } finally {
+        setIsComponentLoading(false);
+      }
+    };
+
+    fetchComponents();
+  }, [componentTab]);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const [heroData, secondaryData] = await Promise.all([
+          getBannersByPositionAPI("HERO"),
+          getBannersByPositionAPI("SECONDARY"),
+        ]);
+
+        setHeroBanners(heroData);
+        setSecondaryBanners(secondaryData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsBannerLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+  const secondaryBanner = secondaryBanners[0];
   return (
     <>
       <TopNav />
       <main className="pt-20">
         {/* 1. Sliding Hero Banner */}
         <section className="layout-container">
-          <div className="relative h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] overflow-hidden bg-surface-container-low rounded-xl mt-8">
-            <div className="flex h-full w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar">
-              {/* Slide 1 */}
-              <div className="flex-none w-full h-full snap-center relative">
-                <img
-                  alt="Hero Slide 1"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  src="https://www.qwertykeys.com/cdn/shop/files/screenshot-20251226-174807.png?v=1766742598&width=1800"
-                />
-                <div className="absolute inset-0 bg-black/20"></div>
-                <div className="absolute inset-0 flex items-center px-6 md:px-12 lg:px-24">
-                  <div className="max-w-2xl text-on-primary">
-                    <span className="font-label text-xs md:text-sm uppercase tracking-[0.2em] mb-4 block font-semibold">
-                      Limited Release
-                    </span>
-                    <h2 className="font-headline text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6">
-                      Tactile Engineering. Editorial Art.
-                    </h2>
-                    <button className="px-8 py-4 bg-primary-container text-on-primary-container rounded-md font-semibold hover:scale-95 transition-transform">
-                      Shop The Collection
-                    </button>
-                  </div>
+          <div className="relative h-[320px] md:h-[420px] lg:h-[500px] xl:h-[560px] overflow-hidden bg-surface-container-low rounded-xl mt-8">
+            <div className="flex h-full w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar">              {/* Slide 1 */}
+            {heroBanners.length > 0 ? (
+                heroBanners.map((banner) => (
+                    <div key={banner.id} className="flex-none w-full h-full snap-center relative">
+                      <img
+                          alt={banner.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          src={banner.imageUrl}
+                      />
+
+                      <div className="absolute inset-0 bg-black/20"></div>
+
+                      <div className="absolute inset-0 flex items-center px-6 md:px-12 lg:px-24">
+                        <div className="max-w-2xl text-on-primary">
+                          {banner.description && (
+                              <span className="font-label text-xs md:text-sm uppercase tracking-[0.2em] mb-4 block font-semibold">
+              {banner.description}
+            </span>
+                          )}
+
+                          <h2 className="font-headline text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6">
+                            {banner.title}
+                          </h2>
+
+                          {banner.buttonText && (
+                              <Link
+                                  href={banner.link || "/products"}
+                                  className="inline-block px-8 py-4 bg-primary-container text-on-primary-container rounded-md font-semibold hover:scale-95 transition-transform"
+                              >
+                                {banner.buttonText}
+                              </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                ))
+            ) : (
+                <div className="flex-none w-full h-full snap-center relative bg-surface-container-low flex items-center justify-center">
+                  <p className="text-on-surface-variant">
+                    {isBannerLoading ? "Đang tải banner..." : "Chưa có hero banner"}
+                  </p>
                 </div>
-              </div>
+            )}
             </div>
             {/* Slider Controls */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3">
-              <div className="w-3 h-3 rounded-full bg-primary"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/30"></div>
-              <div className="w-3 h-3 rounded-full bg-primary/30"></div>
-            </div>
+            {heroBanners.length > 1 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3">
+                  {heroBanners.map((banner, index) => (
+                      <div
+                          key={banner.id}
+                          className={`w-3 h-3 rounded-full ${
+                              index === 0 ? "bg-primary" : "bg-primary/30"
+                          }`}
+                      ></div>
+                  ))}
+                </div>
+            )}
           </div>
         </section>
 
@@ -190,58 +221,77 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-              {KEYBOARDS.map((kb) => (
-                <div key={kb.id} className="group">
-                  <div className="aspect-square rounded-xl overflow-hidden bg-surface-container-low mb-4 relative">
-                    <img
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      src={kb.image}
-                      alt={kb.name}
-                    />
-                    {kb.badge && (
-                      <div className="absolute top-4 left-4 bg-primary text-on-primary px-3 py-1 text-xs font-bold uppercase rounded">
-                        {kb.badge}
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="font-headline text-lg md:text-xl font-bold text-primary">
-                    {kb.name}
-                  </h3>
-                  <p className="text-on-surface-variant font-medium">
-                    ${kb.price.toFixed(2)}
+              {isKeyboardLoading ? (
+                  <p className="col-span-full text-center text-on-surface-variant">
+                    Đang tải sản phẩm...
                   </p>
-                </div>
-              ))}
+              ) : keyboards.length === 0 ? (
+                  <p className="col-span-full text-center text-on-surface-variant">
+                    Chưa có sản phẩm keyboard
+                  </p>
+              ) : (
+                  keyboards.map((kb) => (
+                      <Link href={`/products/${kb.id}`} key={kb.id} className="group block">
+                        <div className="aspect-square rounded-xl overflow-hidden bg-surface-container-low mb-4 relative">
+                          <img
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              src={kb.image}
+                              alt={kb.name}
+                          />
+                        </div>
+
+                        <h3 className="font-headline text-lg md:text-xl font-bold text-primary line-clamp-2">
+                          {kb.name}
+                        </h3>
+
+                        <p className="text-on-surface-variant font-medium">
+                          ${Number(kb.price ?? 0).toFixed(2)}
+                        </p>
+                      </Link>
+                  ))
+              )}
             </div>
           </div>
         </section>
 
         {/* 3. Secondary Full-Width Banner */}
-        <section className="w-full py-12">
-          <div className="layout-container">
-            <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-xl overflow-hidden">
-              <img
-                className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoqaRPQrETFYzAuzX8nXryrc9vVGxIMKHxKrDGLWC8vbX5yC_fYIdOUsomo293UxcVHQvIBByZKlm6PO-KHZhyDtvIXsIWTUJ2HHM6iek3Ig1c4eVcnnFxSAOSrq21ALIKm_guwa_v5YauosQRRGkN5ILvYsvkwir1miLxB416IFZBhwu0UQDwoWb8a2hYj97YiVeLe_quy7GeMvy_b0aIXN4Ncn1RSMFlk65WvrROfb9qsrz8VwixLNgxkQGJGpTCmAaEhLBGUxM"
-                alt="The Artisan Series"
-              />
-              <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center text-center p-6">
-                <div className="max-w-3xl">
-                  <h2 className="font-headline text-3xl md:text-5xl lg:text-6xl font-bold text-on-primary mb-6">
-                    The Artisan Series 01
-                  </h2>
-                  <p className="text-base md:text-lg text-on-primary/90 mb-8 max-w-xl mx-auto">
-                    A limited collaboration featuring hand-polished brass weights and
-                    bespoke silver-plated switches.
-                  </p>
-                  <button className="bg-surface text-primary px-8 md:px-10 py-3 md:py-4 rounded-md font-bold hover:bg-secondary-fixed transition-colors">
-                    Join the Waitlist
-                  </button>
+        {/* 3. Secondary Full-Width Banner */}
+        {secondaryBanner && (
+            <section className="w-full py-12">
+              <div className="layout-container">
+                <div className="relative h-[280px] md:h-[380px] lg:h-[480px] rounded-xl overflow-hidden">
+                  <img
+                      className="w-full h-full object-cover"
+                      src={secondaryBanner.imageUrl}
+                      alt={secondaryBanner.title}
+                  />
+
+                  <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center text-center p-6">
+                    <div className="max-w-3xl">
+                      <h2 className="font-headline text-2xl md:text-4xl lg:text-5xl font-bold text-on-primary mb-6">
+                        {secondaryBanner.title}
+                      </h2>
+
+                      {secondaryBanner.description && (
+                          <p className="text-base md:text-lg text-on-primary/90 mb-8 max-w-xl mx-auto">
+                            {secondaryBanner.description}
+                          </p>
+                      )}
+
+                      {secondaryBanner.buttonText && (
+                          <Link
+                              href={secondaryBanner.link || "/products"}
+                              className="inline-block bg-surface text-primary px-8 md:px-10 py-3 md:py-4 rounded-md font-bold hover:bg-secondary-fixed transition-colors"
+                          >
+                            {secondaryBanner.buttonText}
+                          </Link>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+        )}
 
         {/* 4. Components Section with Tabs */}
         <section className="py-24 bg-surface-container-low">
@@ -282,21 +332,35 @@ export default function Home() {
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {COMPONENTS.map((comp) => (
-                <div key={comp.id} className="group">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-surface-container-lowest mb-4">
-                    <img
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      src={comp.image}
-                      alt={comp.name}
-                    />
-                  </div>
-                  <h4 className="font-bold text-primary text-sm md:text-base">{comp.name}</h4>
-                  <p className="text-xs md:text-sm text-on-surface-variant">
-                    ${comp.price.toFixed(2)}
+              {isComponentLoading ? (
+                  <p className="col-span-full text-center text-on-surface-variant">
+                    Đang tải linh kiện...
                   </p>
-                </div>
-              ))}
+              ) : components.length === 0 ? (
+                  <p className="col-span-full text-center text-on-surface-variant">
+                    Chưa có linh kiện
+                  </p>
+              ) : (
+                  components.map((comp) => (
+                      <Link href={`/products/${comp.id}`} key={comp.id} className="group block">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-surface-container-lowest mb-4">
+                          <img
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              src={comp.image}
+                              alt={comp.name}
+                          />
+                        </div>
+
+                        <h4 className="font-bold text-primary text-sm md:text-base line-clamp-2">
+                          {comp.name}
+                        </h4>
+
+                        <p className="text-xs md:text-sm text-on-surface-variant">
+                          ${Number(comp.price ?? 0).toFixed(2)}
+                        </p>
+                      </Link>
+                  ))
+              )}
             </div>
           </div>
         </section>

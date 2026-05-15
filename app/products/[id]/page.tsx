@@ -420,29 +420,10 @@ export default function ProductDetailPage() {
               >
                 {isAddingToCart ? 'Adding...' : 'Add to Cart'}
               </button>
-              <p className="mt-4 text-center text-sm text-on-surface-variant/60 font-medium">
-                Free insured shipping worldwide. Ships in 2-3 business days.
-              </p>
             </div>
           </div>
 
           {/* Description */}
-          <div className="border-t border-outline-variant/15 pt-8">
-            <div className="flex gap-4 mb-4">
-              <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                65% Layout
-              </span>
-              <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                Gasket Mount
-              </span>
-              <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                Hot-Swap PCB
-              </span>
-            </div>
-            <p className="text-on-surface-variant leading-relaxed">
-              {product.description}
-            </p>
-          </div>
         </div>
       </section>
 

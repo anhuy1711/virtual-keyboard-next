@@ -137,7 +137,12 @@ export default function InventoryPage() {
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
               keyboard
             </span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Inventory</span>
+            <span className="font-label-md text-label-md uppercase tracking-widest">Kho</span>
+          </Link>
+
+          <Link href="/admin/categories" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
+            <span className="material-symbols-outlined">category</span>
+            <span className="font-label-md text-label-md uppercase tracking-widest">Danh mục</span>
           </Link>
 
           <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
@@ -227,26 +232,25 @@ export default function InventoryPage() {
                     <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                   </li>
                   <li>
-                    <span className="text-primary font-bold">Inventory</span>
+                    <span className="text-primary font-bold">Kho</span>
                   </li>
                 </ol>
               </nav>
               <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">Product Management</h1>
-              <p className="mt-2 text-slate-500 max-w-lg">Manage your artisan mechanical keyboard collection and specialized component stock levels.</p>
             </div>
             <div className="flex gap-4">
               <Link href="/admin/create" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-lg hover:shadow-lg transition-all active:scale-95">
                 <span className="material-symbols-outlined text-sm">add</span>
                 Add Product
               </Link>
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">
-                <span className="material-symbols-outlined text-sm">filter_list</span>
-                Filter
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">
-                <span className="material-symbols-outlined text-sm">download</span>
-                Export CSV
-              </button>
+              {/*<button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">*/}
+              {/*  <span className="material-symbols-outlined text-sm">filter_list</span>*/}
+              {/*  Filter*/}
+              {/*</button>*/}
+              {/*<button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">*/}
+              {/*  <span className="material-symbols-outlined text-sm">download</span>*/}
+              {/*  Export CSV*/}
+              {/*</button>*/}
             </div>
           </section>
 
@@ -308,35 +312,34 @@ export default function InventoryPage() {
           </section>
 
           {/* Stats Cards */}
-          <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-primary">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Products</p>
-              <p className="text-2xl font-black text-blue-900">{products.length}</p>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-secondary">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Active Orders</p>
-              <p className="text-2xl font-black text-blue-900">42</p>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-error">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Low Stock Alerts</p>
-              <p className="text-2xl font-black text-blue-900">8</p>
-            </div>
-            <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-tertiary-container">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Inventory Value</p>
-              <p className="text-2xl font-black text-blue-900">$182.4k</p>
-            </div>
-          </section>
+          {/*<section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">*/}
+          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-primary">*/}
+          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Products</p>*/}
+          {/*    <p className="text-2xl font-black text-blue-900">{products.length}</p>*/}
+          {/*  </div>*/}
+          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-secondary">*/}
+          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Active Orders</p>*/}
+          {/*    <p className="text-2xl font-black text-blue-900">42</p>*/}
+          {/*  </div>*/}
+          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-error">*/}
+          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Low Stock Alerts</p>*/}
+          {/*    <p className="text-2xl font-black text-blue-900">8</p>*/}
+          {/*  </div>*/}
+          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-tertiary-container">*/}
+          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Inventory Value</p>*/}
+          {/*    <p className="text-2xl font-black text-blue-900">$182.4k</p>*/}
+          {/*  </div>*/}
+          {/*</section>*/}
 
           {/* Table */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/10">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant/10">
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Product Name</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Category</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">SKUs</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-center">Status</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">Actions</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Tên</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Danh mục</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">Số lượng</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/10">
@@ -369,17 +372,42 @@ export default function InventoryPage() {
                         </span>
                       </td>
                       <td className="px-8 py-6 text-right font-bold text-blue-900">{product.skus?.length || 0} SKUs</td>
-                      <td className="px-8 py-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <span className="text-sm font-medium">Active</span>
-                        </div>
-                      </td>
+
                       <td className="px-8 py-6 text-right space-x-2">
                         <Link href={`/admin/products/${product.id}`} className="inline-block p-2 text-slate-400 hover:text-blue-900 transition-colors">
                           <span className="material-symbols-outlined">edit</span>
                         </Link>
-                        <button className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        <button
+                            onClick={async () => {
+                              if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) return;
+
+                              try {
+                                const token = localStorage.getItem("accessToken");
+
+                                const res = await fetch(
+                                    `http://localhost:8080/products/delete?id=${product.id}`,
+                                    {
+                                      method: "DELETE",
+                                      headers: {
+                                        ...(token && { Authorization: `Bearer ${token}` }),
+                                      },
+                                    }
+                                );
+
+                                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                                const json = await res.json();
+                                if (json.code !== 200) throw new Error(`API error: ${json.code}`);
+
+                                toast.success("Xóa sản phẩm thành công!");
+                                fetchProducts(currentPage); // Refresh lại danh sách
+                              } catch (err) {
+                                console.error("Error deleting product:", err);
+                                toast.error("Xóa sản phẩm thất bại");
+                              }
+                            }}
+                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                        >
                           <span className="material-symbols-outlined">delete</span>
                         </button>
                       </td>
@@ -397,7 +425,7 @@ export default function InventoryPage() {
 
             {/* Pagination */}
             <div className="px-8 py-4 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
-              <p className="text-xs text-slate-500">Showing 1 to {products.length} of {products.length} entries</p>
+              <p className="text-xs text-slate-500">{products.length} / {products.length}</p>
               <div className="flex gap-2">
                 <button className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors">
                   <span className="material-symbols-outlined text-sm">chevron_left</span>

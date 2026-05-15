@@ -166,16 +166,6 @@ export default function ProductsGrid() {
                       <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
                         {product.name}
                       </h2>
-                      <p className="text-sm text-on-surface-variant line-clamp-2">
-                        {product.description}
-                      </p>
-                      <div className="flex gap-2 flex-wrap">
-                        {product.summary && (
-                          <span className="px-3 py-1 bg-tertiary-fixed text-[10px] font-bold uppercase tracking-tighter text-on-tertiary-fixed rounded-full">
-                            {product.summary}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </Link>

@@ -293,21 +293,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Product Spotlight */}
-          <div className="bg-primary-container text-white p-8 rounded-xl flex flex-col md:flex-row items-center gap-8 overflow-hidden relative">
-            <div className="z-10 flex-1">
-              <span className="inline-block px-3 py-1 bg-white/10 backdrop-blur rounded-full font-label-sm text-label-sm mb-4">Inventory Highlight</span>
-              <h3 className="font-h1 text-h1 text-white mb-2">The &apos;Obsidian&apos; HHKB Case</h3>
-              <p className="font-body-lg text-blue-100 max-w-xl mb-6">Our most popular product is currently at 85% stock efficiency. Consider a seasonal promotion to clear the remaining units before the &apos;Snow&apos; edition launch.</p>
-              <div className="flex gap-4 flex-wrap">
-                <button className="bg-white text-primary px-6 py-2.5 rounded-lg font-label-md hover:bg-blue-50 transition-colors">Manage Product</button>
-                <button className="bg-transparent border border-white/30 text-white px-6 py-2.5 rounded-lg font-label-md hover:bg-white/10 transition-colors">View Sales Data</button>
-              </div>
-            </div>
-            <div className="relative w-full md:w-1/3 aspect-video md:aspect-square rounded-lg overflow-hidden border border-white/20 shadow-2xl">
-              <img alt="Obsidian Case" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDb1rXEC2wh-s47r5DUAcdtLxl04fKSUq6TbGCtIUj1zRlfX5it5eDsbi3U2RrA6S9MHtmomjCZ4boEx75mVOsO0mAahHKHZhLnFV35XTQKM8HvoYTLDAxaNjP_yT43FzPQUzZIi_Je8qD2jPnAfrmu5KfLZbzMQ5NUxElVVRutltlSN3jTKvozXToMFSiyTRgYbc9l2o-SFCQ8c3osfr28ji70FtezHB1crJ3PBY6u7s5iGRq5NBUTnXEVZ2cfYtnwIP8A5_BG3As" />
-            </div>
-            <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl"></div>
-          </div>
+
         </div>
       </main>
 
