@@ -17,7 +17,62 @@ const MOCK_PRODUCT: ProductDetailResponse = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuDG_ybH6GhZsjF_dmJiJZlDwzF78-UQwQn5AiGkfH094cL1C923fgs6dVcdbI28Zup4Odu93UNa4NxTSFezF_9UcZ8zerolW947YZlaUNRMQ34do3FhstizT6FB_Cs3Dw9CbT08KfCyVLCcFAALOhiuDVcyRAhgd3ROz0rmYPQDF_-c5gzb_MmVMcAqeleqDJGw_pgI3tI-_Q42VlAcuGQhnmNYqzEks6UwF0W8XUz8NCRLfY5sLYHNUgOY8llXGlF8Ol2avnMTZ6Y",
   categoryId: 1,
   specifications: [],
-  skus: [],
+  skus: [
+    {
+      id: 1,
+      productId: 1,
+      sku: "ART7-NAVY-TAN-001",
+      price: 489.00,
+      quantity: 5,
+      isActive: true,
+      optionValueIds: [0, 0],
+    },
+    {
+      id: 2,
+      productId: 1,
+      sku: "ART7-NAVY-HOLY-001",
+      price: 499.00,
+      quantity: 0,
+      isActive: true,
+      optionValueIds: [0, 1],
+    },
+    {
+      id: 3,
+      productId: 1,
+      sku: "ART7-WHITE-TAN-001",
+      price: 509.00,
+      quantity: 8,
+      isActive: true,
+      optionValueIds: [1, 0],
+    },
+    {
+      id: 4,
+      productId: 1,
+      sku: "ART7-WHITE-HOLY-001",
+      price: 519.00,
+      quantity: 3,
+      isActive: true,
+      optionValueIds: [1, 1],
+    },
+    {
+      id: 5,
+      productId: 1,
+      sku: "ART7-BLACK-TAN-001",
+      price: 479.00,
+      quantity: 10,
+      isActive: true,
+      optionValueIds: [2, 0],
+    },
+    {
+      id: 6,
+      productId: 1,
+      sku: "ART7-BLACK-HOLY-001",
+      price: 489.00,
+      quantity: 0,
+      isActive: true,
+      optionValueIds: [2, 1],
+    },
+  ],
   options: [
     {
       id: 1,
@@ -42,7 +97,7 @@ const MOCK_PRODUCT: ProductDetailResponse = {
 /**
  * Get first available value for each option
  */
-function getInitialSelectedOptions(options?: any[]): Record<number, number> {
+function getInitialSelectedOptions(options?: ProductDetailResponse['options']): Record<number, number> {
   if (!options || options.length === 0) return {};
   
   const initial: Record<number, number> = {};
@@ -55,6 +110,57 @@ function getInitialSelectedOptions(options?: any[]): Record<number, number> {
   return initial;
 }
 
+// ── Helper: Find SKU matching selected option values ──
+function findMatchingSKU(
+  selectedOptions: Record<number, number>,
+  skus: ProductDetailResponse['skus'],
+  options: ProductDetailResponse['options']
+): ProductDetailResponse['skus'][number] | null {
+  if (!options || options.length === 0) return null;
+  
+  // Build optionValueIds based on selectedOptions
+  // Note: Backend returns optionValueIds as IDs, not indices
+  const optionValueIds = options.map((opt) => {
+    const selectedValueId = selectedOptions[opt.id];
+    if (!selectedValueId) return -1;
+    return selectedValueId; // Use the ID directly
+  });
+
+  // Find SKU with matching optionValueIds
+  return skus.find((sku) =>
+    JSON.stringify(sku.optionValueIds) === JSON.stringify(optionValueIds)
+  ) || null;
+}
+
+// ── Helper: Check if all options are selected ──
+function areAllOptionsSelected(selectedOptions: Record<number, number>, options: ProductDetailResponse['options']): boolean {
+  if (!options || options.length === 0) return true;
+  return options.every((opt) => selectedOptions[opt.id] !== undefined);
+}
+
+// ── Helper: Check if option value is available ──
+function isOptionValueAvailable(
+  optionId: number,
+  valueId: number,
+  selectedOptions: Record<number, number>,
+  skus: ProductDetailResponse['skus'],
+  options: ProductDetailResponse['options']
+): boolean {
+  // Check if any SKU is available with this combination
+  const availableSkus = skus.filter((sku) => sku.quantity > 0);
+  
+  if (availableSkus.length === 0) return false;
+
+  // Try to find any available SKU where this option value is used
+  return availableSkus.some((sku) => {
+    const optionIndex = options.findIndex((opt) => opt.id === optionId);
+    if (optionIndex === -1) return true;
+    
+    // Direct ID comparison (backend returns IDs, not indices)
+    return sku.optionValueIds[optionIndex] === valueId;
+  });
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = parseInt(params.id as string);
@@ -62,8 +168,10 @@ export default function ProductDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
+  const [matchingSku, setMatchingSku] = useState<ProductDetailResponse['skus'][number] | null>(null);
   const [activeTab, setActiveTab] = useState<"specs" | "description">("specs");
   const [useMockData] = useState(false); // Set to true to test with mock data
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -96,6 +204,17 @@ export default function ProductDetailPage() {
       fetchProduct();
     }
   }, [productId, useMockData]);
+
+  // ── Update matching SKU when selectedOptions changes ──
+  useEffect(() => {
+    if (!product || !product.skus || product.skus.length === 0) {
+      setMatchingSku(null);
+      return;
+    }
+
+    const matching = findMatchingSKU(selectedOptions, product.skus, product.options);
+    setMatchingSku(matching);
+  }, [selectedOptions, product]);
 
   if (isLoading) {
     return (
@@ -159,9 +278,24 @@ export default function ProductDetailPage() {
             <h1 className="text-5xl font-extrabold tracking-tighter text-primary mb-4">
               {product.name}
             </h1>
-            <p className="text-3xl font-light text-on-surface-variant">
-              $489.00
-            </p>
+            {matchingSku ? (
+              <div className="flex items-center gap-4">
+                <p className="text-3xl font-light text-on-surface">
+                  ${matchingSku.price.toFixed(2)}
+                </p>
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                  matchingSku.quantity > 0
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}>
+                  {matchingSku.quantity > 0 ? `${matchingSku.quantity} in stock` : "Out of stock"}
+                </span>
+              </div>
+            ) : (
+              <p className="text-3xl font-light text-on-surface-variant">
+                Select options to see price
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-8">
@@ -173,34 +307,53 @@ export default function ProductDetailPage() {
                     {option.name}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    {option.values.map((value) => (
-                      <button
-                        key={value.id}
-                        onClick={() =>
-                          setSelectedOptions((prev) => ({
-                            ...prev,
-                            [option.id]: value.id,
-                          }))
-                        }
-                        className={`flex items-center justify-between px-5 py-4 rounded-lg transition-all ${
-                          selectedOptions[option.id] === value.id
-                            ? "bg-surface-container-lowest border-2 border-secondary"
-                            : "bg-surface-container-low hover:bg-surface-container-high"
-                        }`}
-                      >
-                        <span className="font-medium text-primary">
-                          {value.value}
-                        </span>
-                        {selectedOptions[option.id] === value.id && (
-                          <span
-                            className="material-symbols-outlined text-secondary"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            check_circle
+                    {option.values.map((value) => {
+                      const isSelected = selectedOptions[option.id] === value.id;
+                      const isAvailable = isOptionValueAvailable(
+                        option.id,
+                        value.id,
+                        selectedOptions,
+                        product.skus || [],
+                        product.options || []
+                      );
+                      const isDisabled = !isAvailable;
+
+                      return (
+                        <button
+                          key={value.id}
+                          onClick={() => {
+                            if (!isDisabled) {
+                              setSelectedOptions((prev) => ({
+                                ...prev,
+                                [option.id]: value.id,
+                              }));
+                            }
+                          }}
+                          disabled={isDisabled}
+                          className={`flex items-center justify-between px-5 py-4 rounded-lg transition-all ${
+                            isSelected
+                              ? "bg-surface-container-lowest border-2 border-secondary"
+                              : isDisabled
+                              ? "bg-surface-container-low opacity-50 cursor-not-allowed"
+                              : "bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+                          }`}
+                        >
+                          <span className={`font-medium ${
+                            isSelected ? 'text-primary' : isDisabled ? 'text-on-surface-variant/50' : 'text-primary'
+                          }`}>
+                            {value.value}
                           </span>
-                        )}
-                      </button>
-                    ))}
+                          {isSelected && (
+                            <span
+                              className="material-symbols-outlined text-secondary"
+                              style={{ fontVariationSettings: "'FILL' 1" }}
+                            >
+                              check_circle
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))
@@ -212,8 +365,43 @@ export default function ProductDetailPage() {
 
             {/* Add to Cart */}
             <div className="pt-6">
-              <button className="w-full py-6 bg-linear-to-r from-primary to-primary-container text-on-primary rounded-md text-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95">
-                Add to Cart
+              <button
+                onClick={async () => {
+                  if (!areAllOptionsSelected(selectedOptions, product.options)) {
+                    alert('Vui lòng chọn tất cả các tùy chọn');
+                    return;
+                  }
+                  if (!matchingSku) {
+                    alert('Sản phẩm này không có sẵn với các tùy chọn đã chọn');
+                    return;
+                  }
+                  if (matchingSku.quantity <= 0) {
+                    alert('Sản phẩm này đã hết hàng');
+                    return;
+                  }
+
+                  setIsAddingToCart(true);
+                  try {
+                    // TODO: Call add to cart API with matchingSku.id
+                    console.log('Adding to cart with SKU ID:', matchingSku.id);
+                    // await addToCartAPI(matchingSku.id, 1);
+                    alert(`Added SKU ${matchingSku.sku} to cart!`);
+                  } catch (err) {
+                    console.error('Error adding to cart:', err);
+                    alert('Failed to add to cart');
+                  } finally {
+                    setIsAddingToCart(false);
+                  }
+                }}
+                disabled={
+                  !areAllOptionsSelected(selectedOptions, product.options) ||
+                  !matchingSku ||
+                  matchingSku.quantity <= 0 ||
+                  isAddingToCart
+                }
+                className="w-full py-6 bg-linear-to-r from-primary to-primary-container text-on-primary rounded-md text-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingToCart ? 'Adding...' : 'Add to Cart'}
               </button>
               <p className="mt-4 text-center text-sm text-on-surface-variant/60 font-medium">
                 Free insured shipping worldwide. Ships in 2-3 business days.
@@ -295,38 +483,9 @@ export default function ProductDetailPage() {
         {/* Description Tab */}
         {activeTab === "description" && (
           <div className="block animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-start">
-              <div>
-                <h3 className="text-3xl font-extrabold tracking-tighter text-primary mb-6">
-                  Acoustic Mastery
-                </h3>
-                <p className="text-lg text-on-surface-variant leading-relaxed mb-8">
-                  Experience the {product?.name} before it arrives. Our specialized typing test showcases the unique interaction between the mirror brass plate and Tangerine switches, recorded in a controlled studio environment using high-fidelity condenser microphones.
-                </p>
-                <div className="flex flex-col gap-4 mb-8">
-                  <div className="flex items-center gap-4 text-on-surface">
-                    <span className="material-symbols-outlined text-secondary">mic</span>
-                    <span className="font-medium">Studio-Grade Audio Capture</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-on-surface">
-                    <span className="material-symbols-outlined text-secondary">vibration</span>
-                    <span className="font-medium">Vibration Dampening Visualization</span>
-                  </div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="bg-surface-container-low p-6 rounded-2xl">
-                  <div className="relative overflow-hidden rounded-xl aspect-video bg-zinc-900 flex items-center justify-center">
-                    <img
-                      alt="Typing Test Video Thumbnail"
-                      className="absolute inset-0 w-full h-full object-cover opacity-60"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ImkFI4LlCx9-DkLO9HgWIRZZy-KZ0OYqcpL2njhdnzhoal8P1npEsYPgtEVY6pkuxvkAvVDrU4AVpW18dBkiCkZtyqyoP0G6Uh139VEETnf7govoXwwkL1nhMNa3HBB9HwVl2jfEjujXGuNxCJ8MZ78ib8iqdc7AgxqKOq-ihHdeg5tc7k3PuZqiCE2N09TiAHQisOAkiaIzNdSigYZ6W1xVwU1E_jqA7osPSW9yCRZC4ekj57fRTDjAlLw9HgckXXDdmO6Mmy4"
-                    />
-                    <button className="relative z-10 w-16 h-16 bg-secondary text-on-secondary rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-shadow">
-                      <span className="material-symbols-outlined text-3xl">play_arrow</span>
-                    </button>
-                  </div>
-                </div>
+            <div className="prose prose-sm max-w-none">
+              <div className="text-lg text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+                {product.description || "Không có mô tả sản phẩm"}
               </div>
             </div>
           </div>
