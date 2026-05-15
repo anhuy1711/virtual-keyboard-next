@@ -107,9 +107,9 @@ export default function TopNav() {
             <i className="fas fa-search"></i>
           </button>
 
-          <button className="icon-btn" title="Shopping Cart">
+          <Link href="/cart" className="icon-btn" title="Shopping Cart">
             <i className="fas fa-shopping-cart"></i>
-          </button>
+          </Link>
 
           {/* Account Button */}
           {isLoggedIn && (

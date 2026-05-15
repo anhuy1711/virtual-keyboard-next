@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { getProductDetailAPI, ProductDetailResponse } from "@/app/services/productService";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
+import {toast} from "react-toastify";
 
 // Mock data for testing UI
 const MOCK_PRODUCT: ProductDetailResponse = {
@@ -366,33 +367,49 @@ export default function ProductDetailPage() {
             {/* Add to Cart */}
             <div className="pt-6">
               <button
-                onClick={async () => {
-                  if (!areAllOptionsSelected(selectedOptions, product.options)) {
-                    alert('Vui lòng chọn tất cả các tùy chọn');
-                    return;
-                  }
-                  if (!matchingSku) {
-                    alert('Sản phẩm này không có sẵn với các tùy chọn đã chọn');
-                    return;
-                  }
-                  if (matchingSku.quantity <= 0) {
-                    alert('Sản phẩm này đã hết hàng');
-                    return;
-                  }
+                  onClick={async () => {
+                    if (!areAllOptionsSelected(selectedOptions, product.options)) {
+                      toast.error("Vui lòng chọn tất cả các tùy chọn");
+                      return;
+                    }
+                    if (!matchingSku) {
+                      toast.error("Sản phẩm này không có sẵn với các tùy chọn đã chọn");
+                      return;
+                    }
+                    if (matchingSku.quantity <= 0) {
+                      toast.error("Sản phẩm này đã hết hàng");
+                      return;
+                    }
 
-                  setIsAddingToCart(true);
-                  try {
-                    // TODO: Call add to cart API with matchingSku.id
-                    console.log('Adding to cart with SKU ID:', matchingSku.id);
-                    // await addToCartAPI(matchingSku.id, 1);
-                    alert(`Added SKU ${matchingSku.sku} to cart!`);
-                  } catch (err) {
-                    console.error('Error adding to cart:', err);
-                    alert('Failed to add to cart');
-                  } finally {
-                    setIsAddingToCart(false);
-                  }
-                }}
+                    setIsAddingToCart(true);
+                    try {
+                      const token = localStorage.getItem("accessToken");
+
+                      const res = await fetch("http://localhost:8080/cart/add", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          ...(token && { Authorization: `Bearer ${token}` }),
+                        },
+                        body: JSON.stringify({
+                          skuId: matchingSku.id,
+                          quantity: 1,
+                        }),
+                      });
+
+                      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                      const json = await res.json();
+                      if (json.code !== 200) throw new Error(`API error: ${json.code}`);
+
+                      toast.success("Đã thêm vào giỏ hàng!");
+                    } catch (err) {
+                      console.error("Error adding to cart:", err);
+                      toast.error("Thêm vào giỏ hàng thất bại");
+                    } finally {
+                      setIsAddingToCart(false);
+                    }
+                  }}
                 disabled={
                   !areAllOptionsSelected(selectedOptions, product.options) ||
                   !matchingSku ||
