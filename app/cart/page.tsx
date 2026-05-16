@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
+import { useRouter } from 'next/navigation';
 
 interface CartItemOption {
   name: string;
@@ -47,6 +48,7 @@ export default function CartPage() {
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
+  const router = useRouter();
 
   const fetchCart = useCallback(async () => {
     try {
@@ -413,7 +415,7 @@ export default function CartPage() {
         </div>
 
         {/* Checkout Button */}
-        <button className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded font-bold text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
+        <button onClick={() => router.push('/checkout')} className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded font-bold text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
           Proceed to Checkout
         </button>
       </div>

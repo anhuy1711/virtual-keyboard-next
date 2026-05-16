@@ -121,100 +121,11 @@ export default function InventoryPage() {
   return (
     <div className="flex h-screen bg-surface-ivory">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full flex flex-col py-8 bg-surface-bright dark:bg-dark-surface w-64 hidden md:flex z-50 border-r border-outline-variant/10">
-        <div className="px-8 mb-10">
-          <h1 className="text-lg font-black text-blue-900 dark:text-blue-50 uppercase tracking-tight">Admin Panel</h1>
-          <p className="font-label-sm text-label-sm text-slate-500">Elite Keyboards</p>
-        </div>
 
-        <nav className="flex-1 space-y-2">
-          <Link href="/admin" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Dashboard</span>
-          </Link>
-
-          <Link href="/admin/inventory" className="flex items-center space-x-4 py-3 text-blue-900 dark:text-blue-400 font-bold border-l-4 border-blue-900 dark:border-blue-400 pl-4 bg-surface-container-low">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-              keyboard
-            </span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Kho</span>
-          </Link>
-
-          <Link href="/admin/categories" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">category</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Danh mục</span>
-          </Link>
-
-          <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">shopping_cart</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Orders</span>
-          </Link>
-
-          <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">group</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Customers</span>
-          </Link>
-
-          <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">monitoring</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Analytics</span>
-          </Link>
-
-          <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all rounded-lg">
-            <span className="material-symbols-outlined">local_shipping</span>
-            <span className="font-label-md text-label-md uppercase tracking-widest">Logistics</span>
-          </Link>
-        </nav>
-
-        <div className="px-8 mt-auto space-y-4">
-          <button className="w-full bg-primary text-white py-3 rounded-lg font-label-md uppercase tracking-widest hover:bg-primary-hover transition-colors active:scale-95">
-            New Product
-          </button>
-
-          <div className="flex flex-col space-y-2 pt-4 border-t border-outline-variant">
-            <a href="#" className="flex items-center space-x-3 text-slate-500 hover:text-blue-900 transition-colors">
-              <span className="material-symbols-outlined">help</span>
-              <span className="font-label-sm text-label-sm">Support</span>
-            </a>
-            <button onClick={handleLogout} className="flex items-center space-x-3 text-slate-500 hover:text-error transition-colors">
-              <span className="material-symbols-outlined">logout</span>
-              <span className="font-label-sm text-label-sm">Logout</span>
-            </button>
-          </div>
-        </div>
-      </aside>
 
       {/* Main Content */}
       <main className="md:ml-64 w-full overflow-auto pb-20 md:pb-0">
         {/* Top Header */}
-        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">
-          <div className="flex items-center gap-4">
-            <span className="text-xl font-bold tracking-tight text-blue-900 dark:text-blue-50 font-h2">The Digital Atelier</span>
-            <div className="hidden md:flex bg-surface-container-low px-4 py-1.5 rounded-full items-center gap-2">
-              <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
-              <input className="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface outline-none" placeholder="Quick find..." type="text" />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <Link className="hidden sm:flex items-center gap-2 text-blue-900 hover:text-blue-600 transition-colors font-label-md text-label-md" href="/">
-              <span className="material-symbols-outlined">open_in_new</span>
-              View Shop
-            </Link>
-            <div className="flex items-center gap-4">
-              <button className="text-slate-500 hover:text-blue-600 transition-colors relative">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
-              </button>
-              <button className="text-slate-500 hover:text-blue-600 transition-colors">
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-container">
-                <img alt="Admin Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0naN37gHNiyU1lRByFMPBCjd7md3vCQFIl5TTZX-6AltWS0S-freIeKWLWMliYGwb4Bh_ENnT0zJu9oEVrxLjAlA8THDpExu7aKmOs9DX93qJtqZD7tyYn_D6DKI_nanopjxJIX49mCBkb7IljhqwxEO0VRHxR0X6mKh0eLFyXgP0o-et6-2N1dZ8c706xybCGTUMV_fUnfci5KjVhn8xSunUYFFcpNvFSDoWO__Oq08cM18i4EGKQ_xddkpZux8N_PxzwGR5s3g" />
-              </div>
-            </div>
-          </div>
-        </header>
 
         {/* Inventory Content */}
         <div className="p-8 max-w-7xl mx-auto">
@@ -254,82 +165,6 @@ export default function InventoryPage() {
             </div>
           </section>
 
-          {/* Search & Filter Bar */}
-          <section className="mb-8 bg-white p-6 rounded-lg border border-outline-variant/10 shadow-sm space-y-4">
-            <form onSubmit={handleSearch} className="flex gap-4 flex-wrap items-end">
-              <div className="flex-1 min-w-48">
-                <label className="block text-label-md font-label-md text-text-secondary mb-2">
-                  Tìm kiếm sản phẩm
-                </label>
-                <input
-                  type="text"
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  placeholder="Nhập tên sản phẩm..."
-                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-body-md"
-                />
-              </div>
-
-              <div className="flex-1 min-w-48">
-                <label className="block text-label-md font-label-md text-text-secondary mb-2">
-                  Danh mục
-                </label>
-                <select
-                  value={selectedCategory || ''}
-                  onChange={(e) => handleCategoryFilter(e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all font-body-md bg-white"
-                >
-                  <option value="">Tất cả danh mục</option>
-                  <option value="1">Keyboards</option>
-                  <option value="2">Switches</option>
-                  <option value="3">Keycaps</option>
-                  <option value="4">Accessories</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={isLoadingProducts}
-                  className="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md hover:bg-primary-hover disabled:opacity-50 transition-colors flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-sm">search</span>
-                  Tìm kiếm
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchName('');
-                    setSelectedCategory(undefined);
-                    setCurrentPage(0);
-                  }}
-                  className="px-6 py-2 border border-outline-variant rounded-lg font-label-md hover:bg-surface-container transition-colors"
-                >
-                  Xóa bộ lọc
-                </button>
-              </div>
-            </form>
-          </section>
-
-          {/* Stats Cards */}
-          {/*<section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">*/}
-          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-primary">*/}
-          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Products</p>*/}
-          {/*    <p className="text-2xl font-black text-blue-900">{products.length}</p>*/}
-          {/*  </div>*/}
-          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-secondary">*/}
-          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Active Orders</p>*/}
-          {/*    <p className="text-2xl font-black text-blue-900">42</p>*/}
-          {/*  </div>*/}
-          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-error">*/}
-          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Low Stock Alerts</p>*/}
-          {/*    <p className="text-2xl font-black text-blue-900">8</p>*/}
-          {/*  </div>*/}
-          {/*  <div className="p-6 bg-white rounded-xl shadow-sm space-y-2 border-l-4 border-tertiary-container">*/}
-          {/*    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-label">Total Inventory Value</p>*/}
-          {/*    <p className="text-2xl font-black text-blue-900">$182.4k</p>*/}
-          {/*  </div>*/}
-          {/*</section>*/}
 
           {/* Table */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/10">

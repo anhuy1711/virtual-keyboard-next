@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
-import { logoutAPI, getAccessToken, getUserProfile, updateUserInfo, updatePassword } from "@/app/services/authService";
+import {
+  logoutAPI,
+  getUserProfile,
+  updateUserInfo,
+  updatePassword,
+} from "@/app/services/authService";
+import {
+  getMyOrdersAPI,
+  getMyOrderDetailAPI,
+  OrderResponse,
+} from "@/app/services/orderService";
 import "./account.css";
 
 interface User {
@@ -20,22 +30,21 @@ interface User {
   isActive?: boolean;
 }
 
-interface Order {
-  id: string;
-  date: string;
-  items: number;
-  total: string;
-  status: "DELIVERED" | "PENDING" | "CANCELLED";
-}
-
 export default function AccountPage() {
   const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<"profile" | "orders">("profile");
   const [user, setUser] = useState<User | null>(null);
+
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -43,67 +52,41 @@ export default function AccountPage() {
     birthday: "",
     address: "",
   });
+
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // Mock orders data
-  const mockOrders: Order[] = [
-    {
-      id: "ORD-001",
-      date: "2024-01-15",
-      items: 3,
-      total: "$1,299.99",
-      status: "DELIVERED",
-    },
-    {
-      id: "ORD-002",
-      date: "2024-01-10",
-      items: 2,
-      total: "$599.50",
-      status: "PENDING",
-    },
-    {
-      id: "ORD-003",
-      date: "2024-01-05",
-      items: 1,
-      total: "$249.99",
-      status: "DELIVERED",
-    },
-  ];
-
   useEffect(() => {
-    // Mark component as mounted on client
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    // Only run after component is mounted on client
     if (!isMounted) return;
 
     const loadUserProfile = async () => {
       try {
-        // Check if user is logged in
         const token = localStorage.getItem("accessToken");
+
         if (!token) {
           toast.error("Vui lòng đăng nhập để truy cập trang này");
           router.push("/login");
           return;
         }
 
-        // Fetch full user profile from backend
         const userProfile = await getUserProfile();
         setUser(userProfile);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to load profile:", error);
-        
-        // Fallback: try to use localStorage data
+
         const userDataStr = localStorage.getItem("user");
+
         if (userDataStr) {
           try {
             const userData = JSON.parse(userDataStr);
@@ -116,6 +99,7 @@ export default function AccountPage() {
           toast.error("Không thể tải thông tin profile");
           router.push("/login");
         }
+
         setIsLoading(false);
       }
     };
@@ -123,9 +107,33 @@ export default function AccountPage() {
     loadUserProfile();
   }, [isMounted, router]);
 
+  useEffect(() => {
+    if (!isMounted || !user) return;
+
+    if (activeTab === "orders") {
+      loadMyOrders();
+    }
+  }, [activeTab, isMounted, user]);
+
+  const loadMyOrders = async () => {
+    try {
+      setIsLoadingOrders(true);
+
+      const data = await getMyOrdersAPI();
+
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      toast.error("Không thể tải danh sách đơn hàng");
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
   const handleLogout = () => {
     logoutAPI();
     toast.success("Đã đăng xuất thành công!");
+
     setTimeout(() => {
       router.push("/");
     }, 1000);
@@ -140,6 +148,7 @@ export default function AccountPage() {
         birthday: user.birthday || "",
         address: user.address || "",
       });
+
       setIsEditMode(true);
     }
   };
@@ -170,7 +179,7 @@ export default function AccountPage() {
       toast.success("Cập nhật thông tin thành công!");
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Cập nhật thất bại";
+          error instanceof Error ? error.message : "Cập nhật thất bại";
       toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
@@ -183,6 +192,7 @@ export default function AccountPage() {
 
   const handleClosePasswordModal = () => {
     setShowPasswordModal(false);
+
     setPasswordForm({
       currentPassword: "",
       newPassword: "",
@@ -198,7 +208,11 @@ export default function AccountPage() {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+    if (
+        !passwordForm.currentPassword ||
+        !passwordForm.newPassword ||
+        !passwordForm.confirmPassword
+    ) {
       toast.warning("Vui lòng điền đầy đủ thông tin");
       return;
     }
@@ -221,26 +235,87 @@ export default function AccountPage() {
       handleClosePasswordModal();
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Đổi mật khẩu thất bại";
+          error instanceof Error ? error.message : "Đổi mật khẩu thất bại";
       toast.error(errorMessage);
     } finally {
       setIsChangingPassword(false);
     }
   };
 
-  const handleViewOrderDetails = (orderId: string) => {
-    toast.info(`Xem chi tiết đơn hàng ${orderId}`);
+  const handleViewOrderDetails = (orderId: number) => {
+    router.push(`/orders/${orderId}`);
+  };
+
+  // Nếu chưa có màn /orders/[id], có thể dùng hàm này để test API detail:
+  const handleTestOrderDetail = async (orderId: number) => {
+    try {
+      const order = await getMyOrderDetailAPI(orderId);
+      console.log(order);
+      toast.info(`Đơn hàng: ${order.orderCode}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể tải chi tiết đơn hàng");
+    }
+  };
+
+  const getOrderStatusLabel = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Chờ xác nhận";
+      case "CONFIRMED":
+        return "Đã xác nhận";
+      case "SHIPPING":
+        return "Đang giao";
+      case "COMPLETED":
+        return "Hoàn thành";
+      case "CANCELLED":
+        return "Đã hủy";
+      default:
+        return status;
+    }
+  };
+
+  const getOrderStatusClass = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return "delivered";
+      case "PENDING":
+      case "CONFIRMED":
+      case "SHIPPING":
+        return "pending";
+      case "CANCELLED":
+        return "cancelled";
+      default:
+        return "pending";
+    }
+  };
+
+  const getPaymentStatusLabel = (status?: string | null) => {
+    switch (status) {
+      case "UNPAID":
+        return "Chưa thanh toán";
+      case "PAID":
+        return "Đã thanh toán";
+      case "FAILED":
+        return "Thanh toán thất bại";
+      case "REFUNDED":
+        return "Đã hoàn tiền";
+      case "CANCELLED":
+        return "Đã hủy thanh toán";
+      default:
+        return "N/A";
+    }
   };
 
   if (isLoading) {
     return (
-      <>
-        <TopNav />
-        <div className="loading-container">
-          <p>Đang tải...</p>
-        </div>
-        <Footer />
-      </>
+        <>
+          <TopNav />
+          <div className="loading-container">
+            <p>Đang tải...</p>
+          </div>
+          <Footer />
+        </>
     );
   }
 
@@ -249,295 +324,346 @@ export default function AccountPage() {
   }
 
   return (
-    <>
-      <TopNav />
-      <main className="account-container">
-        {/* Sidebar */}
-        <aside className="account-sidebar">
-          <div className="profile-card">
-            <div className="profile-avatar">
-              {user.username.charAt(0).toUpperCase()}
+      <>
+        <TopNav />
+
+        <main className="account-container">
+          {/* Sidebar */}
+          <aside className="account-sidebar">
+            <div className="profile-card">
+              <div className="profile-avatar">
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+
+              <div className="profile-info">
+                <h3 className="profile-name">{user.fullName || user.username}</h3>
+                <p className="profile-tier">Premium Member</p>
+              </div>
             </div>
-            <div className="profile-info">
-              <h3 className="profile-name">{user.fullName}</h3>
-              <p className="profile-tier">Premium Member</p>
+
+            <nav className="sidebar-nav">
+              <button
+                  className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+                  onClick={() => setActiveTab("profile")}
+              >
+                <i className="fas fa-user"></i>
+                <span>Profile</span>
+              </button>
+
+              <button
+                  className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
+                  onClick={() => setActiveTab("orders")}
+              >
+                <i className="fas fa-box"></i>
+                <span>Orders</span>
+              </button>
+            </nav>
+
+            <div className="sidebar-footer">
+              <button className="nav-item logout" onClick={handleLogout}>
+                <i className="fas fa-sign-out-alt"></i>
+                <span>Đăng xuất</span>
+              </button>
             </div>
-          </div>
+          </aside>
 
-          <nav className="sidebar-nav">
-            <button
-              className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-              onClick={() => setActiveTab("profile")}
-            >
-              <i className="fas fa-user"></i>
-              <span>Profile</span>
-            </button>
-            <button
-              className={`nav-item ${activeTab === "orders" ? "active" : ""}`}
-              onClick={() => setActiveTab("orders")}
-            >
-              <i className="fas fa-box"></i>
-              <span>Orders</span>
-            </button>
-          </nav>
-
-          <div className="sidebar-footer">
-            <button className="nav-item logout" onClick={handleLogout}>
-              <i className="fas fa-sign-out-alt"></i>
-              <span>Đăng xuất</span>
-            </button>
-          </div>
-        </aside>
-
-        {/* Content */}
-        <div className="account-content">
-          {/* Profile Tab */}
-          {activeTab === "profile" && (
-            <section className="tab-content">
-              <div className="content-header">
-                <h1>Profile</h1>
-              </div>
-
-              <div className="profile-section">
-                {!isEditMode ? (
-                  <>
-                    <div className="info-grid">
-                      <div className="info-item">
-                        <label>Họ và Tên</label>
-                        <p>{user.fullName || "Chưa cập nhật"}</p>
-                      </div>
-                      <div className="info-item">
-                        <label>Email</label>
-                        <p>{user.email}</p>
-                      </div>
-                      <div className="info-item">
-                        <label>Số điện thoại</label>
-                        <p>{user.phone || "Chưa cập nhật"}</p>
-                      </div>
-                      <div className="info-item">
-                        <label>Ngày sinh</label>
-                        <p>{user.birthday || "Chưa cập nhật"}</p>
-                      </div>
-                      <div className="info-item full-width">
-                        <label>Địa chỉ</label>
-                        <p>{user.address || "Chưa cập nhật"}</p>
-                      </div>
-                      <div className="info-item">
-                        <label>Username</label>
-                        <p>{user.username}</p>
-                      </div>
-                    </div>
-
-                    <div className="action-buttons">
-                      <button className="btn btn-primary" onClick={handleEditProfile}>
-                        Sửa profile
-                      </button>
-                      <button className="btn btn-secondary" onClick={handleUpdatePassword}>
-                        Đổi mật khẩu
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="info-grid">
-                      <div className="form-group">
-                        <label>Họ và Tên *</label>
-                        <input
-                          type="text"
-                          value={formData.fullName}
-                          onChange={(e) => handleFormChange("fullName", e.target.value)}
-                          placeholder="Họ và tên"
-                          className="input-field"
-                          disabled={isUpdating}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Email *</label>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleFormChange("email", e.target.value)}
-                          placeholder="Email"
-                          className="input-field"
-                          disabled={isUpdating}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Số điện thoại</label>
-                        <input
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => handleFormChange("phone", e.target.value)}
-                          placeholder="Số điện thoại"
-                          className="input-field"
-                          disabled={isUpdating}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Ngày sinh</label>
-                        <input
-                          type="date"
-                          value={formData.birthday}
-                          onChange={(e) => handleFormChange("birthday", e.target.value)}
-                          className="input-field"
-                          disabled={isUpdating}
-                        />
-                      </div>
-                      <div className="form-group full-width">
-                        <label>Địa chỉ</label>
-                        <textarea
-                          value={formData.address}
-                          onChange={(e) => handleFormChange("address", e.target.value)}
-                          placeholder="Địa chỉ"
-                          className="input-field"
-                          rows={3}
-                          disabled={isUpdating}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="action-buttons">
-                      <button 
-                        className="btn btn-primary" 
-                        onClick={handleSaveProfile}
-                        disabled={isUpdating}
-                      >
-                        {isUpdating ? "Đang cập nhật..." : "Lưu thay đổi"}
-                      </button>
-                      <button 
-                        className="btn btn-secondary" 
-                        onClick={handleCancelEdit}
-                        disabled={isUpdating}
-                      >
-                        Hủy
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* Orders Tab */}
-          {activeTab === "orders" && (
-            <section className="tab-content">
-              <div className="content-header">
-                <h1>Order History</h1>
-                <p>Xem và theo dõi các đơn hàng trước đây của bạn.</p>
-              </div>
-
-              <div className="orders-section">
-                {mockOrders.map((order) => (
-                  <div key={order.id} className="order-card">
-                    <div className="order-header">
-                      <div>
-                        <p className="order-id">{order.id}</p>
-                        <p className="order-date">{order.date}</p>
-                      </div>
-                      <span
-                        className={`order-status ${order.status.toLowerCase()}`}
-                      >
-                        {order.status === "DELIVERED"
-                          ? "Đã giao"
-                          : order.status === "PENDING"
-                            ? "Đang xử lý"
-                            : "Đã hủy"}
-                      </span>
-                    </div>
-                    <div className="order-details">
-                      <p>
-                        <strong>Items:</strong> {order.items}
-                      </p>
-                      <p>
-                        <strong>Total:</strong> {order.total}
-                      </p>
-                    </div>
-                    <button
-                      className="btn-view-order"
-                      onClick={() => handleViewOrderDetails(order.id)}
-                    >
-                      Xem chi tiết
-                      <i className="fas fa-arrow-right"></i>
-                    </button>
+          {/* Content */}
+          <div className="account-content">
+            {/* Profile Tab */}
+            {activeTab === "profile" && (
+                <section className="tab-content">
+                  <div className="content-header">
+                    <h1>Profile</h1>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      </main>
 
-      {/* Password Change Modal */}
-      {showPasswordModal && (
-        <div className="modal-overlay" onClick={handleClosePasswordModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Đổi mật khẩu</h2>
-              <button className="modal-close" onClick={handleClosePasswordModal}>
-                ✕
-              </button>
-            </div>
+                  <div className="profile-section">
+                    {!isEditMode ? (
+                        <>
+                          <div className="info-grid">
+                            <div className="info-item">
+                              <label>Họ và Tên</label>
+                              <p>{user.fullName || "Chưa cập nhật"}</p>
+                            </div>
 
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Mật khẩu hiện tại *</label>
-                <input
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => handlePasswordFormChange("currentPassword", e.target.value)}
-                  placeholder="Nhập mật khẩu hiện tại"
-                  className="input-field"
-                  disabled={isChangingPassword}
-                />
-              </div>
+                            <div className="info-item">
+                              <label>Email</label>
+                              <p>{user.email}</p>
+                            </div>
 
-              <div className="form-group">
-                <label>Mật khẩu mới *</label>
-                <input
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) => handlePasswordFormChange("newPassword", e.target.value)}
-                  placeholder="Nhập mật khẩu mới"
-                  className="input-field"
-                  disabled={isChangingPassword}
-                />
-              </div>
+                            <div className="info-item">
+                              <label>Số điện thoại</label>
+                              <p>{user.phone || "Chưa cập nhật"}</p>
+                            </div>
 
-              <div className="form-group">
-                <label>Xác nhận mật khẩu mới *</label>
-                <input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => handlePasswordFormChange("confirmPassword", e.target.value)}
-                  placeholder="Xác nhận mật khẩu mới"
-                  className="input-field"
-                  disabled={isChangingPassword}
-                />
-              </div>
-            </div>
+                            <div className="info-item">
+                              <label>Ngày sinh</label>
+                              <p>{user.birthday || "Chưa cập nhật"}</p>
+                            </div>
 
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={handleClosePasswordModal}
-                disabled={isChangingPassword}
-              >
-                Hủy
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleChangePassword}
-                disabled={isChangingPassword}
-              >
-                {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
-              </button>
-            </div>
+                            <div className="info-item full-width">
+                              <label>Địa chỉ</label>
+                              <p>{user.address || "Chưa cập nhật"}</p>
+                            </div>
+
+                            <div className="info-item">
+                              <label>Username</label>
+                              <p>{user.username}</p>
+                            </div>
+                          </div>
+
+                          <div className="action-buttons">
+                            <button className="btn btn-primary" onClick={handleEditProfile}>
+                              Sửa profile
+                            </button>
+
+                            <button className="btn btn-secondary" onClick={handleUpdatePassword}>
+                              Đổi mật khẩu
+                            </button>
+                          </div>
+                        </>
+                    ) : (
+                        <>
+                          <div className="info-grid">
+                            <div className="form-group">
+                              <label>Họ và Tên *</label>
+                              <input
+                                  type="text"
+                                  value={formData.fullName}
+                                  onChange={(e) =>
+                                      handleFormChange("fullName", e.target.value)
+                                  }
+                                  placeholder="Họ và tên"
+                                  className="input-field"
+                                  disabled={isUpdating}
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>Email *</label>
+                              <input
+                                  type="email"
+                                  value={formData.email}
+                                  onChange={(e) =>
+                                      handleFormChange("email", e.target.value)
+                                  }
+                                  placeholder="Email"
+                                  className="input-field"
+                                  disabled={isUpdating}
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>Số điện thoại</label>
+                              <input
+                                  type="tel"
+                                  value={formData.phone}
+                                  onChange={(e) =>
+                                      handleFormChange("phone", e.target.value)
+                                  }
+                                  placeholder="Số điện thoại"
+                                  className="input-field"
+                                  disabled={isUpdating}
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label>Ngày sinh</label>
+                              <input
+                                  type="date"
+                                  value={formData.birthday}
+                                  onChange={(e) =>
+                                      handleFormChange("birthday", e.target.value)
+                                  }
+                                  className="input-field"
+                                  disabled={isUpdating}
+                              />
+                            </div>
+
+                            <div className="form-group full-width">
+                              <label>Địa chỉ</label>
+                              <textarea
+                                  value={formData.address}
+                                  onChange={(e) =>
+                                      handleFormChange("address", e.target.value)
+                                  }
+                                  placeholder="Địa chỉ"
+                                  className="input-field"
+                                  rows={3}
+                                  disabled={isUpdating}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="action-buttons">
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleSaveProfile}
+                                disabled={isUpdating}
+                            >
+                              {isUpdating ? "Đang cập nhật..." : "Lưu thay đổi"}
+                            </button>
+
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleCancelEdit}
+                                disabled={isUpdating}
+                            >
+                              Hủy
+                            </button>
+                          </div>
+                        </>
+                    )}
+                  </div>
+                </section>
+            )}
+
+            {/* Orders Tab */}
+            {activeTab === "orders" && (
+                <section className="tab-content">
+                  <div className="content-header">
+                    <h1>Order History</h1>
+                    <p>Xem và theo dõi các đơn hàng trước đây của bạn.</p>
+                  </div>
+
+                  <div className="orders-section">
+                    {isLoadingOrders ? (
+                        <div className="loading-container">
+                          <p>Đang tải đơn hàng...</p>
+                        </div>
+                    ) : orders.length === 0 ? (
+                        <div className="empty-orders">
+                          <p>Bạn chưa có đơn hàng nào.</p>
+                        </div>
+                    ) : (
+                        orders.map((order) => (
+                            <div key={order.id} className="order-card">
+                              <div className="order-header">
+                                <div>
+                                  <p className="order-id">{order.orderCode}</p>
+                                  <p className="order-date">
+                                    {order.items?.length || 0} sản phẩm
+                                  </p>
+                                </div>
+
+                                <span
+                                    className={`order-status ${getOrderStatusClass(
+                                        order.status
+                                    )}`}
+                                >
+                          {getOrderStatusLabel(order.status)}
+                        </span>
+                              </div>
+
+                              <div className="order-details">
+                                <p>
+                                  <strong>Items:</strong> {order.items?.length || 0}
+                                </p>
+
+                                <p>
+                                  <strong>Total:</strong>{" "}
+                                  {Number(order.total ?? 0).toLocaleString("vi-VN")}₫
+                                </p>
+
+                                <p>
+                                  <strong>Payment:</strong>{" "}
+                                  {getPaymentStatusLabel(order.payment?.status)}
+                                </p>
+                              </div>
+
+                              <button
+                                  className="btn-view-order"
+                                  onClick={() => handleViewOrderDetails(order.id)}
+                              >
+                                Xem chi tiết
+                                <i className="fas fa-arrow-right"></i>
+                              </button>
+                            </div>
+                        ))
+                    )}
+                  </div>
+                </section>
+            )}
           </div>
-        </div>
-      )}
+        </main>
 
-      <Footer />
-    </>
+        {/* Password Change Modal */}
+        {showPasswordModal && (
+            <div className="modal-overlay" onClick={handleClosePasswordModal}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Đổi mật khẩu</h2>
+
+                  <button className="modal-close" onClick={handleClosePasswordModal}>
+                    ✕
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Mật khẩu hiện tại *</label>
+                    <input
+                        type="password"
+                        value={passwordForm.currentPassword}
+                        onChange={(e) =>
+                            handlePasswordFormChange("currentPassword", e.target.value)
+                        }
+                        placeholder="Nhập mật khẩu hiện tại"
+                        className="input-field"
+                        disabled={isChangingPassword}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Mật khẩu mới *</label>
+                    <input
+                        type="password"
+                        value={passwordForm.newPassword}
+                        onChange={(e) =>
+                            handlePasswordFormChange("newPassword", e.target.value)
+                        }
+                        placeholder="Nhập mật khẩu mới"
+                        className="input-field"
+                        disabled={isChangingPassword}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Xác nhận mật khẩu mới *</label>
+                    <input
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) =>
+                            handlePasswordFormChange("confirmPassword", e.target.value)
+                        }
+                        placeholder="Xác nhận mật khẩu mới"
+                        className="input-field"
+                        disabled={isChangingPassword}
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button
+                      className="btn btn-secondary"
+                      onClick={handleClosePasswordModal}
+                      disabled={isChangingPassword}
+                  >
+                    Hủy
+                  </button>
+
+                  <button
+                      className="btn btn-primary"
+                      onClick={handleChangePassword}
+                      disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        <Footer />
+      </>
   );
 }
-
