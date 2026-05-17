@@ -331,34 +331,8 @@ export default function EditProductPage() {
       <div className="flex h-screen bg-surface-ivory">
 
         {/* Sidebar */}
-        <aside className="fixed left-0 top-0 h-full flex flex-col py-8 bg-surface-bright dark:bg-dark-surface w-64 hidden md:flex z-50 border-r border-outline-variant/10">
-          <div className="px-8 mb-10">
-            <h1 className="text-lg font-black text-blue-900 dark:text-blue-50 uppercase tracking-tight">Admin Panel</h1>
-            <p className="font-label-sm text-label-sm text-slate-500">Elite Keyboards</p>
-          </div>
-          <nav className="flex-1 space-y-2">
-            <Link href="/admin" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 transition-all rounded-lg">
-              <span className="material-symbols-outlined">dashboard</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest">Dashboard</span>
-            </Link>
-            <Link href="/admin/inventory" className="flex items-center space-x-4 py-3 text-blue-900 font-bold border-l-4 border-blue-900 pl-4 bg-surface-container-low">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>keyboard</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest">Inventory</span>
-            </Link>
-          </nav>
-          <div className="px-8 mt-auto space-y-4">
-            <Link href="/admin/create" className="w-full bg-primary text-white py-3 rounded-lg font-label-md uppercase tracking-widest hover:bg-primary-hover transition-colors active:scale-95 text-center block">New Product</Link>
-            <div className="flex flex-col space-y-2 pt-4 border-t border-outline-variant">
-              <button onClick={handleLogout} className="flex items-center space-x-3 text-slate-500 hover:text-error transition-colors">
-                <span className="material-symbols-outlined">logout</span>
-                <span className="font-label-sm text-label-sm">Logout</span>
-              </button>
-            </div>
-          </div>
-        </aside>
-
         {/* Main */}
-        <main className="md:ml-64 w-full overflow-auto pb-20 md:pb-0">
+        <main className="w-full pb-20 md:pb-0">
           <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">
             <div className="flex items-center gap-4">
               <Link href="/admin/inventory" className="p-1 hover:bg-slate-100 rounded-md transition-colors">

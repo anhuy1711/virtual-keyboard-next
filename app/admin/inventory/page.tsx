@@ -124,7 +124,7 @@ export default function InventoryPage() {
 
 
       {/* Main Content */}
-      <main className="md:ml-64 w-full overflow-auto pb-20 md:pb-0">
+      <main className="w-full pb-20 md:pb-0">
         {/* Top Header */}
 
         {/* Inventory Content */}
@@ -154,118 +154,147 @@ export default function InventoryPage() {
                 <span className="material-symbols-outlined text-sm">add</span>
                 Add Product
               </Link>
-              {/*<button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">*/}
-              {/*  <span className="material-symbols-outlined text-sm">filter_list</span>*/}
-              {/*  Filter*/}
-              {/*</button>*/}
-              {/*<button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-blue-900 bg-surface-container-high rounded-lg hover:bg-surface-container-highest transition-colors">*/}
-              {/*  <span className="material-symbols-outlined text-sm">download</span>*/}
-              {/*  Export CSV*/}
-              {/*</button>*/}
             </div>
           </section>
 
 
           {/* Table */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/10">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-surface-container-low border-b border-outline-variant/10">
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Tên</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">Danh mục</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">Số lượng</th>
-                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">Hành động</th>
-                </tr>
+              <tr className="bg-surface-container-low border-b border-outline-variant/10">
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                  Tên
+                </th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                  Danh mục
+                </th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">
+                  Số lượng
+                </th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold text-right">
+                  Hành động
+                </th>
+              </tr>
               </thead>
+
               <tbody className="divide-y divide-outline-variant/10">
-                {isLoadingProducts ? (
+              {isLoadingProducts ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
                       <div className="flex items-center justify-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                         Đang tải sản phẩm...
                       </div>
                     </td>
                   </tr>
-                ) : products.length > 0 ? (
+              ) : products.length > 0 ? (
                   products.map((product) => (
-                    <tr key={product.id} className="hover:bg-surface-container/30 transition-colors group">
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
-                            <img alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={product.cover} />
+                      <tr
+                          key={product.id}
+                          className="hover:bg-surface-container/30 transition-colors group"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
+                              <img
+                                  alt={product.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  src={product.cover}
+                              />
+                            </div>
+
+                            <div>
+                              <p className="font-bold text-sm text-blue-900">
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-slate-400">ID: {product.id}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-blue-900">{product.name}</p>
-                            <p className="text-xs text-slate-400">ID: {product.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase tracking-wider rounded-full">
-                          Cat {product.categoryId}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 text-right font-bold text-blue-900">{product.skus?.length || 0} SKUs</td>
+                        </td>
 
-                      <td className="px-8 py-6 text-right space-x-2">
-                        <Link href={`/admin/products/${product.id}`} className="inline-block p-2 text-slate-400 hover:text-blue-900 transition-colors">
-                          <span className="material-symbols-outlined">edit</span>
-                        </Link>
-                        <button
-                            onClick={async () => {
-                              if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) return;
+                        <td className="px-6 py-4">
+              <span className="px-2.5 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase tracking-wider rounded-full">
+                Cat {product.categoryId}
+              </span>
+                        </td>
 
-                              try {
-                                const token = localStorage.getItem("accessToken");
+                        <td className="px-6 py-4 text-right text-sm font-bold text-blue-900">
+                          {product.skus?.length || 0} SKUs
+                        </td>
 
-                                const res = await fetch(
-                                    `http://localhost:8080/products/delete?id=${product.id}`,
-                                    {
-                                      method: "DELETE",
-                                      headers: {
-                                        ...(token && { Authorization: `Bearer ${token}` }),
-                                      },
-                                    }
-                                );
+                        <td className="px-6 py-4 text-right space-x-1">
+                          <Link
+                              href={`/admin/products/${product.id}`}
+                              className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                <span className="material-symbols-outlined text-[18px]">
+                  edit
+                </span>
+                          </Link>
 
-                                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                          <button
+                              onClick={async () => {
+                                if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) return;
 
-                                const json = await res.json();
-                                if (json.code !== 200) throw new Error(`API error: ${json.code}`);
+                                try {
+                                  const token = localStorage.getItem("accessToken");
 
-                                toast.success("Xóa sản phẩm thành công!");
-                                fetchProducts(currentPage); // Refresh lại danh sách
-                              } catch (err) {
-                                console.error("Error deleting product:", err);
-                                toast.error("Xóa sản phẩm thất bại");
-                              }
-                            }}
-                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                        >
-                          <span className="material-symbols-outlined">delete</span>
-                        </button>
-                      </td>
-                    </tr>
+                                  const res = await fetch(
+                                      `http://localhost:8080/products/delete?id=${product.id}`,
+                                      {
+                                        method: "DELETE",
+                                        headers: {
+                                          ...(token && { Authorization: `Bearer ${token}` }),
+                                        },
+                                      }
+                                  );
+
+                                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                                  const json = await res.json();
+                                  if (json.code !== 200) throw new Error(`API error: ${json.code}`);
+
+                                  toast.success("Xóa sản phẩm thành công!");
+                                  fetchProducts(currentPage);
+                                } catch (err) {
+                                  console.error("Error deleting product:", err);
+                                  toast.error("Xóa sản phẩm thất bại");
+                                }
+                              }}
+                              className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                <span className="material-symbols-outlined text-[18px]">
+                  delete
+                </span>
+                          </button>
+                        </td>
+                      </tr>
                   ))
-                ) : (
+              ) : (
                   <tr>
-                    <td colSpan={5} className="px-8 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
                       Không có sản phẩm nào
                     </td>
                   </tr>
-                )}
+              )}
               </tbody>
             </table>
 
-            {/* Pagination */}
-            <div className="px-8 py-4 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
-              <p className="text-xs text-slate-500">{products.length} / {products.length}</p>
+            <div className="px-6 py-3 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
+              <p className="text-xs text-slate-500">
+                {products.length} / {products.length}
+              </p>
+
               <div className="flex gap-2">
                 <button className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors">
                   <span className="material-symbols-outlined text-sm">chevron_left</span>
                 </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">1</button>
+
+                <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">
+                  1
+                </button>
+
                 <button className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors">
                   <span className="material-symbols-outlined text-sm">chevron_right</span>
                 </button>

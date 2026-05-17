@@ -6,131 +6,54 @@ import { getProductDetailAPI, ProductDetailResponse } from "@/app/services/produ
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
 import {toast} from "react-toastify";
+import {
+  getProductReviewsAPI,
+  ProductReviewResponse,
+} from "@/app/services/productReviewService";
 
 // Mock data for testing UI
-const MOCK_PRODUCT: ProductDetailResponse = {
-  id: 1,
-  name: "The Artisan VII",
-  description:
-    "The Artisan VII represents the pinnacle of our design philosophy. Crafted from a single block of aerospace-grade aluminum, it features a unique internal dampening system that produces a resonant, creamy acoustic profile—affectionately known in the community as 'the thock'. Experience premium build quality with hot-swap PCB and gasket mounting system.",
-  summary: "Limited Edition Release",
-  cover:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDG_ybH6GhZsjF_dmJiJZlDwzF78-UQwQn5AiGkfH094cL1C923fgs6dVcdbI28Zup4Odu93UNa4NxTSFezF_9UcZ8zerolW947YZlaUNRMQ34do3FhstizT6FB_Cs3Dw9CbT08KfCyVLCcFAALOhiuDVcyRAhgd3ROz0rmYPQDF_-c5gzb_MmVMcAqeleqDJGw_pgI3tI-_Q42VlAcuGQhnmNYqzEks6UwF0W8XUz8NCRLfY5sLYHNUgOY8llXGlF8Ol2avnMTZ6Y",
-  categoryId: 1,
-  specifications: [],
-  skus: [
-    {
-      id: 1,
-      productId: 1,
-      sku: "ART7-NAVY-TAN-001",
-      price: 489.00,
-      quantity: 5,
-      isActive: true,
-      optionValueIds: [0, 0],
-    },
-    {
-      id: 2,
-      productId: 1,
-      sku: "ART7-NAVY-HOLY-001",
-      price: 499.00,
-      quantity: 0,
-      isActive: true,
-      optionValueIds: [0, 1],
-    },
-    {
-      id: 3,
-      productId: 1,
-      sku: "ART7-WHITE-TAN-001",
-      price: 509.00,
-      quantity: 8,
-      isActive: true,
-      optionValueIds: [1, 0],
-    },
-    {
-      id: 4,
-      productId: 1,
-      sku: "ART7-WHITE-HOLY-001",
-      price: 519.00,
-      quantity: 3,
-      isActive: true,
-      optionValueIds: [1, 1],
-    },
-    {
-      id: 5,
-      productId: 1,
-      sku: "ART7-BLACK-TAN-001",
-      price: 479.00,
-      quantity: 10,
-      isActive: true,
-      optionValueIds: [2, 0],
-    },
-    {
-      id: 6,
-      productId: 1,
-      sku: "ART7-BLACK-HOLY-001",
-      price: 489.00,
-      quantity: 0,
-      isActive: true,
-      optionValueIds: [2, 1],
-    },
-  ],
-  options: [
-    {
-      id: 1,
-      name: "Color",
-      values: [
-        { id: 1, value: "Midnight Navy" },
-        { id: 2, value: "Arctic White" },
-        { id: 3, value: "Obsidian Black" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Switch Type",
-      values: [
-        { id: 4, value: "Tangerine V2" },
-        { id: 5, value: "Holy Panda" },
-      ],
-    },
-  ],
-};
 
 /**
  * Get first available value for each option
  */
 function getInitialSelectedOptions(options?: ProductDetailResponse['options']): Record<number, number> {
   if (!options || options.length === 0) return {};
-  
+
   const initial: Record<number, number> = {};
   options.forEach(option => {
     if (option.values && option.values.length > 0) {
       initial[option.id] = option.values[0].id;
     }
   });
-  
+
   return initial;
 }
 
 // ── Helper: Find SKU matching selected option values ──
 function findMatchingSKU(
-  selectedOptions: Record<number, number>,
-  skus: ProductDetailResponse['skus'],
-  options: ProductDetailResponse['options']
+    selectedOptions: Record<number, number>,
+    skus: ProductDetailResponse['skus'],
+    options: ProductDetailResponse['options']
 ): ProductDetailResponse['skus'][number] | null {
-  if (!options || options.length === 0) return null;
-  
-  // Build optionValueIds based on selectedOptions
-  // Note: Backend returns optionValueIds as IDs, not indices
+  if (!skus || skus.length === 0) return null;
+
+  // Sản phẩm không có biến thể/options: lấy SKU mặc định đầu tiên
+  if (!options || options.length === 0) {
+    return skus.find((sku) => sku.isActive && sku.quantity > 0) || skus[0];
+  }
+
   const optionValueIds = options.map((opt) => {
     const selectedValueId = selectedOptions[opt.id];
     if (!selectedValueId) return -1;
-    return selectedValueId; // Use the ID directly
+    return selectedValueId;
   });
 
-  // Find SKU with matching optionValueIds
-  return skus.find((sku) =>
-    JSON.stringify(sku.optionValueIds) === JSON.stringify(optionValueIds)
-  ) || null;
+  return (
+      skus.find(
+          (sku) =>
+              JSON.stringify(sku.optionValueIds) === JSON.stringify(optionValueIds)
+      ) || null
+  );
 }
 
 // ── Helper: Check if all options are selected ──
@@ -149,14 +72,14 @@ function isOptionValueAvailable(
 ): boolean {
   // Check if any SKU is available with this combination
   const availableSkus = skus.filter((sku) => sku.quantity > 0);
-  
+
   if (availableSkus.length === 0) return false;
 
   // Try to find any available SKU where this option value is used
   return availableSkus.some((sku) => {
     const optionIndex = options.findIndex((opt) => opt.id === optionId);
     if (optionIndex === -1) return true;
-    
+
     // Direct ID comparison (backend returns IDs, not indices)
     return sku.optionValueIds[optionIndex] === valueId;
   });
@@ -170,10 +93,41 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
   const [matchingSku, setMatchingSku] = useState<ProductDetailResponse['skus'][number] | null>(null);
-  const [activeTab, setActiveTab] = useState<"specs" | "description">("specs");
-  const [useMockData] = useState(false); // Set to true to test with mock data
+  const [activeTab, setActiveTab] = useState<"specs" | "description" | "reviews">("specs");  const [useMockData] = useState(false); // Set to true to test with mock data
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [reviews, setReviews] = useState<ProductReviewResponse[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [reviewTotal, setReviewTotal] = useState(0);
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, index) => (
+        <span
+            key={index}
+            className={`material-symbols-outlined text-[18px] ${
+                index < rating ? "text-secondary" : "text-outline-variant"
+            }`}
+            style={index < rating ? { fontVariationSettings: "'FILL' 1" } : undefined}
+        >
+      star
+    </span>
+    ));
+  };
+
+  const averageRating =
+      reviews.length > 0
+          ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+          : 0;
+
+  const ratingCounts = [5, 4, 3, 2, 1].map((star) => {
+    const count = reviews.filter((review) => review.rating === star).length;
+    const percent = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+
+    return {
+      star,
+      count,
+      percent,
+    };
+  });
   useEffect(() => {
     const fetchProduct = async () => {
       setIsLoading(true);
@@ -181,13 +135,8 @@ export default function ProductDetailPage() {
       try {
         // For testing UI, set useMockData to true
         if (useMockData) {
-          console.log("Using mock data for testing");
-          setProduct(MOCK_PRODUCT);
-          setSelectedOptions(getInitialSelectedOptions(MOCK_PRODUCT.options));
         } else {
-          console.log("Fetching product with ID:", productId);
           const data = await getProductDetailAPI(productId);
-          console.log("Product data received:", data);
           setProduct(data);
           setSelectedOptions(getInitialSelectedOptions(data.options));
         }
@@ -217,6 +166,28 @@ export default function ProductDetailPage() {
     setMatchingSku(matching);
   }, [selectedOptions, product]);
 
+  const loadReviews = async () => {
+    try {
+      setIsLoadingReviews(true);
+
+      const data = await getProductReviewsAPI(productId, 0, 10);
+
+      setReviews(data.content || []);
+      setReviewTotal(data.totalElements || 0);
+    } catch (error) {
+      console.error("Failed to load reviews:", error);
+      toast.error("Không thể tải đánh giá sản phẩm");
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    if (productId) {
+      loadReviews();
+    }
+  }, [productId]);
+
   if (isLoading) {
     return (
       <div className="pt-28 pb-20 min-h-screen flex items-center justify-center">
@@ -244,7 +215,7 @@ export default function ProductDetailPage() {
       <TopNav />
       <main className="pt-28 pb-20">
       {/* Product Section */}
-      <section className="max-w-360 mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <section className="max-w-360 mx-auto px-6 md:px-30 grid grid-cols-1 lg:grid-cols-12 gap-16">
         {/* Image Gallery */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           <div className="bg-surface-container-lowest overflow-hidden rounded-xl">
@@ -302,66 +273,69 @@ export default function ProductDetailPage() {
           <div className="flex flex-col gap-8">
             {/* Dynamic Options from Response */}
             {product.options && product.options.length > 0 ? (
-              product.options.map((option) => (
-                <div key={option.id}>
-                  <label className="block font-label text-sm font-bold tracking-widest uppercase mb-4 text-on-surface/60">
-                    {option.name}
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {option.values.map((value) => {
-                      const isSelected = selectedOptions[option.id] === value.id;
-                      const isAvailable = isOptionValueAvailable(
-                        option.id,
-                        value.id,
-                        selectedOptions,
-                        product.skus || [],
-                        product.options || []
-                      );
-                      const isDisabled = !isAvailable;
+                product.options.map((option) => (
+                    <div key={option.id}>
+                      <label className="block font-label text-sm font-bold tracking-widest uppercase mb-4 text-on-surface/60">
+                        {option.name}
+                      </label>
 
-                      return (
-                        <button
-                          key={value.id}
-                          onClick={() => {
-                            if (!isDisabled) {
-                              setSelectedOptions((prev) => ({
-                                ...prev,
-                                [option.id]: value.id,
-                              }));
-                            }
-                          }}
-                          disabled={isDisabled}
-                          className={`flex items-center justify-between px-5 py-4 rounded-lg transition-all ${
-                            isSelected
-                              ? "bg-surface-container-lowest border-2 border-secondary"
-                              : isDisabled
-                              ? "bg-surface-container-low opacity-50 cursor-not-allowed"
-                              : "bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-                          }`}
-                        >
-                          <span className={`font-medium ${
-                            isSelected ? 'text-primary' : isDisabled ? 'text-on-surface-variant/50' : 'text-primary'
-                          }`}>
-                            {value.value}
-                          </span>
-                          {isSelected && (
-                            <span
-                              className="material-symbols-outlined text-secondary"
-                              style={{ fontVariationSettings: "'FILL' 1" }}
-                            >
-                              check_circle
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))
+                      <div className="grid grid-cols-2 gap-3">
+                        {option.values.map((value) => {
+                          const isSelected = selectedOptions[option.id] === value.id;
+
+                          const isAvailable = isOptionValueAvailable(
+                              option.id,
+                              value.id,
+                              selectedOptions,
+                              product.skus || [],
+                              product.options || []
+                          );
+
+                          const isDisabled = !isAvailable;
+
+                          return (
+                              <button
+                                  key={value.id}
+                                  onClick={() => {
+                                    if (!isDisabled) {
+                                      setSelectedOptions((prev) => ({
+                                        ...prev,
+                                        [option.id]: value.id,
+                                      }));
+                                    }
+                                  }}
+                                  disabled={isDisabled}
+                                  className={`flex items-center justify-between px-5 py-2 rounded-lg transition-all ${
+                                      isSelected
+                                          ? "bg-surface-container-lowest border-2 border-secondary"
+                                          : isDisabled
+                                              ? "bg-surface-container-low opacity-50 cursor-not-allowed"
+                                              : "bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+                                  }`}
+                              >
+              <span
+                  className={`font-medium ${
+                      isSelected
+                          ? "text-primary"
+                          : isDisabled
+                              ? "text-on-surface-variant/50"
+                              : "text-primary"
+                  }`}
+              >
+                {value.value}
+              </span>
+
+
+                              </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                ))
             ) : (
-              <div className="text-on-surface-variant text-sm">
-                Không có tùy chọn sản phẩm
-              </div>
+                <div className="rounded-lg bg-surface-container-low px-5 py-4 text-sm text-on-surface-variant">
+                  Sản phẩm này không có biến thể. Bạn có thể thêm trực tiếp vào giỏ hàng.
+                </div>
             )}
 
             {/* Add to Cart */}
@@ -451,6 +425,16 @@ export default function ProductDetailPage() {
           >
             Description
           </button>
+          <button
+              onClick={() => setActiveTab("reviews")}
+              className={`px-8 py-4 font-headline font-semibold text-lg border-b-4 transition-all ${
+                  activeTab === "reviews"
+                      ? "border-secondary text-primary"
+                      : "border-transparent text-on-surface-variant/60 hover:text-on-surface"
+              }`}
+          >
+            Đánh giá
+          </button>
         </div>
 
         {/* Specifications Tab */}
@@ -487,6 +471,115 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
+        )}
+        {activeTab === "reviews" && (
+            <div className="block animate-fadeIn">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                {/* Review Summary */}
+                <div className="lg:col-span-4 flex flex-col gap-8">
+                  <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-6">
+                    <h3 className="text-2xl font-extrabold tracking-tight text-primary mb-2">
+                      Customer Reviews
+                    </h3>
+
+                    <div className="flex items-end gap-3 mb-5">
+            <span className="text-5xl font-bold text-primary">
+              {averageRating > 0 ? averageRating.toFixed(1) : "0.0"}
+            </span>
+
+                      <div className="flex flex-col">
+                        <div className="flex">
+                          {renderStars(Math.round(averageRating))}
+                        </div>
+
+                        <span className="text-xs font-medium text-on-surface-variant/60 uppercase tracking-widest mt-1">
+                Based on {reviewTotal} reviews
+              </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      {ratingCounts.map((item) => (
+                          <div key={item.star} className="flex items-center gap-4">
+                <span className="text-sm font-medium w-4 text-on-surface-variant">
+                  {item.star}
+                </span>
+
+                            <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                              <div
+                                  className="h-full bg-secondary"
+                                  style={{ width: `${item.percent}%` }}
+                              />
+                            </div>
+
+                            <span className="text-sm font-medium w-10 text-on-surface-variant/60">
+                  {item.percent}%
+                </span>
+                          </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                      type="button"
+                      onClick={() =>
+                          toast.info("Bạn có thể đánh giá sản phẩm trong màn chi tiết đơn hàng đã hoàn thành")
+                      }
+                      className="w-full py-4 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-on-primary transition-all"
+                  >
+                    Viết đánh giá
+                  </button>
+
+                  <p className="text-sm text-on-surface-variant/70 leading-relaxed">
+                    Chỉ khách hàng đã mua sản phẩm và có đơn hàng hoàn thành mới có thể
+                    viết đánh giá.
+                  </p>
+                </div>
+
+                {/* Review List */}
+                <div className="lg:col-span-8 flex flex-col gap-8">
+                  {isLoadingReviews ? (
+                      <div className="py-12 text-center text-on-surface-variant">
+                        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+                        Đang tải đánh giá...
+                      </div>
+                  ) : reviews.length > 0 ? (
+                      reviews.map((review) => (
+                          <div
+                              key={review.id}
+                              className="pb-8 border-b border-outline-variant/30"
+                          >
+                            <div className="flex justify-between items-start mb-4 gap-4">
+                              <div>
+                                <div className="flex mb-1">
+                                  {renderStars(review.rating)}
+                                </div>
+
+                                <h4 className="font-bold text-lg text-on-surface">
+                                  {review.fullName || review.username || `User #${review.userId}`}
+                                </h4>
+                              </div>
+
+                              <span className="text-sm text-on-surface-variant/60 whitespace-nowrap">
+                  {review.createdAt
+                      ? new Date(review.createdAt).toLocaleDateString("vi-VN")
+                      : ""}
+                </span>
+                            </div>
+
+                            <p className="text-on-surface-variant leading-relaxed italic">
+                              “{review.comment || "Không có nội dung đánh giá."}”
+                            </p>
+                          </div>
+                      ))
+                  ) : (
+                      <div className="py-12 text-center text-on-surface-variant/60 font-medium border border-dashed border-outline-variant/30 rounded-xl">
+                        Sản phẩm này chưa có đánh giá nào.
+                      </div>
+                  )}
+                </div>
+              </div>
+            </div>
         )}
       </section>
     </main>

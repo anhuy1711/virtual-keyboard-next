@@ -57,27 +57,29 @@ export default function AdminSidebar() {
     };
 
     return (
-        <aside className="fixed left-0 top-0 h-screen w-72 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-8 px-6 gap-8 z-50">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+        <aside className="fixed left-0 top-0 h-screen w-64 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 gap-5 z-50">
+            {/* Brand */}
+            <div className="flex items-center gap-3 px-1">
+                <div className="w-9 h-9 bg-primary flex items-center justify-center rounded-lg shrink-0">
           <span
-              className="material-symbols-outlined text-white"
+              className="material-symbols-outlined text-white text-[19px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
           >
             architecture
           </span>
                 </div>
 
-                <div>
-                    <h1 className="font-headline text-xl font-bold tracking-tight text-primary">
+                <div className="min-w-0">
+                    <h1 className="font-headline text-lg font-bold tracking-tight text-primary leading-tight truncate">
                         Digital Atelier
                     </h1>
-                    <p className="text-xs text-on-surface-variant opacity-70">
+                    <p className="text-[10px] text-on-surface-variant opacity-70 uppercase tracking-wide">
                         Management Console
                     </p>
                 </div>
             </div>
 
+            {/* Menu */}
             <nav className="flex flex-col gap-1 flex-grow">
                 {menuItems.map((item) => {
                     const active = isActive(item.href);
@@ -88,18 +90,18 @@ export default function AdminSidebar() {
                             href={item.href}
                             className={
                                 active
-                                    ? 'flex items-center gap-4 py-3 px-4 rounded-xl text-secondary font-bold border-r-4 border-secondary bg-surface-container-high active:scale-95 transition-all'
-                                    : 'flex items-center gap-4 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors'
+                                    ? 'flex items-center gap-3 py-2.5 px-3 rounded-lg text-secondary font-bold border-r-4 border-secondary bg-surface-container-high active:scale-95 transition-all'
+                                    : 'flex items-center gap-3 py-2.5 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors'
                             }
                         >
               <span
-                  className="material-symbols-outlined"
+                  className="material-symbols-outlined text-[20px] shrink-0"
                   style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
               >
                 {item.icon}
               </span>
 
-                            <span className="text-label-md tracking-widest uppercase">
+                            <span className="text-[12px] font-semibold tracking-wide uppercase">
                 {item.label}
               </span>
                         </Link>
@@ -107,20 +109,22 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            <div className="mt-auto flex flex-col gap-1 pt-8 border-t border-outline-variant/10">
+            {/* Footer */}
+            <div className="mt-auto flex flex-col gap-1 pt-5 border-t border-outline-variant/10">
                 <Link
                     href="/"
-                    className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-bold mb-4 shadow-lg flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-3 rounded-lg font-bold text-sm mb-3 shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
                 >
+                    <span className="material-symbols-outlined text-[18px]">home</span>
                     <span>Trang chủ</span>
                 </Link>
 
                 <Link
                     href="#"
-                    className="flex items-center gap-4 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors"
                 >
-                    <span className="material-symbols-outlined">settings</span>
-                    <span className="text-label-md tracking-widest uppercase">
+                    <span className="material-symbols-outlined text-[20px]">settings</span>
+                    <span className="text-[12px] font-semibold tracking-wide uppercase">
             Settings
           </span>
                 </Link>
@@ -128,10 +132,10 @@ export default function AdminSidebar() {
                 <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex items-center gap-4 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors text-left"
+                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors text-left"
                 >
-                    <span className="material-symbols-outlined">logout</span>
-                    <span className="text-label-md tracking-widest uppercase">
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    <span className="text-[12px] font-semibold tracking-wide uppercase">
             Log Out
           </span>
                 </button>

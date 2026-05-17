@@ -87,6 +87,10 @@ export default function CreateProductPage() {
   const [productType, setProductType] = useState('KIT');
   const [category, setCategory] = useState('Custom Mechanical');
   const [coverImage, setCoverImage] = useState<string>('');
+  const [defaultPrice, setDefaultPrice] = useState(0);
+  const [defaultStock, setDefaultStock] = useState(0);
+
+
 
   const [options, setOptions] = useState<Option[]>([
     { name: 'Case Color', values: [{ name: 'Anodized Black' }, { name: 'E-White' }, { name: 'Deep Blue' }] },
@@ -134,6 +138,10 @@ export default function CreateProductPage() {
     setOptions([...options, { name: '', values: [] }]);
     setAddValueInputs([...addValueInputs, '']);
   };
+
+  const hasVariants = options.some(
+      (option) => option.name.trim() && option.values.length > 0
+  );
   const updateOptionName = (i: number, name: string) => {
     const next = [...options]; next[i] = { ...next[i], name }; setOptions(next);
   };
@@ -191,6 +199,10 @@ export default function CreateProductPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const hasVariants = options.some(
+          (option) => option.name.trim() && option.values.length > 0
+      );
+
       const request: CreateProductRequest = {
         name: productName,
         description,
@@ -198,9 +210,31 @@ export default function CreateProductPage() {
         cover: coverImage || 'https://via.placeholder.com/300',
         type: productType || 'KIT',
         categoryId: 1,
-        specifications: options.flatMap((opt) => opt.values.map((val) => ({ name: opt.name, value: val.name }))),
-        options: options.map((opt) => ({ name: opt.name, values: opt.values.map((v) => v.name) })),
-        skus: skus.map((sku) => ({ price: sku.price, quantity: sku.stock, optionValueIndexes: sku.optionValueIndexes })),
+
+        specifications: [],
+
+        options: hasVariants
+            ? options
+                .filter((opt) => opt.name.trim() && opt.values.length > 0)
+                .map((opt) => ({
+                  name: opt.name,
+                  values: opt.values.map((v) => v.name),
+                }))
+            : [],
+
+        skus: hasVariants
+            ? skus.map((sku) => ({
+              price: sku.price,
+              quantity: sku.stock,
+              optionValueIndexes: sku.optionValueIndexes,
+            }))
+            : [
+              {
+                price: defaultPrice,
+                quantity: defaultStock,
+                optionValueIndexes: [],
+              },
+            ],
       };
       await createProductAPI(request);
       toast.success('Sản phẩm đã được tạo thành công!');
@@ -229,42 +263,9 @@ export default function CreateProductPage() {
       <div className="flex h-screen bg-surface-ivory">
 
         {/* Sidebar */}
-        <aside className="fixed left-0 top-0 h-full flex flex-col py-8 bg-surface-bright dark:bg-dark-surface w-64 hidden md:flex z-50 border-r border-outline-variant/10">
-          <div className="px-8 mb-10">
-            <h1 className="text-lg font-black text-blue-900 dark:text-blue-50 uppercase tracking-tight">Admin Panel</h1>
-            <p className="font-label-sm text-label-sm text-slate-500">Elite Keyboards</p>
-          </div>
-          <nav className="flex-1 space-y-2">
-            <Link href="/admin" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 transition-all rounded-lg">
-              <span className="material-symbols-outlined">dashboard</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest">Dashboard</span>
-            </Link>
-            <Link href="/admin/inventory" className="flex items-center space-x-4 py-3 text-blue-900 font-bold border-l-4 border-blue-900 pl-4 bg-surface-container-low">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>keyboard</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest">Inventory</span>
-            </Link>
-            <Link href="#" className="flex items-center space-x-4 py-3 text-slate-500 pl-5 hover:bg-slate-200/50 transition-all rounded-lg">
-              <span className="material-symbols-outlined">shopping_cart</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest">Orders</span>
-            </Link>
-          </nav>
-          <div className="px-8 mt-auto space-y-4">
-            <Link href="/admin/create" className="w-full bg-primary text-white py-3 rounded-lg font-label-md uppercase tracking-widest hover:bg-primary-hover transition-colors active:scale-95 text-center block">New Product</Link>
-            <div className="flex flex-col space-y-2 pt-4 border-t border-outline-variant">
-              <a href="#" className="flex items-center space-x-3 text-slate-500 hover:text-blue-900 transition-colors">
-                <span className="material-symbols-outlined">help</span>
-                <span className="font-label-sm text-label-sm">Support</span>
-              </a>
-              <button onClick={handleLogout} className="flex items-center space-x-3 text-slate-500 hover:text-error transition-colors">
-                <span className="material-symbols-outlined">logout</span>
-                <span className="font-label-sm text-label-sm">Logout</span>
-              </button>
-            </div>
-          </div>
-        </aside>
 
         {/* Main */}
-        <main className="md:ml-64 w-full overflow-auto pb-20 md:pb-0">
+        <main className="w-full pb-20 md:pb-0">
           <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">
             <span className="text-xl font-bold tracking-tight text-blue-900 font-h2">Add New Product</span>
             <div className="flex items-center gap-6">
@@ -388,6 +389,7 @@ export default function CreateProductPage() {
             {/* ═══════════════════════════════════════════════════════════════════
               Section 3: SKU Management  — ĐÃ SỬA
           ═══════════════════════════════════════════════════════════════════ */}
+
             <section className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
@@ -410,7 +412,37 @@ export default function CreateProductPage() {
                 </button>
               </div>
 
-              {skus.length === 0 ? (
+              {!hasVariants ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-label-md font-label-md text-text-primary">
+                        Price
+                      </label>
+                      <input
+                          type="number"
+                          min={0}
+                          value={defaultPrice}
+                          onChange={(e) => setDefaultPrice(Number(e.target.value))}
+                          className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md"
+                          placeholder="VD: 12000"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-label-md font-label-md text-text-primary">
+                        Stock
+                      </label>
+                      <input
+                          type="number"
+                          min={0}
+                          value={defaultStock}
+                          onChange={(e) => setDefaultStock(Number(e.target.value))}
+                          className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md"
+                          placeholder="VD: 100"
+                      />
+                    </div>
+                  </div>
+              ) : skus.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-outline-variant rounded-lg">
                     <span className="material-symbols-outlined text-4xl text-text-light block mb-2">inventory_2</span>
                     <p className="text-body-sm text-text-light">No SKUs yet.</p>

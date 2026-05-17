@@ -116,7 +116,7 @@ export default function CategoriesPage() {
     return (
         <div className="flex h-screen bg-surface-ivory">
             {/* Main Content */}
-            <main className="md:ml-64 w-full overflow-auto pb-20 md:pb-0">
+            <main className="w-full pb-20 md:pb-0">
                 {/* Top Header */}
 
 

@@ -1,315 +1,333 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { jwtDecode } from 'jwt-decode';
+import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { logoutAPI } from '@/app/services/authService';
-
-type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN';
-
-interface AuditLog {
-    id: number;
-    date: string;
-    time: string;
-    adminName: string;
-    action: AuditAction;
-    target: string;
-    description: string;
-    ipAddress: string;
-}
-
-const MOCK_AUDIT_LOGS: AuditLog[] = [
-    {
-        id: 1,
-        date: '2026-05-16',
-        time: '14:30:22',
-        adminName: 'Hoàng Nam',
-        action: 'CREATE',
-        target: 'Sản phẩm: Neo98',
-        description: 'ID: PRD-9982',
-        ipAddress: '192.168.1.45',
-    },
-    {
-        id: 2,
-        date: '2026-05-16',
-        time: '14:28:15',
-        adminName: 'Minh Anh',
-        action: 'UPDATE',
-        target: 'Đơn hàng: #ORD-8829',
-        description: 'Trạng thái: Đã giao',
-        ipAddress: '113.20.145.2',
-    },
-    {
-        id: 3,
-        date: '2026-05-16',
-        time: '13:10:05',
-        adminName: 'Hoàng Nam',
-        action: 'DELETE',
-        target: 'Người dùng: Guest_882',
-        description: 'Lý do: Spam',
-        ipAddress: '192.168.1.45',
-    },
-    {
-        id: 4,
-        date: '2026-05-16',
-        time: '09:00:12',
-        adminName: 'Thúy Hạnh',
-        action: 'LOGIN',
-        target: 'Hệ thống',
-        description: 'Trình duyệt: Chrome',
-        ipAddress: '27.67.2.14',
-    },
-];
+import {
+    AuditAction,
+    AuditLogResponse,
+    getAuditLogsAPI,
+    SimplePage,
+} from '@/app/services/auditLogService';
 
 export default function AuditLogPage() {
     const router = useRouter();
 
-    const [keyword, setKeyword] = useState('');
-    const [adminFilter, setAdminFilter] = useState('ALL');
-    const [actionFilter, setActionFilter] = useState<'ALL' | AuditAction>('ALL');
-    const [currentPage, setCurrentPage] = useState(1);
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
 
-    const filteredLogs = useMemo(() => {
-        return MOCK_AUDIT_LOGS.filter((log) => {
-            const matchKeyword =
-                !keyword.trim() ||
-                log.adminName.toLowerCase().includes(keyword.toLowerCase()) ||
-                log.target.toLowerCase().includes(keyword.toLowerCase()) ||
-                log.description.toLowerCase().includes(keyword.toLowerCase()) ||
-                log.ipAddress.toLowerCase().includes(keyword.toLowerCase());
+    const [logs, setLogs] = useState<AuditLogResponse[]>([]);
+    const [pageData, setPageData] = useState<SimplePage<AuditLogResponse> | null>(
+        null
+    );
+    const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
-            const matchAdmin =
-                adminFilter === 'ALL' || log.adminName === adminFilter;
+    const [actorName, setActorName] = useState('');
+    const [selectedAction, setSelectedAction] = useState<AuditAction | ''>('');
+    const [currentPage, setCurrentPage] = useState(0);
 
-            const matchAction =
-                actionFilter === 'ALL' || log.action === actionFilter;
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
-            return matchKeyword && matchAdmin && matchAction;
-        });
-    }, [keyword, adminFilter, actionFilter]);
+    useEffect(() => {
+        if (!isMounted) return;
 
-    const getActionClass = (action: AuditAction) => {
-        switch (action) {
-            case 'CREATE':
-                return 'bg-emerald-50 text-emerald-700';
-            case 'UPDATE':
-                return 'bg-blue-50 text-blue-700';
-            case 'DELETE':
-                return 'bg-red-50 text-red-700';
-            case 'LOGIN':
-                return 'bg-slate-100 text-slate-700';
-            default:
-                return 'bg-slate-100 text-slate-700';
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            router.push('/login');
+            return;
+        }
+
+        try {
+            const decoded = jwtDecode(token) as { role?: string };
+            const userRole = decoded.role?.toUpperCase();
+
+            if (userRole !== 'ADMIN') {
+                router.push('/');
+                return;
+            }
+
+            setIsAuthorized(true);
+        } catch (error) {
+            console.error('Invalid token:', error);
+            router.push('/login');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router, isMounted]);
+
+    useEffect(() => {
+        if (isAuthorized) {
+            fetchAuditLogs(0);
+        }
+    }, [isAuthorized]);
+
+    const fetchAuditLogs = async (page: number = 0) => {
+        try {
+            setIsLoadingLogs(true);
+
+            const response = await getAuditLogsAPI({
+                action: selectedAction || undefined,
+                actorName: actorName.trim() || undefined,
+                page,
+                size: 20,
+            });
+
+            setLogs(response.content || []);
+            setPageData(response);
+            setCurrentPage(page);
+        } catch (error) {
+            console.error('Failed to fetch audit logs:', error);
+            toast.error('Lỗi khi tải nhật ký hệ thống');
+        } finally {
+            setIsLoadingLogs(false);
         }
     };
 
-    const handleLogout = () => {
-        logoutAPI();
-        toast.success('Đã đăng xuất!');
-        router.push('/');
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        fetchAuditLogs(0);
     };
 
-    const handleViewDetail = (log: AuditLog) => {
+    const handleReset = () => {
+        setActorName('');
+        setSelectedAction('');
+        setCurrentPage(0);
+
+        setTimeout(() => {
+            fetchAuditLogs(0);
+        }, 0);
+    };
+
+    const getActionClass = (action: string) => {
+        switch (action) {
+            case 'CREATE':
+                return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+            case 'UPDATE':
+            case 'UPDATE_STATUS':
+                return 'bg-blue-100 text-blue-700 border-blue-200';
+            case 'DELETE':
+            case 'CANCEL_ORDER':
+                return 'bg-red-100 text-red-700 border-red-200';
+            case 'LOGIN':
+            case 'LOGOUT':
+                return 'bg-slate-100 text-slate-700 border-slate-200';
+            case 'CHECKOUT':
+                return 'bg-purple-100 text-purple-700 border-purple-200';
+            default:
+                return 'bg-slate-100 text-slate-700 border-slate-200';
+        }
+    };
+
+    const formatDate = (value?: string | null) => {
+        if (!value) return { date: '-', time: '-' };
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            const [rawDate, rawTime] = value.split('T');
+            return {
+                date: rawDate || value,
+                time: rawTime?.slice(0, 8) || '-',
+            };
+        }
+
+        return {
+            date: date.toLocaleDateString('vi-VN'),
+            time: date.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            }),
+        };
+    };
+
+    const handleViewDetail = (log: AuditLogResponse) => {
         toast.info(`${log.action}: ${log.target}`);
     };
 
-    const handleExportCsv = () => {
-        toast.success('Đã xuất báo cáo CSV');
-    };
+    if (!isMounted || isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-surface">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-on-surface-variant">
+                        Đang kiểm tra quyền truy cập...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthorized) {
+        return null;
+    }
 
     return (
-        <div className="bg-surface text-on-surface flex min-h-screen">
-            {/* Sidebar */}
+        <div className="flex h-screen bg-surface-ivory">
+            <main className="w-full pb-20 md:pb-0">
+                <div className="p-8 max-w-7xl mx-auto">
+                    {/* Title Section */}
+                    <section className="flex justify-between items-end mb-8">
+                        <div>
+                            <nav className="flex mb-2">
+                                <ol className="flex items-center space-x-2 text-[10px] uppercase tracking-widest text-slate-400 font-label">
+                                    <li>
+                                        <Link href="/admin" className="hover:text-primary">
+                                            Admin
+                                        </Link>
+                                    </li>
+                                    <li>
+                    <span className="material-symbols-outlined text-[12px]">
+                      chevron_right
+                    </span>
+                                    </li>
+                                    <li>
+                                        <span className="text-primary font-bold">Audit Log</span>
+                                    </li>
+                                </ol>
+                            </nav>
 
-            {/* Main */}
-            <main className="flex-grow flex flex-col min-w-0">
+                            <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
+                                Audit Log
+                            </h1>
 
-                {/* Content */}
-                <div className="ml-72 mt-16 p-12 px-24">
-                    {/* Page Header */}
-                    <div className="mb-10">
-                        <div className="flex items-baseline gap-4 mb-2">
-                            <h2 className="font-headline text-4xl font-extrabold text-primary tracking-tight">
-                                Nhật ký hệ thống
-                            </h2>
-                            <span className="text-secondary font-headline text-xl font-light opacity-50">
-                (Audit Log)
-              </span>
-                        </div>
-
-                        <p className="text-on-surface-variant max-w-2xl font-light leading-relaxed">
-                            Theo dõi và kiểm tra toàn bộ hoạt động của hệ thống. Dữ liệu ghi
-                            lại lịch sử thay đổi từ cấu hình sản phẩm đến quản lý người dùng
-                            để đảm bảo tính minh bạch và bảo mật.
-                        </p>
-                    </div>
-
-                    {/* Filters */}
-                    <section className="grid grid-cols-12 gap-6 mb-12">
-                        <div className="col-span-12 lg:col-span-8 bg-surface-container-low p-6 rounded-2xl flex flex-wrap items-center gap-6">
-                            <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">
-                  Thời gian
-                </span>
-
-                                <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-xl border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-sm text-secondary">
-                    calendar_today
-                  </span>
-                                    <input
-                                        className="bg-transparent border-none text-sm font-medium focus:ring-0 w-48 text-on-surface"
-                                        type="text"
-                                        value="16/05/2026 - 23/05/2026"
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">
-                  Người dùng
-                </span>
-
-                                <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-xl border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-sm text-secondary">
-                    person
-                  </span>
-
-                                    <select
-                                        value={adminFilter}
-                                        onChange={(e) => setAdminFilter(e.target.value)}
-                                        className="bg-transparent border-none text-sm font-medium focus:ring-0 w-40 text-on-surface"
-                                    >
-                                        <option value="ALL">Tất cả Admin</option>
-                                        <option value="Hoàng Nam">Hoàng Nam</option>
-                                        <option value="Minh Anh">Minh Anh</option>
-                                        <option value="Thúy Hạnh">Thúy Hạnh</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">
-                  Loại hành động
-                </span>
-
-                                <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-xl border border-outline-variant/10">
-                  <span className="material-symbols-outlined text-sm text-secondary">
-                    bolt
-                  </span>
-
-                                    <select
-                                        value={actionFilter}
-                                        onChange={(e) =>
-                                            setActionFilter(e.target.value as 'ALL' | AuditAction)
-                                        }
-                                        className="bg-transparent border-none text-sm font-medium focus:ring-0 w-32 text-on-surface"
-                                    >
-                                        <option value="ALL">Tất cả</option>
-                                        <option value="CREATE">CREATE</option>
-                                        <option value="UPDATE">UPDATE</option>
-                                        <option value="DELETE">DELETE</option>
-                                        <option value="LOGIN">LOGIN</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-span-12 lg:col-span-4 bg-primary text-white p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden">
-                            <div className="relative z-10">
-                                <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">
-                                    Dữ liệu hiện tại
-                                </p>
-
-                                <h3 className="font-headline text-3xl font-bold">
-                                    {filteredLogs.length}{' '}
-                                    <span className="text-sm font-normal opacity-70">
-                    Sự kiện
-                  </span>
-                                </h3>
-                            </div>
-
-                            <button
-                                onClick={handleExportCsv}
-                                className="relative z-10 w-full mt-4 bg-white/10 hover:bg-white/20 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-                            >
-                <span className="material-symbols-outlined text-sm">
-                  download
-                </span>
-                                Xuất báo cáo (CSV)
-                            </button>
-
-                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-secondary opacity-20 blur-3xl rounded-full"></div>
+                            <p className="mt-2 text-sm text-slate-500">
+                                Theo dõi thời gian, người thực hiện, hành động và đối tượng bị
+                                tác động trong hệ thống.
+                            </p>
                         </div>
                     </section>
 
-                    {/* Table */}
-                    <section className="bg-surface-container-lowest rounded-[2rem] overflow-hidden shadow-sm border border-outline-variant/10">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                <tr className="border-b border-outline-variant/10">
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                                        Thời gian
-                                    </th>
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                                        Quản trị viên
-                                    </th>
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                                        Hành động
-                                    </th>
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                                        Đối tượng tác động
-                                    </th>
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                                        Địa chỉ IP
-                                    </th>
-                                    <th className="px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant text-right">
-                                        Chi tiết
-                                    </th>
-                                </tr>
-                                </thead>
+                    {/* Filter */}
+                    <section className="mb-8 bg-white p-6 rounded-2xl border border-outline-variant/10 shadow-sm">
+                        <form
+                            onSubmit={handleSearch}
+                            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+                        >
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                    Người thực hiện
+                                </label>
+                                <input
+                                    value={actorName}
+                                    onChange={(e) => setActorName(e.target.value)}
+                                    className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                    placeholder="VD: Hoàng Nam"
+                                    type="text"
+                                />
+                            </div>
 
-                                <tbody className="divide-y divide-outline-variant/5">
-                                {filteredLogs.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-8 py-12 text-center text-on-surface-variant"
-                                        >
-                                            Không có nhật ký nào phù hợp.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredLogs.map((log) => (
+                            <div>
+                                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                    Hành động
+                                </label>
+                                <select
+                                    value={selectedAction}
+                                    onChange={(e) =>
+                                        setSelectedAction(e.target.value as AuditAction | '')
+                                    }
+                                    className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                >
+                                    <option value="">Tất cả</option>
+                                    <option value="CREATE">CREATE</option>
+                                    <option value="UPDATE">UPDATE</option>
+                                    <option value="DELETE">DELETE</option>
+                                    <option value="LOGIN">LOGIN</option>
+                                    <option value="LOGOUT">LOGOUT</option>
+                                    <option value="CHECKOUT">CHECKOUT</option>
+                                    <option value="CANCEL_ORDER">CANCEL_ORDER</option>
+                                    <option value="UPDATE_STATUS">UPDATE_STATUS</option>
+                                </select>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    className="h-11 flex-1 px-4 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-hover transition-colors"
+                                >
+                                    Lọc
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={handleReset}
+                                    className="h-11 px-4 rounded-lg border border-outline-variant text-slate-500 text-sm font-bold hover:bg-surface-container-low transition-colors"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    {/* Table */}
+                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-outline-variant/10">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                            <tr className="bg-surface-container-low border-b border-outline-variant/10">
+                                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                                    Thời gian
+                                </th>
+                                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                                    Người thực hiện
+                                </th>
+                                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                                    Hành động
+                                </th>
+                                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                                    Đối tượng tác động
+                                </th>
+                                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-slate-500 font-label font-bold">
+                                    Mô tả
+                                </th>
+                            </tr>
+                            </thead>
+
+                            <tbody className="divide-y divide-outline-variant/10">
+                            {isLoadingLogs ? (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-12 text-center text-slate-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                            Đang tải nhật ký hệ thống...
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : logs.length > 0 ? (
+                                logs.map((log) => {
+                                    const { date, time } = formatDate(log.performedAt);
+
+                                    return (
                                         <tr
                                             key={log.id}
-                                            className="hover:bg-surface-container-low/50 transition-colors"
+                                            className="hover:bg-surface-container/30 transition-colors group"
                                         >
-                                            <td className="px-8 py-4">
-                                                <p className="text-sm font-medium text-on-surface">
-                                                    {log.date}
-                                                </p>
-                                                <p className="text-[10px] text-on-surface-variant">
-                                                    {log.time}
-                                                </p>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <p className="font-bold text-blue-900">{date}</p>
+                                                <p className="text-xs text-slate-400">{time}</p>
                                             </td>
 
-                                            <td className="px-8 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center border border-outline-variant/20 font-bold text-xs">
-                                                        {log.adminName.charAt(0)}
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <div className="flex items-center gap-4">
+                                                    <div>
+                                                        <p className="font-bold text-blue-900">
+                                                            {log.actorName || 'Unknown'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-400">
+                                                            ID: {log.actorId || '-'}
+                                                        </p>
                                                     </div>
-                                                    <span className="text-sm font-semibold">
-                              {log.adminName}
-                            </span>
                                                 </div>
                                             </td>
 
-                                            <td className="px-8 py-4">
+                                            <td className="px-8 py-6">
                           <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${getActionClass(
+                              className={`inline-flex px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider ${getActionClass(
                                   log.action
                               )}`}
                           >
@@ -317,88 +335,99 @@ export default function AuditLogPage() {
                           </span>
                                             </td>
 
-                                            <td className="px-8 py-4">
-                                                <p className="text-sm font-medium">{log.target}</p>
-                                                <p className="text-[10px] text-on-surface-variant italic">
-                                                    {log.description}
+                                            <td className="px-8 py-6">
+                                                <p className="font-bold text-blue-900">
+                                                    {log.target}
                                                 </p>
                                             </td>
 
-                                            <td className="px-8 py-4 text-xs font-mono text-on-surface-variant">
-                                                {log.ipAddress}
-                                            </td>
+                                            <td className="px-8 py-6 min-w-[280px]">
+                                                <p className="text-sm text-slate-500">
+                                                    {log.description || '-'}
+                                                </p>
 
-                                            <td className="px-8 py-4 text-right">
-                                                <button
-                                                    onClick={() => handleViewDetail(log)}
-                                                    className="p-2 hover:bg-surface-container-high rounded-lg transition-colors text-secondary"
-                                                >
-                            <span className="material-symbols-outlined text-lg">
-                              visibility
-                            </span>
-                                                </button>
+                                                {log.ipAddress && (
+                                                    <p className="mt-1 text-xs text-slate-400">
+                                                        IP: {log.ipAddress}
+                                                    </p>
+                                                )}
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                                </tbody>
-                            </table>
-                        </div>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="px-8 py-12 text-center text-slate-500">
+                                        Không có nhật ký nào
+                                    </td>
+                                </tr>
+                            )}
+                            </tbody>
+                        </table>
 
                         {/* Pagination */}
-                        <div className="px-8 py-6 flex items-center justify-between bg-surface-container-low/30 border-t border-outline-variant/10">
-                            <p className="text-xs text-on-surface-variant">
-                                Hiển thị{' '}
-                                <span className="font-bold text-on-surface">
-                  {filteredLogs.length}
-                </span>{' '}
-                                trên{' '}
-                                <span className="font-bold text-on-surface">
-                  {MOCK_AUDIT_LOGS.length}
-                </span>{' '}
-                                hành động
+                        <div className="px-8 py-4 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
+                            <p className="text-xs text-slate-500">
+                                {logs.length} / {pageData?.totalElements ?? 0}
                             </p>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex gap-2">
                                 <button
-                                    disabled={currentPage === 1}
-                                    className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-on-surface-variant transition-colors disabled:opacity-40"
+                                    disabled={currentPage <= 0}
+                                    onClick={() => fetchAuditLogs(currentPage - 1)}
+                                    className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors disabled:opacity-50"
                                 >
-                  <span className="material-symbols-outlined">
+                  <span className="material-symbols-outlined text-sm">
                     chevron_left
                   </span>
                                 </button>
 
-                                {[1, 2, 3].map((page) => (
-                                    <button
-                                        key={page}
-                                        onClick={() => setCurrentPage(page)}
-                                        className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm ${
-                                            currentPage === page
-                                                ? 'bg-primary text-white'
-                                                : 'hover:bg-surface-container-high text-on-surface-variant'
-                                        }`}
-                                    >
-                                        {page}
-                                    </button>
-                                ))}
-
-                                <span className="px-2 text-on-surface-variant">...</span>
-
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-on-surface-variant font-bold text-sm">
-                                    32
+                                <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">
+                                    {currentPage + 1}
                                 </button>
 
-                                <button className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container-high text-on-surface-variant transition-colors">
-                  <span className="material-symbols-outlined">
+                                <button
+                                    disabled={pageData ? currentPage + 1 >= pageData.totalPages : true}
+                                    onClick={() => fetchAuditLogs(currentPage + 1)}
+                                    className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors disabled:opacity-50"
+                                >
+                  <span className="material-symbols-outlined text-sm">
                     chevron_right
                   </span>
                                 </button>
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </main>
+
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
+                <Link
+                    href="/admin"
+                    className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
+                >
+                    <span className="material-symbols-outlined">dashboard</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+                </Link>
+
+                <Link
+                    href="/admin/inventory"
+                    className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
+                >
+                    <span className="material-symbols-outlined">keyboard</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+                </Link>
+
+                <Link
+                    href="/admin/audit-log"
+                    className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-blue-900 font-bold"
+                >
+          <span className="material-symbols-outlined">
+            assignment_turned_in
+          </span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Logs</span>
+                </Link>
+            </nav>
         </div>
     );
 }
