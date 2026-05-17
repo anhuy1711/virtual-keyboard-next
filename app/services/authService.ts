@@ -91,40 +91,28 @@ export const loginAPI = async (
  * @param password - User password
  * @returns User object with id, username, email
  */
-export const registerAPI = async (
-  username: string,
-  password: string
-): Promise<any> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/user/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username,
-        password,
-      } as RegisterRequest),
-    });
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+}
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.message || `Register failed with status ${response.status}`
-      );
-    }
+export const registerAPI = async (request: RegisterRequest) => {
+  const response = await fetch("http://localhost:8080/user/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
 
-    const apiResponse: ApiResponse<any> = await response.json();
+  const data = await response.json();
 
-    if (!apiResponse.data) {
-      throw new Error("Invalid response format from server");
-    }
-
-    return apiResponse.data;
-  } catch (error) {
-    console.error("Register API error:", error);
-    throw error;
+  if (!response.ok || data.code !== 200) {
+    throw new Error(data.message || "Đăng ký thất bại");
   }
+
+  return data.data;
 };
 
 /**

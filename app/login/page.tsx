@@ -86,11 +86,11 @@ export default function LoginPage() {
             {/* Email Input */}
             <div className="form-group">
               <label htmlFor="username">
-                Email <span className="required">*</span>
+                Tên đăng nhập <span className="required">*</span>
               </label>
               <input
                 id="username"
-                type="email"
+                type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Email"

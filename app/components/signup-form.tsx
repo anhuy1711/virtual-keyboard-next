@@ -8,6 +8,7 @@ import "./signup-form.css";
 export default function SignupForm() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -122,6 +123,23 @@ export default function SignupForm() {
                 required
                 disabled={isLoading}
                 className="input-field"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="username">
+                Username <span className="required">*</span>
+              </label>
+
+              <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Nhập username"
+                  required
+                  disabled={isLoading}
+                  className="input-field"
               />
             </div>
 

@@ -10,6 +10,7 @@ import "../components/login-form.css";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +21,7 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!email || !password || !confirmPassword) {
+    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
       toast.warning("Vui lòng điền đầy đủ thông tin");
       return;
     }
@@ -38,7 +39,11 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const response = await registerAPI(email, password);
+      await registerAPI({
+        username: username.trim(),
+        email: email.trim(),
+        password,
+      });
 
       toast.success("Tạo tài khoản thành công!");
 
@@ -91,6 +96,23 @@ export default function SignupPage() {
                       required
                       disabled={isLoading}
                       className="input-field"
+                    />
+                  </div>
+
+                  {/* Username Input */}
+                  <div className="form-group">
+                    <label htmlFor="username">
+                      Username <span className="required">*</span>
+                    </label>
+                    <input
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="Nhập username"
+                        required
+                        disabled={isLoading}
+                        className="input-field"
                     />
                   </div>
 
