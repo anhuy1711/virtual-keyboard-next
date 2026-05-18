@@ -4,21 +4,24 @@ export interface CategoryResponse {
     description?: string | null;
 }
 
+export interface CategoryCreateRequest {
+    name: string;
+    description?: string;
+}
+
 export interface SimplePage<T> {
     content: T[];
+    totalElements: number;
     page: number;
     size: number;
-    totalElements: number;
     totalPages: number;
-    last?: boolean;
-    first?: boolean;
 }
 
 interface ApiResponse<T> {
     code: number;
     data: T;
+    message?: string;
 }
-
 const API_URL = "http://localhost:8080";
 
 export const getCategoriesAPI = async (
@@ -52,4 +55,44 @@ export const getCategoriesAPI = async (
     const result: ApiResponse<SimplePage<CategoryResponse>> = await response.json();
 
     return result.data;
+};
+
+export const createCategoryAPI = async (
+    request: CategoryCreateRequest
+): Promise<CategoryResponse> => {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`${API_URL}/categories/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(request),
+    });
+
+    const result: ApiResponse<CategoryResponse> = await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || 'Tạo danh mục thất bại');
+    }
+
+    return result.data;
+};
+
+export const deleteCategoryAPI = async (id: number): Promise<void> => {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`${API_URL}/categories/delete?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+        },
+    });
+
+    const result: ApiResponse<null> = await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || 'Xóa danh mục thất bại');
+    }
 };

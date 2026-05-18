@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getProductDetailAPI, updateProductAPI, CreateProductRequest } from '@/app/services/productService';
 import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
+import { uploadProductImageAPI } from '@/app/services/uploadService';
 
 interface OptionValue {
   id?: number;
@@ -97,6 +98,7 @@ export default function EditProductPage() {
   const [productType, setProductType] = useState('KIT');
   const [category, setCategory] = useState('Custom Mechanical');
   const [coverImage, setCoverImage] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const [specifications, setSpecifications] = useState<Specification[]>([]);
   const [addSpecInput, setAddSpecInput] = useState({ name: '', value: '' });
@@ -178,12 +180,30 @@ export default function EditProductPage() {
   const handleLogout = () => { logoutAPI(); toast.success('Đã đăng xuất!'); router.push('/'); };
 
   // ── media ─────────────────────────────────────────────────────────────────
-  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = async (
+      e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setCoverImage(ev.target?.result as string);
-      reader.readAsDataURL(file);
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh');
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+
+      const imageUrl = await uploadProductImageAPI(file);
+
+      setCoverImage(imageUrl);
+      toast.success('Tải ảnh lên thành công!');
+    } catch (error) {
+      console.error('Upload image error:', error);
+      toast.error('Tải ảnh lên thất bại');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -378,13 +398,62 @@ export default function EditProductPage() {
               </div>
               <div className="col-span-12 md:col-span-4">
                 <div className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
-                  <h3 className="text-label-md font-h3 text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Ảnh bìa</h3>
+                  <h3 className="text-label-md font-h3 text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">
+                    Ảnh bìa
+                  </h3>
+
                   <label className="relative aspect-square bg-surface-ivory border-2 border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center gap-2 group hover:border-secondary cursor-pointer transition-colors overflow-hidden">
-                    {coverImage && <img alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" src={coverImage} />}
-                    <span className="material-symbols-outlined text-h1 text-text-light group-hover:text-secondary z-10">add_photo_alternate</span>
-                    <span className="text-label-sm font-label-sm text-text-light group-hover:text-secondary z-10">Tải ảnh lên</span>
-                    <input type="file" accept="image/*" onChange={handleCoverImageUpload} className="hidden" />
+                    {coverImage && (
+                        <img
+                            alt="Preview"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            src={coverImage}
+                        />
+                    )}
+
+                    {!coverImage && (
+                        <>
+          <span className="material-symbols-outlined text-h1 text-text-light group-hover:text-secondary z-10">
+            add_photo_alternate
+          </span>
+
+                          <span className="text-label-sm font-label-sm text-text-light group-hover:text-secondary z-10">
+            Tải ảnh lên
+          </span>
+                        </>
+                    )}
+
+                    {isUploadingImage && (
+                        <div className="absolute inset-0 bg-white/70 flex flex-col items-center justify-center z-20">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                          <span className="text-sm text-primary font-semibold">
+            Đang tải ảnh...
+          </span>
+                        </div>
+                    )}
+
+                    {coverImage && !isUploadingImage && (
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+          <span className="text-white text-sm font-bold">
+            Bấm để đổi ảnh
+          </span>
+                        </div>
+                    )}
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                    />
                   </label>
+
+                  {coverImage && (
+                      <p className="text-xs text-text-light break-all">
+                        {coverImage}
+                      </p>
+                  )}
                 </div>
               </div>
             </section>

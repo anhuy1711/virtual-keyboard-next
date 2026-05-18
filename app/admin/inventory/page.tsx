@@ -27,6 +27,8 @@ export default function InventoryPage() {
   const [searchName, setSearchName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
   const [currentPage, setCurrentPage] = useState(0);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -103,6 +105,46 @@ export default function InventoryPage() {
     router.push('/');
   };
 
+  const handleConfirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+
+    try {
+      setIsDeletingProduct(true);
+
+      const token = localStorage.getItem('accessToken');
+
+      const res = await fetch(
+          `http://localhost:8080/products/delete?id=${productToDelete.id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const json = await res.json();
+
+      if (json.code !== 200) {
+        throw new Error(json.message || `API error: ${json.code}`);
+      }
+
+      toast.success('Xóa sản phẩm thành công!');
+
+      setProductToDelete(null);
+      fetchProducts(currentPage);
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      toast.error('Xóa sản phẩm thất bại');
+    } finally {
+      setIsDeletingProduct(false);
+    }
+  };
+
   if (!isMounted || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-surface">
@@ -150,7 +192,7 @@ export default function InventoryPage() {
               <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">Product Management</h1>
             </div>
             <div className="flex gap-4">
-              <Link href="/admin/create" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-lg hover:shadow-lg transition-all active:scale-95">
+              <Link href="/admin/create" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:shadow-lg transition-all active:scale-95">
                 <span className="material-symbols-outlined text-sm">add</span>
                 Add Product
               </Link>
@@ -234,39 +276,13 @@ export default function InventoryPage() {
                           </Link>
 
                           <button
-                              onClick={async () => {
-                                if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) return;
-
-                                try {
-                                  const token = localStorage.getItem("accessToken");
-
-                                  const res = await fetch(
-                                      `http://localhost:8080/products/delete?id=${product.id}`,
-                                      {
-                                        method: "DELETE",
-                                        headers: {
-                                          ...(token && { Authorization: `Bearer ${token}` }),
-                                        },
-                                      }
-                                  );
-
-                                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                                  const json = await res.json();
-                                  if (json.code !== 200) throw new Error(`API error: ${json.code}`);
-
-                                  toast.success("Xóa sản phẩm thành công!");
-                                  fetchProducts(currentPage);
-                                } catch (err) {
-                                  console.error("Error deleting product:", err);
-                                  toast.error("Xóa sản phẩm thất bại");
-                                }
-                              }}
+                              type="button"
+                              onClick={() => setProductToDelete(product)}
                               className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           >
-                <span className="material-symbols-outlined text-[18px]">
-                  delete
-                </span>
+  <span className="material-symbols-outlined text-[18px]">
+    delete
+  </span>
                           </button>
                         </td>
                       </tr>
@@ -303,6 +319,65 @@ export default function InventoryPage() {
           </div>
         </div>
       </main>
+
+      {productToDelete && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 px-4">
+            <div
+                className="rounded-2xl bg-white px-6 py-6 text-center shadow-xl"
+                style={{
+                  width: 'min(320px, calc(100vw - 32px))',
+                }}
+            >
+              {/* Icon đỏ */}
+              <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-100">
+        <span className="material-symbols-outlined text-[22px] text-red-500">
+          delete
+        </span>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-base font-bold text-slate-900">
+                Xác nhận xoá
+              </h2>
+
+              {/* Tên sản phẩm */}
+              <p className="mt-3 text-sm font-semibold text-blue-900 break-words">
+                {productToDelete.name}
+              </p>
+
+              {/* Buttons */}
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                    type="button"
+                    onClick={() => setProductToDelete(null)}
+                    disabled={isDeletingProduct}
+                    className="h-10 rounded-lg bg-slate-100 text-sm font-semibold text-slate-600 disabled:opacity-50"
+                >
+                  Huỷ
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleConfirmDeleteProduct}
+                    disabled={isDeletingProduct}
+                    style={{
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f87171';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#ef4444';
+                    }}
+                    className="h-10 rounded-lg text-sm font-bold disabled:opacity-50"
+                >
+                  {isDeletingProduct ? 'Đang xoá...' : 'Xác nhận'}
+                </button>
+              </div>
+            </div>
+          </div>
+      )}
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">

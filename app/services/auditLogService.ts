@@ -56,7 +56,7 @@ export const getAuditLogsAPI = async (
     if (params.to) query.append('to', params.to);
 
     query.append('page', String(params.page ?? 0));
-    query.append('size', String(params.size ?? 20));
+    query.append('size', String(params.size ?? 10));
 
     const response = await fetch(`${API_URL}/audit-logs?${query.toString()}`, {
         method: 'GET',

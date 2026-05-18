@@ -12,27 +12,27 @@ const menuItems = [
         icon: 'dashboard',
     },
     {
-        label: 'Inventory',
+        label: 'Kho',
         href: '/admin/inventory',
         icon: 'inventory_2',
     },
     {
-        label: 'Categories',
+        label: 'Danh mục',
         href: '/admin/categories',
         icon: 'category',
     },
     {
-        label: 'Orders',
+        label: 'Đơn hàng',
         href: '/admin/orders',
         icon: 'shopping_cart',
     },
     {
-        label: 'Users',
+        label: 'Người dùng ',
         href: '/admin/users',
         icon: 'group',
     },
     {
-        label: 'Audit Log',
+        label: 'Nhật ký',
         href: '/admin/audit-log',
         icon: 'assignment_turned_in',
     },
@@ -71,10 +71,10 @@ export default function AdminSidebar() {
 
                 <div className="min-w-0">
                     <h1 className="font-headline text-lg font-bold tracking-tight text-primary leading-tight truncate">
-                        Digital Atelier
+                        Clack Keebs
                     </h1>
                     <p className="text-[10px] text-on-surface-variant opacity-70 uppercase tracking-wide">
-                        Management Console
+                        CMS
                     </p>
                 </div>
             </div>
@@ -113,31 +113,33 @@ export default function AdminSidebar() {
             <div className="mt-auto flex flex-col gap-1 pt-5 border-t border-outline-variant/10">
                 <Link
                     href="/"
-                    className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-3 rounded-lg font-bold text-sm mb-3 shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
+                    className="w-full bg-primary text-white py-3 rounded-lg font-bold text-sm mb-3 shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
                 >
                     <span className="material-symbols-outlined text-[18px]">home</span>
                     <span>Trang chủ</span>
                 </Link>
 
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors"
-                >
-                    <span className="material-symbols-outlined text-[20px]">settings</span>
-                    <span className="text-[12px] font-semibold tracking-wide uppercase">
-            Settings
-          </span>
-                </Link>
+
 
                 <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors text-left"
+                    style={{
+                        backgroundColor: "#fef2f2",
+                        color: "#dc2626",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#fee2e2";
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#fef2f2";
+                    }}
+                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors text-left"
                 >
                     <span className="material-symbols-outlined text-[20px]">logout</span>
                     <span className="text-[12px] font-semibold tracking-wide uppercase">
-            Log Out
-          </span>
+    Đăng xuất
+  </span>
                 </button>
             </div>
         </aside>

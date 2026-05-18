@@ -415,7 +415,7 @@ export default function CartPage() {
         </div>
 
         {/* Checkout Button */}
-        <button onClick={() => router.push('/checkout')} className="w-full py-5 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded font-bold text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
+        <button onClick={() => router.push('/checkout')} className="w-full py-5 bg-primary text-on-primary rounded font-bold text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
           Proceed to Checkout
         </button>
       </div>

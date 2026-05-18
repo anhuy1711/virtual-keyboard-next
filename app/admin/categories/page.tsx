@@ -6,7 +6,13 @@ import { jwtDecode } from 'jwt-decode';
 import Link from 'next/link';
 import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
-import { getCategoriesAPI, CategoryResponse } from '@/app/services/categoryService';
+import {
+    CategoryResponse,
+    createCategoryAPI,
+    deleteCategoryAPI,
+    getCategoriesAPI,
+    SimplePage,
+} from '@/app/services/categoryService';
 
 interface Category {
     id: number;
@@ -29,6 +35,44 @@ export default function CategoriesPage() {
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
     const [searchName, setSearchName] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [newCategoryDescription, setNewCategoryDescription] = useState('');
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<CategoryResponse | null>(null);
+    const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+
+
+    const handleCreateCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!newCategoryName.trim()) {
+            toast.warning('Vui lòng nhập tên danh mục');
+            return;
+        }
+
+        try {
+            setIsCreatingCategory(true);
+
+            await createCategoryAPI({
+                name: newCategoryName.trim(),
+                description: newCategoryDescription.trim() || undefined,
+            });
+
+            toast.success('Tạo danh mục thành công!');
+
+            setIsCreateModalOpen(false);
+            setNewCategoryName('');
+            setNewCategoryDescription('');
+
+            fetchCategories(currentPage);
+        } catch (error) {
+            console.error('Create category error:', error);
+            toast.error('Tạo danh mục thất bại');
+        } finally {
+            setIsCreatingCategory(false);
+        }
+    };
 
     useEffect(() => {
         setIsMounted(true);
@@ -92,6 +136,32 @@ export default function CategoriesPage() {
         fetchCategories(0);
     };
 
+    const openDeleteCategoryModal = (category: CategoryResponse) => {
+        setCategoryToDelete(category);
+    };
+
+    const handleConfirmDeleteCategory = async () => {
+        if (!categoryToDelete) return;
+
+        try {
+            setIsDeletingCategory(true);
+
+            await deleteCategoryAPI(categoryToDelete.id);
+
+            toast.success('Xóa danh mục thành công!');
+
+            setCategoryToDelete(null);
+            fetchCategories(currentPage);
+        } catch (error) {
+            console.error('Delete category error:', error);
+            toast.error(
+                error instanceof Error ? error.message : 'Xóa danh mục thất bại'
+            );
+        } finally {
+            setIsDeletingCategory(false);
+        }
+    };
+
     const handleLogout = () => {
         logoutAPI();
         toast.success('Đã đăng xuất!');
@@ -113,7 +183,10 @@ export default function CategoriesPage() {
         return null;
     }
 
+
+
     return (
+
         <div className="flex h-screen bg-surface-ivory">
             {/* Main Content */}
             <main className="w-full pb-20 md:pb-0">
@@ -147,7 +220,11 @@ export default function CategoriesPage() {
                         </div>
 
                         <div className="flex gap-4">
-                            <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-primary to-primary-container rounded-lg hover:shadow-lg transition-all active:scale-95">
+                            <button
+                                type="button"
+                                onClick={() => setIsCreateModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary-hover transition-all active:scale-95"
+                            >
                                 <span className="material-symbols-outlined text-sm">add</span>
                                 Add Category
                             </button>
@@ -251,13 +328,13 @@ export default function CategoriesPage() {
                                             </button>
 
                                             <button
-                                                onClick={() => {
-                                                    if (!confirm(`Bạn có chắc muốn xóa danh mục "${category.name}"?`)) return;
-                                                    toast.warn('Chưa tích hợp API xóa danh mục');
-                                                }}
-                                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                                type="button"
+                                                onClick={() => openDeleteCategoryModal(category)}
+                                                className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                             >
-                                                <span className="material-symbols-outlined">delete</span>
+  <span className="material-symbols-outlined text-[18px]">
+    delete
+  </span>
                                             </button>
                                         </td>
                                     </tr>
@@ -306,6 +383,140 @@ export default function CategoriesPage() {
                 </div>
             </main>
 
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
+                    <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-outline-variant/10 overflow-hidden animate-fadeIn">
+                        <div className="px-6 py-5 border-b border-outline-variant/10 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-extrabold text-blue-900">
+                                    Tạo danh mục mới
+                                </h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsCreateModalOpen(false)}
+                                disabled={isCreatingCategory}
+                                className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateCategory}>
+                            <div className="px-6 pb-6 space-y-4">
+                                <div>
+                                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                        Tên danh mục <span className="text-red-500">*</span>
+                                    </label>
+
+                                    <input
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        disabled={isCreatingCategory}
+                                        className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                        placeholder="VD: Switch"
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                        Mô tả
+                                    </label>
+
+                                    <textarea
+                                        value={newCategoryDescription}
+                                        onChange={(e) => setNewCategoryDescription(e.target.value)}
+                                        disabled={isCreatingCategory}
+                                        className="w-full min-h-28 px-4 py-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                                        placeholder="Mô tả ..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4 border-t border-outline-variant/10 flex justify-end gap-3 bg-surface-container-low">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreateModalOpen(false)}
+                                    disabled={isCreatingCategory}
+                                    className="px-5 py-2 rounded-lg border border-outline-variant text-slate-600 text-sm font-bold hover:bg-white transition-colors disabled:opacity-50"
+                                >
+                                    Hủy
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    disabled={isCreatingCategory}
+                                    className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-hover transition-colors disabled:opacity-50"
+                                >
+                                    {isCreatingCategory ? 'Đang tạo...' : 'Tạo danh mục'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {categoryToDelete && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 px-4">
+                    <div
+                        className="rounded-2xl bg-white px-6 py-6 text-center shadow-xl"
+                        style={{
+                            width: "min(320px, calc(100vw - 32px))",
+                        }}
+                    >
+                        {/* Icon đỏ */}
+                        <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-100">
+        <span className="material-symbols-outlined text-[22px] text-red-500">
+          delete
+        </span>
+                        </div>
+
+                        {/* Title */}
+                        <h2 className="text-base font-bold text-slate-900">
+                            Xác nhận xoá
+                        </h2>
+
+                        {/* Tên danh mục */}
+                        <p className="mt-3 text-sm font-semibold text-blue-900 break-words">
+                            {categoryToDelete.name}
+                        </p>
+
+                        {/* Buttons */}
+                        <div className="mt-6 grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setCategoryToDelete(null)}
+                                disabled={isDeletingCategory}
+                                className="h-10 rounded-lg bg-slate-100 text-sm font-semibold text-slate-600 disabled:opacity-50"
+                            >
+                                Huỷ
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleConfirmDeleteCategory}
+                                disabled={isDeletingCategory}
+                                style={{
+                                    backgroundColor: '#ef4444',
+                                    color: '#ffffff',
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#f87171';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#ef4444';
+                                }}
+                                className="h-10 rounded-lg text-sm font-bold disabled:opacity-50"
+                            >
+                                {isDeletingCategory ? 'Đang xoá...' : 'Xác nhận'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Mobile Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
                 <Link href="/admin" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400">
@@ -329,5 +540,6 @@ export default function CategoriesPage() {
                 </Link>
             </nav>
         </div>
+
     );
 }

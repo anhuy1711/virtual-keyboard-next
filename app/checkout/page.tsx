@@ -341,7 +341,7 @@ export default function CheckoutPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting || isLoadingCart || !cart || cart.items.length === 0}
-                                    className="group relative px-10 h-16 bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-bold rounded-md flex items-center justify-center gap-3 overflow-hidden transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="group relative px-10 h-16 bg-primary text-on-primary font-headline font-bold rounded-md flex items-center justify-center gap-3 overflow-hidden transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <span>{isSubmitting ? 'Đang đặt hàng...' : 'Đặt hàng'}</span>
                                     <span className="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">

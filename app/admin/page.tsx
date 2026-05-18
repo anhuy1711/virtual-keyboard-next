@@ -4,15 +4,33 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import Link from 'next/link';
-import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
+  DashboardResponse,
+  getDashboardAPI,
+} from '@/app/services/dashboardService';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const pathname = usePathname();
+
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
+
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -32,10 +50,7 @@ export default function AdminDashboard() {
       const decoded = jwtDecode(token) as { role?: string };
       const userRole = decoded.role?.toUpperCase();
 
-      console.log('Admin check - Decoded token:', { role: userRole });
-
       if (userRole !== 'ADMIN') {
-        console.log('User is not admin, redirecting to home');
         router.push('/');
         return;
       }
@@ -49,14 +64,86 @@ export default function AdminDashboard() {
     }
   }, [router, isMounted]);
 
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    fetchDashboard();
+  }, [isAuthorized]);
+
+  const fetchDashboard = async () => {
+    try {
+      setIsLoadingDashboard(true);
+
+      const data = await getDashboardAPI();
+
+      setDashboard(data);
+    } catch (error) {
+      console.error('Dashboard error:', error);
+      toast.error('Không thể tải dữ liệu dashboard');
+    } finally {
+      setIsLoadingDashboard(false);
+    }
+  };
+
+  const isActive = (path: string) => pathname === path;
+
+  const formatCurrency = (value?: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
+
+  const formatDate = (value?: string) => {
+    if (!value) return '-';
+
+    return new Date(value).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'PENDING':
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'CONFIRMED':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'SHIPPING':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-700 border-red-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const revenueData =
+      dashboard?.revenueByMonth?.map((item) => ({
+        month: item.month,
+        revenue: Number(item.revenue || 0),
+      })) || [];
+
+  const orderStatusData =
+      dashboard?.ordersByStatus?.map((item) => ({
+        status: item.status,
+        value: Number(item.value || 0),
+      })) || [];
+
   if (!isMounted || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-on-surface-variant">Đang kiểm tra quyền truy cập...</p>
+        <div className="flex items-center justify-center min-h-screen bg-surface">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-on-surface-variant">
+              Đang kiểm tra quyền truy cập...
+            </p>
+          </div>
         </div>
-      </div>
     );
   }
 
@@ -64,160 +151,402 @@ export default function AdminDashboard() {
     return null;
   }
 
-  const handleLogout = () => {
-    logoutAPI();
-    toast.success('Đã đăng xuất!');
-    router.push('/');
-  };
-
-  const isActive = (path: string) => pathname === path;
-
-  // Mock stats data
-  const stats = [
-    { label: 'Total Users', value: '2,842', change: '+12%', icon: 'group', positive: true },
-    { label: 'Monthly Revenue', value: '$42,190', change: '+8.4%', icon: 'payments', positive: true },
-    { label: 'Inventory Value', value: '$128,400', change: 'Stable', icon: 'inventory_2', positive: true },
-  ];
-
-  const chartData = [40, 65, 55, 85, 70, 45, 95, 55, 75, 100, 80];
-  const maxValue = Math.max(...chartData);
-
-  const recentActivities = [
-    { id: 1, type: 'order', title: 'New order #8291', desc: 'Custom GMK Keycap Set • 2 mins ago', color: 'bg-secondary' },
-    { id: 2, type: 'alert', title: 'Inventory Alert', desc: 'Lubricant Krytox 205g0 is low • 45 mins ago', color: 'bg-orange-400' },
-    { id: 3, type: 'user', title: 'User Verified', desc: 'Alexander M. updated profile • 2 hrs ago', color: 'bg-emerald-400' },
-    { id: 4, type: 'order', title: 'New order #8290', desc: 'Tofu60 Walnut Edition • 5 hrs ago', color: 'bg-secondary' },
-  ];
-
   return (
-    <div className="flex h-screen bg-surface-ivory">
-      {/* Sidebar */}
-
-      {/* Main Content */}
-      <main className="w-full pb-20 md:pb-0">
-        {/* Top Header */}
-
-        {/* Dashboard Content */}
-        <div className="p-8 max-w-7xl mx-auto">
-          {/* Greeting & Date */}
-          <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h2 className="font-h1 text-h1 text-primary">Atelier Overview</h2>
-              <p className="font-body-md text-text-secondary mt-1">Status check for Elite Keyboards Workshop</p>
-            </div>
-            <div className="bg-surface-container px-4 py-2 rounded-lg flex items-center gap-3">
-              <span className="material-symbols-outlined text-secondary">calendar_today</span>
-              <span className="font-label-md text-label-md text-secondary">October 24, 2023</span>
-            </div>
-          </div>
-
-          {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl border border-surface-container-highest shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <span className="material-symbols-outlined text-blue-600" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {stat.icon}
-                    </span>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 ${stat.positive ? 'text-emerald-600 bg-emerald-50' : 'text-slate-600 bg-slate-50'}`}>
-                    {stat.change}
-                    <span className="material-symbols-outlined text-xs">{stat.positive ? 'arrow_upward' : 'horizontal_rule'}</span>
-                  </span>
-                </div>
-                <p className="font-label-md text-label-md text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                <h3 className="font-h2 text-h2 text-blue-900 mt-1">{stat.value}</h3>
-              </div>
-            ))}
-          </div>
-
-          {/* Charts and Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            {/* Chart */}
-            <div className="lg:col-span-2 bg-white p-8 rounded-xl border border-surface-container-highest shadow-sm">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h4 className="font-h3 text-h3 text-blue-900">Revenue Performance</h4>
-                  <p className="font-body-sm text-slate-500">Weekly breakdown of orders vs returns</p>
-                </div>
-                <select className="bg-surface-container-low border-none rounded-lg font-label-sm text-label-sm focus:ring-secondary px-3 py-1.5">
-                  <option>Last 7 Days</option>
-                  <option>Last 30 Days</option>
-                </select>
+      <div className="flex h-screen bg-surface-ivory">
+        <main className="w-full pb-20 md:pb-0 overflow-auto">
+          <div className="admin-page space-y-6">
+            {/* Header */}
+            <section className="admin-section-header">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                  Admin Overview
+                </p>
+                <h1 className="admin-title mt-2">Dashboard</h1>
+                <p className="admin-subtitle">
+                  Tổng quan doanh thu, đơn hàng, sản phẩm và khách hàng trong hệ
+                  thống.
+                </p>
               </div>
 
-              <div className="h-64 flex items-end justify-between gap-2 px-2 relative">
-                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                  <div className="border-t border-slate-100 w-full"></div>
-                  <div className="border-t border-slate-100 w-full"></div>
-                  <div className="border-t border-slate-100 w-full"></div>
-                  <div className="border-t border-slate-100 w-full"></div>
-                </div>
-
-                {chartData.map((value, index) => (
-                  <div key={index} className="flex-1 bg-surface-container rounded-t-sm hover:bg-secondary-container transition-colors relative group cursor-pointer" style={{ height: `${(value / maxValue) * 100}%` }}>
-                    <div className="bg-secondary w-full opacity-50 rounded-t-sm" style={{ height: `${(value / maxValue) * 60}%`, position: 'absolute', bottom: 0 }}></div>
-                    {value === 100 && (
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] px-2 py-1 rounded whitespace-nowrap font-bold">$12.4k</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-between mt-6 px-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                <span>Aug 2023</span>
-                <span>Jul 2024</span>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white p-8 rounded-xl border border-surface-container-highest shadow-sm">
-              <h4 className="font-h3 text-h3 text-blue-900 mb-6">Recent Activity</h4>
-              <div className="space-y-6">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex gap-4">
-                    <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${activity.color}`}></div>
-                    <div>
-                      <p className="font-label-md text-label-md text-on-surface">{activity.title}</p>
-                      <p className="font-body-sm text-text-light text-xs">{activity.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full mt-8 py-2 border border-outline text-slate-600 rounded-lg font-label-md hover:bg-slate-50 transition-colors">
-                View All Logs
+              <button
+                  type="button"
+                  onClick={fetchDashboard}
+                  disabled={isLoadingDashboard}
+                  className="admin-btn-secondary"
+              >
+              <span className="material-symbols-outlined text-[18px]">
+                refresh
+              </span>
+                {isLoadingDashboard ? 'Đang tải...' : 'Làm mới'}
               </button>
-            </div>
+            </section>
+
+            {isLoadingDashboard && !dashboard ? (
+                <div className="admin-card p-12 text-center text-slate-500">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+                  Đang tải dữ liệu dashboard...
+                </div>
+            ) : (
+                <>
+                  {/* Stats */}
+                  <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div className="admin-card p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">
+                            Doanh thu
+                          </p>
+                          <h2 className="mt-3 text-2xl font-extrabold text-blue-900">
+                            {formatCurrency(dashboard?.totalRevenue)}
+                          </h2>
+                        </div>
+
+                        <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                      <span className="material-symbols-outlined">
+                        payments
+                      </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="admin-card p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">
+                            Đơn hàng
+                          </p>
+                          <h2 className="mt-3 text-2xl font-extrabold text-blue-900">
+                            {dashboard?.totalOrders ?? 0}
+                          </h2>
+                        </div>
+
+                        <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
+                      <span className="material-symbols-outlined">
+                        shopping_cart
+                      </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="admin-card p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">
+                            Sản phẩm
+                          </p>
+                          <h2 className="mt-3 text-2xl font-extrabold text-blue-900">
+                            {dashboard?.totalProducts ?? 0}
+                          </h2>
+                        </div>
+
+                        <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                      <span className="material-symbols-outlined">
+                        inventory_2
+                      </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="admin-card p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">
+                            Khách hàng
+                          </p>
+                          <h2 className="mt-3 text-2xl font-extrabold text-blue-900">
+                            {dashboard?.totalUsers ?? 0}
+                          </h2>
+                        </div>
+
+                        <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                          <span className="material-symbols-outlined">group</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Charts */}
+                  <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div className="admin-card p-5 xl:col-span-2">
+                      <div className="flex items-center justify-between mb-5">
+                        <div>
+                          <h3 className="text-lg font-bold text-blue-900">
+                            Doanh thu theo tháng
+                          </h3>
+                          <p className="text-sm text-slate-500">
+                            Tổng doanh thu từ các đơn hàng đã hoàn thành.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="h-80">
+                        {revenueData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={revenueData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                                <YAxis
+                                    tick={{ fontSize: 12 }}
+                                    tickFormatter={(value) => `${value / 1000000}tr`}
+                                />
+                                <Tooltip
+                                    formatter={(value: number) => [
+                                      formatCurrency(value),
+                                      'Doanh thu',
+                                    ]}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="revenue"
+                                    strokeWidth={3}
+                                    dot={{ r: 4 }}
+                                    activeDot={{ r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-slate-500">
+                              Chưa có dữ liệu doanh thu.
+                            </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="admin-card p-5">
+                      <h3 className="text-lg font-bold text-blue-900 mb-1">
+                        Trạng thái đơn hàng
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-5">
+                        Số lượng đơn hàng theo từng trạng thái.
+                      </p>
+
+                      <div className="h-80">
+                        {orderStatusData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={orderStatusData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis
+                                    dataKey="status"
+                                    tick={{ fontSize: 11 }}
+                                    interval={0}
+                                />
+                                <YAxis tick={{ fontSize: 12 }} />
+                                <Tooltip />
+                                <Bar dataKey="value" radius={[8, 8, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-slate-500">
+                              Chưa có dữ liệu đơn hàng.
+                            </div>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Tables */}
+                  <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Recent Orders */}
+                    <div className="admin-table-wrapper">
+                      <div className="px-6 py-4 border-b border-outline-variant/10 flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-blue-900">
+                          Đơn hàng gần đây
+                        </h3>
+
+                        <Link
+                            href="/admin/orders"
+                            className="text-sm font-bold text-blue-700 hover:underline"
+                        >
+                          Xem tất cả
+                        </Link>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="admin-table">
+                          <thead className="admin-table-head">
+                          <tr>
+                            <th className="admin-table-th">Mã đơn</th>
+                            <th className="admin-table-th">User</th>
+                            <th className="admin-table-th text-right">
+                              Tổng tiền
+                            </th>
+                            <th className="admin-table-th text-right">
+                              Trạng thái
+                            </th>
+                          </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-outline-variant/10">
+                          {dashboard?.recentOrders?.length ? (
+                              dashboard.recentOrders.map((order) => (
+                                  <tr key={order.id} className="admin-table-row">
+                                    <td className="admin-table-td">
+                                      <div>
+                                        <p className="font-bold text-blue-900">
+                                          #{order.id}
+                                        </p>
+                                        <p className="text-xs text-slate-400">
+                                          {formatDate(order.createdAt)}
+                                        </p>
+                                      </div>
+                                    </td>
+
+                                    <td className="admin-table-td text-sm text-slate-700">
+                                      User #{order.userId}
+                                    </td>
+
+                                    <td className="admin-table-td text-sm text-right font-semibold">
+                                      {formatCurrency(order.total)}
+                                    </td>
+
+                                    <td className="admin-table-td text-right">
+                                <span
+                                    className={`status-badge ${getStatusClass(
+                                        order.status
+                                    )}`}
+                                >
+                                  {order.status}
+                                </span>
+                                    </td>
+                                  </tr>
+                              ))
+                          ) : (
+                              <tr>
+                                <td
+                                    colSpan={4}
+                                    className="px-6 py-10 text-center text-slate-500"
+                                >
+                                  Chưa có đơn hàng gần đây.
+                                </td>
+                              </tr>
+                          )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Top Products */}
+                    <div className="admin-table-wrapper">
+                      <div className="px-6 py-4 border-b border-outline-variant/10 flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-blue-900">
+                          Sản phẩm bán chạy
+                        </h3>
+
+                        <Link
+                            href="/admin/inventory"
+                            className="text-sm font-bold text-blue-700 hover:underline"
+                        >
+                          Xem kho hàng
+                        </Link>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="admin-table">
+                          <thead className="admin-table-head">
+                          <tr>
+                            <th className="admin-table-th">Sản phẩm</th>
+                            <th className="admin-table-th text-right">Đã bán</th>
+                            <th className="admin-table-th text-right">
+                              Doanh thu
+                            </th>
+                          </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-outline-variant/10">
+                          {dashboard?.topProducts?.length ? (
+                              dashboard.topProducts.map((product) => (
+                                  <tr
+                                      key={product.productId}
+                                      className="admin-table-row"
+                                  >
+                                    <td className="admin-table-td">
+                                      <div>
+                                        <p className="font-bold text-blue-900">
+                                          {product.productName}
+                                        </p>
+                                        <p className="text-xs text-slate-400">
+                                          ID: {product.productId}
+                                        </p>
+                                      </div>
+                                    </td>
+
+                                    <td className="admin-table-td text-right text-sm font-semibold">
+                                      {product.sold}
+                                    </td>
+
+                                    <td className="admin-table-td text-right text-sm font-semibold">
+                                      {formatCurrency(product.revenue)}
+                                    </td>
+                                  </tr>
+                              ))
+                          ) : (
+                              <tr>
+                                <td
+                                    colSpan={3}
+                                    className="px-6 py-10 text-center text-slate-500"
+                                >
+                                  Chưa có dữ liệu sản phẩm bán chạy.
+                                </td>
+                              </tr>
+                          )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </section>
+                </>
+            )}
           </div>
+        </main>
 
-          {/* Product Spotlight */}
+        {/* Mobile Navigation */}
+        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
+          <Link
+              href="/admin"
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+                  isActive('/admin') ? 'text-blue-900 font-bold' : 'text-slate-400'
+              }`}
+          >
+            <span className="material-symbols-outlined">dashboard</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+          </Link>
 
-        </div>
-      </main>
+          <Link
+              href="/admin/inventory"
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+                  isActive('/admin/inventory')
+                      ? 'text-blue-900 font-bold'
+                      : 'text-slate-400'
+              }`}
+          >
+            <span className="material-symbols-outlined">keyboard</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+          </Link>
 
-      {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
-        <Link href="/admin" className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${isActive('/admin') ? 'text-blue-900 font-bold' : 'text-slate-400'}`}>
-          <span className="material-symbols-outlined">dashboard</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
-        </Link>
-        <Link href="/admin/inventory" className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${isActive('/admin/inventory') ? 'text-blue-900 font-bold' : 'text-slate-400'}`}>
-          <span className="material-symbols-outlined">keyboard</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
-        </Link>
-        <Link href="#" className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg">
-          <span className="material-symbols-outlined">shopping_cart</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
-        </Link>
-        <Link href="#" className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg">
-          <span className="material-symbols-outlined">group</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Users</span>
-        </Link>
-      </nav>
-    </div>
+          <Link
+              href="/admin/orders"
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+                  isActive('/admin/orders')
+                      ? 'text-blue-900 font-bold'
+                      : 'text-slate-400'
+              }`}
+          >
+            <span className="material-symbols-outlined">shopping_cart</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
+          </Link>
+
+          <Link
+              href="/admin/users"
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
+                  isActive('/admin/users')
+                      ? 'text-blue-900 font-bold'
+                      : 'text-slate-400'
+              }`}
+          >
+            <span className="material-symbols-outlined">group</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Users</span>
+          </Link>
+        </nav>
+      </div>
   );
 }
-
-
-

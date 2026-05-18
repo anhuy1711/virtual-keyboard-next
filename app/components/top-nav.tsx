@@ -84,7 +84,7 @@ export default function TopNav() {
       <div className="navbar-container">
         {/* Logo */}
         <div className="navbar-brand">
-          <h1>Virtual Keyboard</h1>
+          <h1>Clack Keebs</h1>
         </div>
 
         {/* Desktop Menu */}
@@ -114,7 +114,7 @@ export default function TopNav() {
           )}
 
           {/* Admin Button - Only show if user is admin */}
-          {isLoggedIn && userRole === "admin" && (
+          {isLoggedIn && userRole === "ADMIN" && (
             <Link href="/admin" className="btn-admin" title="Admin Panel">
               <i className="fas fa-shield-alt"></i> Admin
             </Link>

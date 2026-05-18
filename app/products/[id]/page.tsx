@@ -390,7 +390,7 @@ export default function ProductDetailPage() {
                   matchingSku.quantity <= 0 ||
                   isAddingToCart
                 }
-                className="w-full py-6 bg-linear-to-r from-primary to-primary-container text-on-primary rounded-md text-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-6 bg-primary text-on-primary rounded-md text-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isAddingToCart ? 'Adding...' : 'Add to Cart'}
               </button>
