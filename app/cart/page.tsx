@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+import {updateCartItemQuantityAPI} from "@/app/services/cartService";
 
 interface CartItemOption {
   name: string;
@@ -49,6 +51,59 @@ export default function CartPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
   const router = useRouter();
+  const [quantityInputs, setQuantityInputs] = useState<Record<number, string>>({});
+  const formatCurrency = (value?: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
+
+  const handleQuantityInputChange = (itemId: number, value: string) => {
+    // Cho phép xoá trắng input
+    if (value === '') {
+      setQuantityInputs((prev) => ({
+        ...prev,
+        [itemId]: '',
+      }));
+      return;
+    }
+
+    // Chỉ cho nhập số
+    if (!/^\d+$/.test(value)) return;
+
+    setQuantityInputs((prev) => ({
+      ...prev,
+      [itemId]: value,
+    }));
+  };
+
+  const handleQuantityInputBlur = (itemId: number, currentQuantity: number) => {
+    const rawValue = quantityInputs[itemId];
+
+    // Nếu xoá trắng rồi blur thì trả về quantity cũ
+    if (!rawValue) {
+      setQuantityInputs((prev) => {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      });
+      return;
+    }
+
+    const newQuantity = Math.max(1, Number(rawValue));
+
+    if (newQuantity !== currentQuantity) {
+      updateQuantity(itemId, newQuantity);
+    }
+
+    setQuantityInputs((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+  };
 
   const fetchCart = useCallback(async () => {
     try {
@@ -81,38 +136,42 @@ export default function CartPage() {
     fetchCart();
   }, [fetchCart]);
 
-  const updateQuantity = async (id: number, newQuantity: number) => {
-    if (!cart || newQuantity <= 0) return;
+  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
+    if (newQuantity < 1 || !cart) return;
 
-    // Optimistic UI
-    setCart({
-      ...cart,
-      items: cart.items.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
-      ),
-    });
+    const oldCart = cart;
 
     try {
-      const token = localStorage.getItem("accessToken");
+      setCart((prev) => {
+        if (!prev) return prev;
 
-      const res = await fetch(`http://localhost:8080/cart/items/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ quantity: newQuantity }),
+        const newItems = prev.items.map((item) =>
+            item.id === cartItemId
+                ? { ...item, quantity: newQuantity }
+                : item
+        );
+
+        const newTotalPrice = newItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+        );
+
+        return {
+          ...prev,
+          items: newItems,
+          totalPrice: newTotalPrice,
+        };
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await updateCartItemQuantityAPI(cartItemId, newQuantity);
+    } catch (error) {
+      setCart(oldCart);
 
-      const json = await res.json();
-      if (json.code !== 200) throw new Error(`API error: ${json.code}`);
-
-    } catch (err) {
-      console.error("Error updating quantity:", err);
-      // Rollback nếu API thất bại
-      fetchCart();
+      toast.error(
+          error instanceof Error
+              ? error.message
+              : "Cập nhật số lượng thất bại"
+      );
     }
   };
 
@@ -255,7 +314,7 @@ export default function CartPage() {
                             </p>
                           </div>
                           <p className="text-xl font-bold text-primary tracking-tight">
-                            ${item.price.toFixed(2)}
+                            {formatCurrency(item.price)}
                           </p>
                         </div>
 
@@ -263,15 +322,29 @@ export default function CartPage() {
                         <div className="flex items-center gap-8 mt-6">
                           <div className="flex items-center bg-surface-container rounded p-1 border border-outline-variant/10">
                             <button
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                type="button"
+                                onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                                 className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
                             >
                               <span className="material-symbols-outlined text-sm">remove</span>
                             </button>
-                            <span className="w-10 text-center font-bold text-sm">
-                          {String(item.quantity).padStart(2, "0")}
-                        </span>
+
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={quantityInputs[item.id] ?? String(item.quantity)}
+                                onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
+                                onBlur={() => handleQuantityInputBlur(item.id, item.quantity)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                                className="w-12 h-8 text-center bg-transparent border-none outline-none font-bold text-sm text-on-surface"
+                            />
+
                             <button
+                                type="button"
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 className="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
                             >
@@ -302,91 +375,24 @@ export default function CartPage() {
                   <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">
                     west
                   </span>
-                  Continue Exploring
+                  Tiếp tục mua hàng
                 </a>
-                <div className="flex items-center gap-2 text-on-surface-variant text-sm italic font-body">
-                  <span className="material-symbols-outlined text-secondary">verified_user</span>
-                  Secure transaction with TLS 1.3 encryption
-                </div>
               </div>
             </div>
 
         {/* Summary Sidebar */}
           <div className="lg:col-span-4 sticky top-32">
           <div className="bg-surface-container-low p-8 rounded-xl shadow-sm border border-outline-variant/10">
-          <h2 className="text-2xl font-bold tracking-tight text-primary mb-8">
-          Order Summary
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
+          Tổng cộng
           </h2>
 
           <div className="space-y-6">
-        {/* Subtotal */}
-        <div className="flex justify-between text-sm">
-                    <span className="text-on-surface-variant uppercase tracking-widest font-medium">
-                      Subtotal
-                    </span>
-          <span className="font-bold text-on-surface">
-                      ${subtotal.toFixed(2)}
-                    </span>
-        </div>
 
         {/* Shipping */}
-        <div className="space-y-3">
-          <label className="text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant block">
-            Shipping Estimation
-          </label>
-          <div className="relative">
-            <select
-                value={shippingMethod}
-                onChange={(e) => setShippingMethod(e.target.value)}
-                className="w-full bg-surface-container-lowest border-none py-3 px-4 rounded text-sm focus:ring-2 focus:ring-secondary/20 transition-all appearance-none cursor-pointer"
-            >
-              <option value="standard">Standard Ground (3-5 Days) — Free</option>
-              <option value="express">Express Overnight — $25.00</option>
-              <option value="international">International Air — $45.00</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
-                        expand_more
-                      </span>
-          </div>
-        </div>
-
-        {/* Discount Code */}
-        <div className="space-y-3 pb-6 border-b border-outline-variant/20">
-          <label className="text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant block">
-            Discount Code
-          </label>
-          <div className="flex gap-2">
-            <input
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value)}
-                className="flex-grow bg-surface-container-lowest border-none py-3 px-4 rounded text-sm focus:ring-2 focus:ring-secondary/20 outline-none"
-                placeholder="Enter code"
-                type="text"
-            />
-            <button
-                onClick={applyDiscount}
-                className="px-6 py-2 bg-primary-container text-on-primary font-bold text-xs uppercase tracking-widest rounded hover:opacity-90 transition-opacity"
-            >
-              Apply
-            </button>
-          </div>
-          {discountApplied && (
-              <p className="text-xs text-secondary font-medium">
-                ✓ 10% discount applied
-              </p>
-          )}
-        </div>
 
         {/* Price Breakdown */}
         <div className="pt-2 space-y-3">
-          {shipping > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-on-surface-variant">Shipping</span>
-                <span className="font-bold text-on-surface">
-                          ${shipping.toFixed(2)}
-                        </span>
-              </div>
-          )}
           {discount > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-on-surface-variant">Discount (10%)</span>
@@ -395,20 +401,10 @@ export default function CartPage() {
                         </span>
               </div>
           )}
-          <div className="flex justify-between text-sm">
-            <span className="text-on-surface-variant">Tax</span>
-            <span className="font-bold text-on-surface">
-                        ${tax.toFixed(2)}
-                      </span>
-          </div>
           <div className="flex justify-between items-end pb-6 border-t border-outline-variant/20 pt-4">
-            <span className="text-lg font-bold text-on-surface">Total</span>
             <div className="text-right">
-                        <span className="text-xs text-on-surface-variant block mb-1">
-                          Tax included
-                        </span>
               <span className="text-3xl font-extrabold text-primary tracking-tighter">
-                          ${total.toFixed(2)}
+                          {formatCurrency(subtotal) }
                         </span>
             </div>
           </div>
@@ -416,26 +412,13 @@ export default function CartPage() {
 
         {/* Checkout Button */}
         <button onClick={() => router.push('/checkout')} className="w-full py-5 bg-primary text-on-primary rounded font-bold text-sm uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
-          Proceed to Checkout
+          Thanh toán
         </button>
       </div>
 
       {/* Shipping Info */}
-      <div className="mt-8 flex flex-col gap-4">
-        <div className="flex items-center gap-3 p-4 bg-surface-container-lowest/50 rounded">
-          <span className="material-symbols-outlined text-secondary">local_shipping</span>
-          <p className="text-[11px] text-on-surface-variant font-medium leading-relaxed">
-            COMPLIMENTARY SHIPPING ON ALL KEYBOARD ORDERS OVER $300.
-          </p>
-        </div>
-      </div>
 
       {/* Payment Methods */}
-      <div className="mt-8 px-4 flex justify-center gap-6">
-        <span className="material-symbols-outlined text-on-surface-variant/40 text-4xl">payments</span>
-        <span className="material-symbols-outlined text-on-surface-variant/40 text-4xl">credit_card</span>
-        <span className="material-symbols-outlined text-on-surface-variant/40 text-4xl">account_balance_wallet</span>
-      </div>
       </div>
 </div>
 </div>

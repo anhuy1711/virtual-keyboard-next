@@ -27,8 +27,13 @@ const menuItems = [
         icon: 'shopping_cart',
     },
     {
-        label: 'Người dùng ',
+        label: 'Khách hàng',
         href: '/admin/users',
+        icon: 'group',
+    },
+    {
+        label: 'Nhân viên ',
+        href: '/admin/staffs',
         icon: 'group',
     },
     {

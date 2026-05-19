@@ -47,7 +47,7 @@ const SPECS = [
 
 export default function Home() {
   const [keyboardTab, setKeyboardTab] = useState("in-stock");
-  const [componentTab, setComponentTab] = useState("keycaps");
+  const [componentTab, setComponentTab] = useState("KEYCAP");
 
   const [heroBanners, setHeroBanners] = useState<BannerResponse[]>([]);
   const [secondaryBanners, setSecondaryBanners] = useState<BannerResponse[]>([]);
@@ -81,7 +81,7 @@ export default function Home() {
       try {
         setIsComponentLoading(true);
         const data = await getHomeComponentsAPI(
-            componentTab as "keycaps" | "switches"
+            componentTab as "Keycap" | "Switch"
         );
         setComponents(data);
       } catch (error) {
@@ -303,9 +303,9 @@ export default function Home() {
                 </h2>
                 <div className="flex gap-8 border-b border-outline-variant">
                   <button
-                    onClick={() => setComponentTab("keycaps")}
+                    onClick={() => setComponentTab("KEYCAP")}
                     className={`pb-4 font-bold tracking-tight border-b-2 transition-all ${
-                      componentTab === "keycaps"
+                      componentTab === "KEYCAP"
                         ? "text-primary border-primary"
                         : "text-on-surface-variant border-transparent hover:text-primary"
                     }`}
@@ -313,14 +313,14 @@ export default function Home() {
                     Keycaps
                   </button>
                   <button
-                    onClick={() => setComponentTab("switches")}
+                    onClick={() => setComponentTab("SWITCH")}
                     className={`pb-4 font-medium tracking-tight border-b-2 transition-all ${
-                      componentTab === "switches"
+                      componentTab === "Switch"
                         ? "text-primary border-primary"
                         : "text-on-surface-variant border-transparent hover:text-primary"
                     }`}
                   >
-                    Switches
+                    Switch
                   </button>
                 </div>
               </div>
@@ -345,7 +345,7 @@ export default function Home() {
                       <Link href={`/products/${comp.id}`} key={comp.id} className="group block">
                         <div className="aspect-square rounded-lg overflow-hidden bg-surface-container-lowest mb-4">
                           <img
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                               src={comp.image}
                               alt={comp.name}
                           />

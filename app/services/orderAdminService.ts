@@ -16,9 +16,21 @@ export interface OrderItemResponse {
     totalPrice?: number;
 }
 
+export interface PaymentResponse {
+    id: number;
+    amount: number;
+    paymentMethod: string;
+    provider: string;
+    status: string;
+    transactionCode?: string | null;
+    paymentUrl?: string | null;
+}
+
 export interface OrderResponse {
     id: number;
-    userId: number;
+    userId?: number | null;
+
+    orderCode?: string | null;
 
     customerName?: string | null;
     customerEmail?: string | null;
@@ -26,13 +38,14 @@ export interface OrderResponse {
 
     receiverName?: string | null;
     receiverPhone?: string | null;
-    shippingAddress?: string | null;
+    receiverAddress?: string | null;
+
+    note?: string | null;
 
     total: number;
     status: OrderStatus;
 
-    paymentMethod?: string | null;
-    paymentStatus?: string | null;
+    payment?: PaymentResponse | null;
 
     createdAt?: string | null;
     updatedAt?: string | null;
@@ -142,6 +155,27 @@ export const updateOrderStatusAPI = async (
 
     if (!response.ok || result.code !== 200) {
         throw new Error(result.message || "Cập nhật trạng thái thất bại");
+    }
+
+    return result.data;
+};
+
+export const confirmOrderAPI = async (
+    id: number
+): Promise<OrderResponse> => {
+    const token = localStorage.getItem("accessToken");
+
+    const response = await fetch(`${API_URL}/orders/admin/${id}/confirm`, {
+        method: "PUT",
+        headers: {
+            ...(token && { Authorization: `Bearer ${token}` }),
+        },
+    });
+
+    const result: ApiResponse<OrderResponse> = await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || "Xác nhận đơn hàng thất bại");
     }
 
     return result.data;

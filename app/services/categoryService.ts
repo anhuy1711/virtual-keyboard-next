@@ -22,6 +22,13 @@ interface ApiResponse<T> {
     data: T;
     message?: string;
 }
+
+
+export interface CategoryUpdateRequest {
+    name: string;
+    description?: string;
+}
+
 const API_URL = "http://localhost:8080";
 
 export const getCategoriesAPI = async (
@@ -95,4 +102,28 @@ export const deleteCategoryAPI = async (id: number): Promise<void> => {
     if (!response.ok || result.code !== 200) {
         throw new Error(result.message || 'Xóa danh mục thất bại');
     }
+};
+
+export const updateCategoryAPI = async (
+    id: number,
+    request: CategoryUpdateRequest
+): Promise<CategoryResponse> => {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch(`http://localhost:8080/categories/update/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(request),
+    });
+
+    const result: ApiResponse<CategoryResponse> = await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || 'Cập nhật danh mục thất bại');
+    }
+
+    return result.data;
 };

@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import Link from 'next/link';
-import { createProductAPI, CreateProductRequest } from '@/app/services/productService';
+import { createProductAPI, CreateProductRequest, getCategoriesAPI, CategoryResponse,} from '@/app/services/productService';
 import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
+import { uploadProductImageAPI } from "@/app/services/uploadService";
 
 interface OptionValue {
   name: string;
@@ -85,23 +86,22 @@ export default function CreateProductPage() {
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('KIT');
-  const [category, setCategory] = useState('Custom Mechanical');
+  const [categoryId, setCategoryId] = useState<number | ''>('');
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [coverImage, setCoverImage] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [defaultPrice, setDefaultPrice] = useState(0);
   const [defaultStock, setDefaultStock] = useState(0);
 
 
 
   const [options, setOptions] = useState<Option[]>([
-    { name: 'Case Color', values: [{ name: 'Anodized Black' }, { name: 'E-White' }, { name: 'Deep Blue' }] },
-    { name: 'Plate Material', values: [{ name: 'Aluminum' }, { name: 'Brass' }, { name: 'FR4' }] },
+
   ]);
   const [addValueInputs, setAddValueInputs] = useState<string[]>(['', '']);
 
   const [skus, setSkus] = useState<SKURow[]>([
-    { id: '1', combination: 'Black / Aluminum', optionValueIndexes: [0, 0], sku: 'BLK-ALU-001', price: 349, stock: 50, label: 'Standard Edition' },
-    { id: '2', combination: 'Black / Brass',    optionValueIndexes: [0, 1], sku: 'BLK-BRS-002', price: 399, stock: 25, label: 'Premium Edition'  },
-    { id: '3', combination: 'White / FR4',      optionValueIndexes: [1, 2], sku: 'WHT-FR4-003', price: 329, stock: 10, label: 'Atelier Special'  },
   ]);
 
   // Which row is in edit mode (null = none)
@@ -122,14 +122,55 @@ export default function CreateProductPage() {
   }, [router, isMounted]);
 
   const handleLogout = () => { logoutAPI(); toast.success('Đã đăng xuất!'); router.push('/'); };
+  useEffect(() => {
+    if (!isAuthorized) return;
 
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+
+        const response = await getCategoriesAPI(0, 100);
+
+        setCategories(response.content || []);
+
+        if (response.content?.length > 0) {
+          setCategoryId(response.content[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        toast.error('Lỗi khi tải danh mục');
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, [isAuthorized]);
   // ── media ─────────────────────────────────────────────────────────────────
-  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = async (
+      e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setCoverImage(ev.target?.result as string);
-      reader.readAsDataURL(file);
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh");
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+
+      const imageUrl = await uploadProductImageAPI(file);
+
+      setCoverImage(imageUrl);
+      toast.success("Tải ảnh lên thành công!");
+    } catch (error) {
+      console.error("Upload image error:", error);
+      toast.error("Tải ảnh lên thất bại");
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -266,19 +307,19 @@ export default function CreateProductPage() {
 
         {/* Main */}
         <main className="w-full pb-20 md:pb-0">
-          <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">
-            <span className="text-xl font-bold tracking-tight text-blue-900 font-h2">Add New Product</span>
-            <div className="flex items-center gap-6">
-              <button className="text-slate-500 hover:text-blue-600 relative">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
-              </button>
-              <button className="text-slate-500 hover:text-blue-600"><span className="material-symbols-outlined">settings</span></button>
-              <button onClick={() => handlePublish({ preventDefault: () => {} } as React.FormEvent)} disabled={isSubmitting} className="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md hover:bg-primary-hover transition-colors disabled:opacity-50">
-                {isSubmitting ? 'Submitting...' : 'Submit New Product'}
-              </button>
-            </div>
-          </header>
+          {/*<header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">*/}
+          {/*  <span className="text-xl font-bold tracking-tight text-blue-900 font-h2">Add New Product</span>*/}
+          {/*  <div className="flex items-center gap-6">*/}
+          {/*    <button className="text-slate-500 hover:text-blue-600 relative">*/}
+          {/*      <span className="material-symbols-outlined">notifications</span>*/}
+          {/*      <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>*/}
+          {/*    </button>*/}
+          {/*    <button className="text-slate-500 hover:text-blue-600"><span className="material-symbols-outlined">settings</span></button>*/}
+          {/*    <button onClick={() => handlePublish({ preventDefault: () => {} } as React.FormEvent)} disabled={isSubmitting} className="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md hover:bg-primary-hover transition-colors disabled:opacity-50">*/}
+          {/*      {isSubmitting ? 'Submitting...' : 'Submit New Product'}*/}
+          {/*    </button>*/}
+          {/*  </div>*/}
+          {/*</header>*/}
 
           <form onSubmit={handlePublish} className="p-8 max-w-6xl mx-auto space-y-8">
 
@@ -287,11 +328,11 @@ export default function CreateProductPage() {
               <div className="col-span-12 md:col-span-8 space-y-6">
                 <div className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
                   <h3 className="text-h3 font-h3 text-primary flex items-center gap-2">
-                    <span className="material-symbols-outlined">info</span>Basic Information
+                    <span className="material-symbols-outlined">info</span>Thông tin cơ bản
                   </h3>
                   <div className="space-y-4">
                     <div className="flex flex-col gap-2">
-                      <label className="text-label-md font-label-md text-text-primary">Product Name</label>
+                      <label className="text-label-md font-label-md text-text-primary">Tên sản phẩm</label>
                       <input value={productName} onChange={(e) => setProductName(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="e.g. Atelier Series-1 Custom Keyboard" type="text" />
                     </div>
                     <div className="flex flex-col gap-2">
@@ -299,20 +340,36 @@ export default function CreateProductPage() {
                       <input value={summary} onChange={(e) => setSummary(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="A brief catchphrase for the product listing" type="text" />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-label-md font-label-md text-text-primary">Description</label>
+                      <label className="text-label-md font-label-md text-text-primary">Mô tả</label>
                       <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" rows={6} placeholder="Detailed product specifications and story..." />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2">
-                        <label className="text-label-md font-label-md text-text-primary">Product Type</label>
+                        <label className="text-label-md font-label-md text-text-primary">Loại sản phẩm</label>
                         <select value={productType} onChange={(e) => setProductType(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md">
                           <option>KIT</option><option>PREBUILT</option><option>KEYCAP</option><option>SWITCH</option>
                         </select>
                       </div>
                       <div className="flex flex-col gap-2">
-                        <label className="text-label-md font-label-md text-text-primary">Category</label>
-                        <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md">
-                          <option>Custom Mechanical</option><option>Artisan Edition</option><option>Accessories</option>
+                        <label className="text-label-md font-label-md text-text-primary">
+                          Danh mục
+                        </label>
+
+                        <select
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(Number(e.target.value))}
+                            disabled={isLoadingCategories}
+                            className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md disabled:opacity-50"
+                        >
+                          <option value="">
+                            {isLoadingCategories ? 'Đang tải danh mục...' : 'Chọn danh mục'}
+                          </option>
+
+                          {categories.map((category) => (
+                              <option key={category.id} value={category.id}>
+                                {category.name}
+                              </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -321,12 +378,52 @@ export default function CreateProductPage() {
               </div>
               <div className="col-span-12 md:col-span-4">
                 <div className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
-                  <h3 className="text-label-md font-h3 text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Media & Visuals</h3>
+                  <h3 className="text-label-md font-h3 text-primary uppercase tracking-widest border-b border-outline-variant/10 pb-2">Ảnh bìa</h3>
                   <label className="relative aspect-square bg-surface-ivory border-2 border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center gap-2 group hover:border-secondary cursor-pointer transition-colors overflow-hidden">
-                    {coverImage && <img alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" src={coverImage} />}
-                    <span className="material-symbols-outlined text-h1 text-text-light group-hover:text-secondary z-10">add_photo_alternate</span>
-                    <span className="text-label-sm font-label-sm text-text-light group-hover:text-secondary z-10">Upload Cover Image</span>
-                    <input type="file" accept="image/*" onChange={handleCoverImageUpload} className="hidden" />
+                    {coverImage && (
+                        <img
+                            alt="Preview"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            src={coverImage}
+                        />
+                    )}
+
+                    {!coverImage && (
+                        <>
+      <span className="material-symbols-outlined text-h1 text-text-light group-hover:text-secondary z-10">
+        add_photo_alternate
+      </span>
+
+                          <span className="text-label-sm font-label-sm text-text-light group-hover:text-secondary z-10">
+        Upload Cover Image
+      </span>
+                        </>
+                    )}
+
+                    {isUploadingImage && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/75">
+                          <div className="mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+                          <span className="text-sm font-semibold text-primary">
+        Đang tải ảnh...
+      </span>
+                        </div>
+                    )}
+
+                    {coverImage && !isUploadingImage && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="text-sm font-bold text-white">
+        Bấm để đổi ảnh
+      </span>
+                        </div>
+                    )}
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                    />
                   </label>
                 </div>
               </div>
@@ -336,10 +433,10 @@ export default function CreateProductPage() {
             <section className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-h3 font-h3 text-primary flex items-center gap-2">
-                  <span className="material-symbols-outlined">tune</span>Product Options
+                  <span className="material-symbols-outlined">tune</span>Oftions
                 </h3>
                 <button type="button" onClick={addOptionType} className="flex items-center gap-1 text-secondary font-label-md text-label-md hover:underline">
-                  <span className="material-symbols-outlined text-base">add_circle</span>Add Option Type
+                  <span className="material-symbols-outlined text-base">add_circle</span>Thêm Option
                 </button>
               </div>
               {options.length === 0 && (
@@ -394,11 +491,8 @@ export default function CreateProductPage() {
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
                   <h3 className="text-h3 font-h3 text-primary flex items-center gap-2">
-                    <span className="material-symbols-outlined">list_alt</span>SKU Management
+                    <span className="material-symbols-outlined">list_alt</span>Quản lý biến thể (SKU)
                   </h3>
-                  <p className="text-body-sm font-body-sm text-text-secondary">
-                    Manage inventory levels and pricing for each variant combination.
-                  </p>
                 </div>
 
                 {/* Regenerate button */}
@@ -408,7 +502,7 @@ export default function CreateProductPage() {
                     className="flex items-center gap-1.5 bg-surface-container text-primary px-4 py-2 rounded-lg font-label-md text-label-md border border-primary/10 hover:bg-surface-container-high transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">refresh</span>
-                  Regenerate SKUs
+                  Tạo biến thể
                 </button>
               </div>
 
@@ -416,7 +510,7 @@ export default function CreateProductPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-label-md font-label-md text-text-primary">
-                        Price
+                        Giá (VNĐ)
                       </label>
                       <input
                           type="number"
@@ -430,7 +524,7 @@ export default function CreateProductPage() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-label-md font-label-md text-text-primary">
-                        Stock
+                        Số lượng
                       </label>
                       <input
                           type="number"
@@ -551,9 +645,9 @@ export default function CreateProductPage() {
             {/* ═══════════════════════════════════════════════════ end Section 3 */}
 
             <div className="flex justify-end gap-4 pb-8">
-              <Link href="/admin/inventory" className="px-8 py-3 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors">Cancel</Link>
+              <Link href="/admin/inventory" className="px-8 py-3 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors">Huỷ</Link>
               <button type="submit" disabled={isSubmitting} className="px-8 py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-hover transition-colors disabled:opacity-50 shadow-lg">
-                {isSubmitting ? 'Publishing...' : 'Publish Product'}
+                {isSubmitting ? 'Publishing...' : 'Thêm sản phẩm'}
               </button>
             </div>
           </form>

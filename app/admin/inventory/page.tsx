@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import Link from 'next/link';
-import { filterProductsAPI, ProductSearchRequest } from '@/app/services/productService';
-import { logoutAPI } from '@/app/services/authService';
+import {
+  filterProductsAPI,
+  ProductSearchRequest,
+  getCategoriesAPI,
+  CategoryResponse,
+} from '@/app/services/productService';import { logoutAPI } from '@/app/services/authService';
 import { toast } from 'react-toastify';
 
 interface Product {
@@ -14,6 +18,7 @@ interface Product {
   description: string;
   cover: string;
   categoryId: number;
+  categoryName: string;
   skus?: Array<{ id?: number; quantity?: number; price?: number; [key: string]: number | string | undefined }>;
 }
 
@@ -29,6 +34,31 @@ export default function InventoryPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [pageData, setPageData] = useState<any>(null);
+
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchProducts(0);
+      fetchCategories();
+    }
+  }, [isAuthorized]);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+
+      const response = await getCategoriesAPI(0, 100);
+
+      setCategories(response.content || []);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      toast.error('Lỗi khi tải danh mục');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -68,16 +98,25 @@ export default function InventoryPage() {
     }
   }, [isAuthorized]);
 
-  const fetchProducts = async (page: number = 0) => {
+  const fetchProducts = async (
+      page: number = 0,
+      filters?: {
+        name?: string;
+        categoryId?: number;
+      }
+  ) => {
     try {
       setIsLoadingProducts(true);
+
       const searchRequest: ProductSearchRequest = {
-        name: searchName || undefined,
-        categoryId: selectedCategory || undefined,
+        name: filters?.name ?? (searchName || undefined),
+        categoryId: filters?.categoryId ?? selectedCategory,
       };
-      
+
       const response = await filterProductsAPI(searchRequest, page, 20);
+
       setProducts((response.content || []) as Product[]);
+      setPageData(response);
       setCurrentPage(page);
     } catch (error) {
       console.error('Failed to fetch products:', error);
@@ -89,8 +128,21 @@ export default function InventoryPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0);
-    fetchProducts(0);
+
+    fetchProducts(0, {
+      name: searchName.trim() || undefined,
+      categoryId: selectedCategory || undefined,
+    });
+  };
+
+  const handleResetFilter = () => {
+    setSearchName('');
+    setSelectedCategory(undefined);
+
+    fetchProducts(0, {
+      name: undefined,
+      categoryId: undefined,
+    });
   };
 
   const handleCategoryFilter = (categoryId: number | undefined) => {
@@ -199,6 +251,69 @@ export default function InventoryPage() {
             </div>
           </section>
 
+          {/* Filter */}
+          <section className="mb-6 bg-white p-5 rounded-xl border border-outline-variant/10 shadow-sm">
+            <form
+                onSubmit={handleSearch}
+                className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+            >
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                  Tên sản phẩm
+                </label>
+
+                <input
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="VD: Neo98, switch, keycap..."
+                    type="text"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                  Danh mục
+                </label>
+
+                <select
+                    value={selectedCategory ?? ''}
+                    onChange={(e) =>
+                        setSelectedCategory(
+                            e.target.value ? Number(e.target.value) : undefined
+                        )
+                    }
+                    disabled={isLoadingCategories}
+                    className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                >
+                  <option value="">
+                    {isLoadingCategories ? 'Đang tải...' : 'Tất cả danh mục'}
+                  </option>
+
+                  {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                  type="submit"
+                  className="h-10 px-5 rounded-lg bg-primary text-white text-sm font-bold transition-colors"
+              >
+                Tìm kiếm
+              </button>
+
+              <button
+                  type="button"
+                  onClick={handleResetFilter}
+                  className="h-10 px-5 rounded-lg border border-outline-variant text-slate-600 text-sm font-bold bg-white transition-colors"
+              >
+                Reset
+              </button>
+            </form>
+          </section>
 
           {/* Table */}
           <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
@@ -256,8 +371,8 @@ export default function InventoryPage() {
                         </td>
 
                         <td className="px-6 py-4">
-              <span className="px-2.5 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold uppercase tracking-wider rounded-full">
-                Cat {product.categoryId}
+              <span className=" px-2.5 py-1 text-sm text-blue-900 font-bold tracking-wider rounded-full">
+                {product.categoryName}
               </span>
                         </td>
 
@@ -299,11 +414,15 @@ export default function InventoryPage() {
 
             <div className="px-6 py-3 bg-surface-container-low flex justify-between items-center border-t border-outline-variant/10">
               <p className="text-xs text-slate-500">
-                {products.length} / {products.length}
+                {products.length} / {pageData?.totalElements ?? products.length}
               </p>
 
               <div className="flex gap-2">
-                <button className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors">
+                <button
+                    disabled={currentPage <= 0}
+                    onClick={() => fetchProducts(currentPage - 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors disabled:opacity-50"
+                >
                   <span className="material-symbols-outlined text-sm">chevron_left</span>
                 </button>
 
@@ -311,7 +430,11 @@ export default function InventoryPage() {
                   1
                 </button>
 
-                <button className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors">
+                <button
+                    disabled={pageData ? currentPage + 1 >= pageData.totalPages : true}
+                    onClick={() => fetchProducts(currentPage + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-slate-400 hover:bg-surface-container-lowest transition-colors disabled:opacity-50"
+                >
                   <span className="material-symbols-outlined text-sm">chevron_right</span>
                 </button>
               </div>
@@ -380,24 +503,7 @@ export default function InventoryPage() {
       )}
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
-        <Link href="/admin" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400">
-          <span className="material-symbols-outlined">dashboard</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
-        </Link>
-        <Link href="/admin/inventory" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-blue-900 font-bold">
-          <span className="material-symbols-outlined">keyboard</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
-        </Link>
-        <Link href="#" className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg">
-          <span className="material-symbols-outlined">shopping_cart</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
-        </Link>
-        <Link href="#" className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg">
-          <span className="material-symbols-outlined">group</span>
-          <span className="text-[10px] uppercase font-label-sm mt-1">Users</span>
-        </Link>
-      </nav>
+
     </div>
   );
 }

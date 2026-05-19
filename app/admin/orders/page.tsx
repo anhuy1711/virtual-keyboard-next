@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
@@ -12,6 +13,7 @@ import {
     OrderStatus,
     SimplePage,
     updateOrderStatusAPI,
+    confirmOrderAPI,
 } from "@/app/services/orderAdminService";
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -46,6 +48,9 @@ export default function AdminOrdersPage() {
     );
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    const [orderToConfirm, setOrderToConfirm] = useState<OrderResponse | null>(null);
+    const [isConfirmingOrder, setIsConfirmingOrder] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -85,13 +90,6 @@ export default function AdminOrdersPage() {
         }
     }, [isAuthorized]);
 
-    const buildFilterRequest = (): FilterOrderRequest => {
-        return {
-            orderId: orderId.trim() ? Number(orderId.trim()) : undefined,
-            userId: userId.trim() ? Number(userId.trim()) : undefined,
-            status: status || undefined,
-        };
-    };
 
     const fetchOrders = async (page: number = 0) => {
         try {
@@ -191,6 +189,28 @@ export default function AdminOrdersPage() {
                 return "bg-red-100 text-red-700 border-red-200";
             default:
                 return "bg-slate-100 text-slate-700 border-slate-200";
+        }
+    };
+
+    const handleConfirmOrder = async () => {
+        if (!orderToConfirm) return;
+
+        try {
+            setIsConfirmingOrder(true);
+
+            await confirmOrderAPI(orderToConfirm.id);
+
+            toast.success("Xác nhận đơn hàng thành công!");
+
+            setOrderToConfirm(null);
+            fetchOrders(currentPage);
+        } catch (error) {
+            console.error("Confirm order error:", error);
+            toast.error(
+                error instanceof Error ? error.message : "Xác nhận đơn hàng thất bại"
+            );
+        } finally {
+            setIsConfirmingOrder(false);
         }
     };
 
@@ -334,7 +354,7 @@ export default function AdminOrdersPage() {
                                             <td className="px-6 py-4">
                                                 <div>
                                                     <p className="font-bold text-sm text-blue-900">
-                                                        #{order.id}
+                                                        {order.orderCode}
                                                     </p>
                                                     <p className="text-xs text-slate-400">
                                                         {formatDate(order.createdAt)}
@@ -345,10 +365,7 @@ export default function AdminOrdersPage() {
                                             <td className="px-6 py-4">
                                                 <div>
                                                     <p className="font-bold text-sm text-blue-900">
-                                                        {order.customerName || `User #${order.userId}`}
-                                                    </p>
-                                                    <p className="text-xs text-slate-400">
-                                                        {order.customerEmail || "-"}
+                                                        {order.receiverName || `User #${order.userId}`}
                                                     </p>
                                                 </div>
                                             </td>
@@ -368,22 +385,38 @@ export default function AdminOrdersPage() {
                                             </td>
 
                                             <td className="px-6 py-4 text-sm text-slate-600">
-                                                <p>{order.paymentMethod || "-"}</p>
+                                                <p>{order.payment?.paymentMethod || "-"}</p>
                                                 <p className="text-xs text-slate-400">
-                                                    {order.paymentStatus || "-"}
+                                                    {order.payment?.status || "-"}
                                                 </p>
                                             </td>
 
                                             <td className="px-6 py-4 text-right">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleViewDetail(order.id)}
-                                                    className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                                                >
-                            <span className="material-symbols-outlined text-[18px]">
-                              visibility
-                            </span>
-                                                </button>
+                                                <div className="flex justify-end gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleViewDetail(order.id)}
+                                                        className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Xem chi tiết"
+                                                    >
+      <span className="material-symbols-outlined text-[18px]">
+        visibility
+      </span>
+                                                    </button>
+
+                                                    {order.status === "PENDING" && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setOrderToConfirm(order)}
+                                                            className="inline-flex items-center justify-center w-8 h-8 text-emerald-600 bg-emerald-50 rounded-lg transition-colors"
+                                                            title="Xác nhận đơn"
+                                                        >
+        <span className="material-symbols-outlined text-[18px]">
+          check_circle
+        </span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -438,6 +471,59 @@ export default function AdminOrdersPage() {
                     </div>
                 </div>
             </main>
+
+            {orderToConfirm && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 px-4">
+                    <div
+                        className="rounded-2xl bg-white px-6 py-6 text-center shadow-xl"
+                        style={{
+                            width: "min(340px, calc(100vw - 32px))",
+                        }}
+                    >
+                        <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100">
+        <span className="material-symbols-outlined text-[22px] text-emerald-600">
+          check_circle
+        </span>
+                        </div>
+
+                        <h2 className="text-base font-bold text-slate-900">
+                            Xác nhận đơn hàng
+                        </h2>
+
+                        <p className="mt-3 text-sm font-semibold text-blue-900">
+                            Đơn #{orderToConfirm.id}
+                        </p>
+
+                        <p className="mt-2 text-xs text-slate-500">
+                            Sau khi xác nhận, đơn hàng sẽ chuyển từ PENDING sang CONFIRMED.
+                        </p>
+
+                        <div className="mt-6 grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setOrderToConfirm(null)}
+                                disabled={isConfirmingOrder}
+                                className="h-10 rounded-lg bg-slate-100 text-sm font-semibold text-slate-600 disabled:opacity-50"
+                            >
+                                Huỷ
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleConfirmOrder}
+                                disabled={isConfirmingOrder}
+                                style={{
+                                    backgroundColor: "#10b981",
+                                    color: "#ffffff",
+                                }}
+                                className="h-10 rounded-lg text-sm font-bold disabled:opacity-50"
+                            >
+                                {isConfirmingOrder ? "Đang xác nhận..." : "Xác nhận"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Detail Modal */}
             {(selectedOrder || isLoadingDetail) && (
@@ -618,34 +704,10 @@ export default function AdminOrdersPage() {
                                         </table>
                                     </div>
 
-                                    <div className="bg-surface-container-low rounded-xl p-4">
-                                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
-                                            Cập nhật trạng thái
-                                        </p>
 
-                                        <div className="flex flex-wrap gap-2">
-                                            {ORDER_STATUSES.map((item) => (
-                                                <button
-                                                    key={item}
-                                                    type="button"
-                                                    disabled={
-                                                        isUpdatingStatus || selectedOrder.status === item
-                                                    }
-                                                    onClick={() => handleUpdateStatus(item)}
-                                                    className={`px-4 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider disabled:opacity-50 ${
-                                                        selectedOrder.status === item
-                                                            ? getStatusClass(item)
-                                                            : "border-outline-variant text-slate-600 bg-white"
-                                                    }`}
-                                                >
-                                                    {item}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
 
-                                <div className="px-6 py-4 border-t border-outline-variant/10 flex justify-end bg-surface-container-low">
+                                <div className="px-6 py-4 border-t border-outline-variant/10 flex justify-end gap-3 bg-surface-container-low">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedOrder(null)}
@@ -653,6 +715,19 @@ export default function AdminOrdersPage() {
                                     >
                                         Đóng
                                     </button>
+
+                                    {selectedOrder.status === "PENDING" && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOrderToConfirm(selectedOrder)}
+                                            className="px-5 py-2 rounded-lg text-sm font-bold text-white"
+                                            style={{
+                                                backgroundColor: "#10b981",
+                                            }}
+                                        >
+                                            Xác nhận đơn
+                                        </button>
+                                    )}
                                 </div>
                             </>
                         )}

@@ -10,6 +10,17 @@ export interface UserResponse {
     isActive: boolean;
 }
 
+export interface AdminCreateUserRequest {
+    username: string;
+    email: string;
+    password: string;
+    fullName?: string;
+    phone?: string;
+    address?: string;
+    birthday?: string;
+    role: Role;
+}
+
 interface ApiResponse<T> {
     code: number;
     data: T;
@@ -104,6 +115,66 @@ export const getUserInfoAPI = async (): Promise<UserResponse> => {
     }
 
     const result: ApiResponse<UserResponse> = await response.json();
+
+    return result.data;
+};
+
+export const createUserByAdminAPI = async (
+    request: AdminCreateUserRequest
+): Promise<CustomerResponse> => {
+    const token = localStorage.getItem('accessToken');
+
+    const response = await fetch('http://localhost:8080/user/admin/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(request),
+    });
+
+    const result: ApiResponse<CustomerResponse> = await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || 'Tạo tài khoản thất bại');
+    }
+
+    return result.data;
+};
+
+export const getStaffsAPI = async (
+    filters: Omit<FilterUserRequest, 'role'>,
+    page = 0,
+    size = 20
+): Promise<SimplePage<CustomerResponse>> => {
+    const token = localStorage.getItem('accessToken');
+
+    const request: FilterUserRequest = {
+        fullName: filters.fullName?.trim() || undefined,
+        username: filters.username?.trim() || undefined,
+        email: filters.email?.trim() || undefined,
+        phone: filters.phone?.trim() || undefined,
+        role: 'STAFF',
+    };
+
+    const response = await fetch(
+        `${API_URL}/user/admin/list?page=${page}&size=${size}`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(request),
+        }
+    );
+
+    const result: ApiResponse<SimplePage<CustomerResponse>> =
+        await response.json();
+
+    if (!response.ok || result.code !== 200) {
+        throw new Error(result.message || 'Không thể tải danh sách khách hàng');
+    }
 
     return result.data;
 };

@@ -34,10 +34,10 @@ export const getHomeKeyboardsAPI = async (
 };
 
 export const getHomeComponentsAPI = async (
-    category: "keycaps" | "switches"
+    productType: "Keycap" | "Switch"
 ): Promise<HomeProductResponse[]> => {
     const response = await fetch(
-        `${API_URL}/products/home/components?category=${category}`,
+        `${API_URL}/products/home/components?productType=${productType}`,
         {
             method: "GET",
             headers: {

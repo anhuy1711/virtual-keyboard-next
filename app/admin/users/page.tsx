@@ -9,6 +9,8 @@ import {
     CustomerResponse,
     getCustomersAPI,
     SimplePage,
+    createUserByAdminAPI,
+    Role,
 } from '@/app/services/userService';
 
 export default function UsersPage() {
@@ -30,6 +32,18 @@ export default function UsersPage() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
+
+    const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+
+    const [createUsername, setCreateUsername] = useState('');
+    const [createEmail, setCreateEmail] = useState('');
+    const [createPassword, setCreatePassword] = useState('');
+    const [createFullName, setCreateFullName] = useState('');
+    const [createPhone, setCreatePhone] = useState('');
+    const [createAddress, setCreateAddress] = useState('');
+    const [createBirthday, setCreateBirthday] = useState('');
+    const [createRole, setCreateRole] = useState<Role>('STAFF');
 
     useEffect(() => {
         setIsMounted(true);
@@ -95,6 +109,69 @@ export default function UsersPage() {
         }
     };
 
+    const resetCreateUserForm = () => {
+        setCreateUsername('');
+        setCreateEmail('');
+        setCreatePassword('');
+        setCreateFullName('');
+        setCreatePhone('');
+        setCreateAddress('');
+        setCreateBirthday('');
+        setCreateRole('STAFF');
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!createUsername.trim()) {
+            toast.warning('Vui lòng nhập username');
+            return;
+        }
+
+        if (!createEmail.trim()) {
+            toast.warning('Vui lòng nhập email');
+            return;
+        }
+
+        if (!createPassword.trim()) {
+            toast.warning('Vui lòng nhập mật khẩu');
+            return;
+        }
+
+        if (!createRole) {
+            toast.warning('Vui lòng chọn vai trò');
+            return;
+        }
+
+        try {
+            setIsCreatingUser(true);
+
+            await createUserByAdminAPI({
+                username: createUsername.trim(),
+                email: createEmail.trim(),
+                password: createPassword,
+                fullName: createFullName.trim() || undefined,
+                phone: createPhone.trim() || undefined,
+                address: createAddress.trim() || undefined,
+                birthday: createBirthday || undefined,
+                role: createRole,
+            });
+
+            toast.success('Tạo tài khoản thành công!');
+
+            setIsCreateUserOpen(false);
+            resetCreateUserForm();
+            fetchCustomers(currentPage);
+        } catch (error) {
+            console.error('Create user error:', error);
+            toast.error(
+                error instanceof Error ? error.message : 'Tạo tài khoản thất bại'
+            );
+        } finally {
+            setIsCreatingUser(false);
+        }
+    };
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         fetchCustomers(0);
@@ -141,9 +218,9 @@ export default function UsersPage() {
                                         </Link>
                                     </li>
                                     <li>
-                    <span className="material-symbols-outlined text-[12px]">
-                      chevron_right
-                    </span>
+          <span className="material-symbols-outlined text-[12px]">
+            chevron_right
+          </span>
                                     </li>
                                     <li>
                                         <span className="text-primary font-bold">Khách hàng</span>
@@ -155,6 +232,15 @@ export default function UsersPage() {
                                 Customer Management
                             </h1>
                         </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsCreateUserOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg active:scale-95 transition-all"
+                        >
+                            <span className="material-symbols-outlined text-sm">add</span>
+                            Add User
+                        </button>
                     </section>
 
                     {/* Filter */}
@@ -361,6 +447,178 @@ export default function UsersPage() {
                     </div>
                 </div>
             </main>
+
+            {isCreateUserOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 px-4">
+                    <div
+                        className="rounded-2xl bg-white shadow-xl overflow-hidden flex flex-col"
+                        style={{
+                            width: 'min(640px, calc(100vw - 32px))',
+                            maxHeight: 'calc(100vh - 32px)',
+                        }}
+                    >
+                        <div className="px-6 py-5 border-b border-outline-variant/10 flex items-center justify-between shrink-0">
+                            <div>
+                                <h2 className="text-xl font-extrabold text-blue-900">
+                                    Tạo tài khoản nội bộ
+                                </h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsCreateUserOpen(false);
+                                    resetCreateUserForm();
+                                }}
+                                disabled={isCreatingUser}
+                                className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateUser} className="flex flex-col min-h-0">
+                            <div className="px-6 pb-6 space-y-4 overflow-y-auto flex-1">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Username <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            value={createUsername}
+                                            onChange={(e) => setCreateUsername(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="VD: staff01"
+                                            type="text"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Email <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            value={createEmail}
+                                            onChange={(e) => setCreateEmail(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="VD: staff@gmail.com"
+                                            type="email"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Mật khẩu <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            value={createPassword}
+                                            onChange={(e) => setCreatePassword(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="Nhập mật khẩu"
+                                            type="password"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Vai trò <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            value={createRole}
+                                            onChange={(e) => setCreateRole(e.target.value as Role)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                        >
+                                            <option value="STAFF">STAFF</option>
+                                            <option value="ADMIN">ADMIN</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Họ tên
+                                        </label>
+                                        <input
+                                            value={createFullName}
+                                            onChange={(e) => setCreateFullName(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="VD: Nguyễn Văn A"
+                                            type="text"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Số điện thoại
+                                        </label>
+                                        <input
+                                            value={createPhone}
+                                            onChange={(e) => setCreatePhone(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="VD: 0900000000"
+                                            type="text"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Ngày sinh
+                                        </label>
+                                        <input
+                                            value={createBirthday}
+                                            onChange={(e) => setCreateBirthday(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            type="date"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                            Địa chỉ
+                                        </label>
+                                        <input
+                                            value={createAddress}
+                                            onChange={(e) => setCreateAddress(e.target.value)}
+                                            disabled={isCreatingUser}
+                                            className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                            placeholder="Nhập địa chỉ"
+                                            type="text"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4 border-t border-outline-variant/10 flex justify-end gap-3 bg-surface-container-low shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCreateUserOpen(false);
+                                        resetCreateUserForm();
+                                    }}
+                                    disabled={isCreatingUser}
+                                    className="px-5 py-2 rounded-lg border border-outline-variant text-slate-600 text-sm font-bold bg-white disabled:opacity-50"
+                                >
+                                    Hủy
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    disabled={isCreatingUser}
+                                    className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-50"
+                                >
+                                    {isCreatingUser ? 'Đang tạo...' : 'Tạo tài khoản'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {selectedCustomer && (
                 <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">

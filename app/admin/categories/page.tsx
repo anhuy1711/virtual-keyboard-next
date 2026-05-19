@@ -12,6 +12,7 @@ import {
     deleteCategoryAPI,
     getCategoriesAPI,
     SimplePage,
+    updateCategoryAPI
 } from '@/app/services/categoryService';
 
 interface Category {
@@ -41,7 +42,50 @@ export default function CategoriesPage() {
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<CategoryResponse | null>(null);
     const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+    const [categoryToEdit, setCategoryToEdit] = useState<CategoryResponse | null>(null);
+    const [editCategoryName, setEditCategoryName] = useState('');
+    const [editCategoryDescription, setEditCategoryDescription] = useState('');
+    const [isUpdatingCategory, setIsUpdatingCategory] = useState(false);
 
+    const openEditCategoryModal = (category: CategoryResponse) => {
+        setCategoryToEdit(category);
+        setEditCategoryName(category.name || '');
+        setEditCategoryDescription(category.description || '');
+    };
+    const handleUpdateCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!categoryToEdit) return;
+
+        if (!editCategoryName.trim()) {
+            toast.warning('Vui lòng nhập tên danh mục');
+            return;
+        }
+
+        try {
+            setIsUpdatingCategory(true);
+
+            await updateCategoryAPI(categoryToEdit.id, {
+                name: editCategoryName.trim(),
+                description: editCategoryDescription.trim() || undefined,
+            });
+
+            toast.success('Cập nhật danh mục thành công!');
+
+            setCategoryToEdit(null);
+            setEditCategoryName('');
+            setEditCategoryDescription('');
+
+            fetchCategories(currentPage);
+        } catch (error) {
+            console.error('Update category error:', error);
+            toast.error(
+                error instanceof Error ? error.message : 'Cập nhật danh mục thất bại'
+            );
+        } finally {
+            setIsUpdatingCategory(false);
+        }
+    };
 
     const handleCreateCategory = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -323,8 +367,14 @@ export default function CategoriesPage() {
                                         </td>
 
                                         <td className="px-8 py-6 text-right space-x-2">
-                                            <button className="inline-block p-2 text-slate-400 hover:text-blue-900 transition-colors">
-                                                <span className="material-symbols-outlined">edit</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditCategoryModal(category)}
+                                                className="inline-flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                                            >
+  <span className="material-symbols-outlined text-[18px]">
+    edit
+  </span>
                                             </button>
 
                                             <button
@@ -382,7 +432,89 @@ export default function CategoriesPage() {
                     </div>
                 </div>
             </main>
+            {categoryToEdit && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 px-4">
+                    <div
+                        className="rounded-2xl bg-white shadow-xl overflow-hidden flex flex-col"
+                        style={{
+                            width: 'min(520px, calc(100vw - 32px))',
+                            maxHeight: 'calc(100vh - 32px)',
+                        }}
+                    >
+                        <div className="px-6 py-5 border-b border-outline-variant/10 flex items-center justify-between shrink-0">
+                            <div>
+                                <h2 className="text-xl font-extrabold text-blue-900">
+                                    Sửa danh mục
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    Cập nhật thông tin danh mục sản phẩm.
+                                </p>
+                            </div>
 
+                            <button
+                                type="button"
+                                onClick={() => setCategoryToEdit(null)}
+                                disabled={isUpdatingCategory}
+                                className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateCategory} className="flex flex-col min-h-0">
+                            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                                <div>
+                                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                        Tên danh mục <span className="text-red-500">*</span>
+                                    </label>
+
+                                    <input
+                                        value={editCategoryName}
+                                        onChange={(e) => setEditCategoryName(e.target.value)}
+                                        disabled={isUpdatingCategory}
+                                        className="w-full h-11 px-4 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                                        placeholder="VD: Keyboard"
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                                        Mô tả
+                                    </label>
+
+                                    <textarea
+                                        value={editCategoryDescription}
+                                        onChange={(e) => setEditCategoryDescription(e.target.value)}
+                                        disabled={isUpdatingCategory}
+                                        className="w-full min-h-28 px-4 py-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                                        placeholder="Mô tả ngắn về danh mục..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4 border-t border-outline-variant/10 flex justify-end gap-3 bg-surface-container-low shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setCategoryToEdit(null)}
+                                    disabled={isUpdatingCategory}
+                                    className="px-5 py-2 rounded-lg border border-outline-variant text-slate-600 text-sm font-bold bg-white disabled:opacity-50"
+                                >
+                                    Hủy
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    disabled={isUpdatingCategory}
+                                    className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-50"
+                                >
+                                    {isUpdatingCategory ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
                     <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-outline-variant/10 overflow-hidden animate-fadeIn">
