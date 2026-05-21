@@ -366,26 +366,26 @@ export default function Home() {
         </section>
 
         {/* Aesthetic Spec Grid */}
-        <section className="py-16 md:py-24 bg-surface border-t border-outline-variant/15">
-          <div className="layout-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
-            {SPECS.map((spec) => (
-              <div key={spec.id} className="text-center md:text-left">
-                <span
-                  className="material-symbols-outlined text-secondary text-4xl mb-4 block"
-                  style={{ fontVariationSettings: "'FILL' 0" }}
-                >
-                  {spec.icon}
-                </span>
-                <h4 className="font-headline font-bold text-primary mb-2">
-                  {spec.title}
-                </h4>
-                <p className="text-sm text-on-surface-variant font-body">
-                  {spec.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/*<section className="py-16 md:py-24 bg-surface border-t border-outline-variant/15">*/}
+        {/*  <div className="layout-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">*/}
+        {/*    {SPECS.map((spec) => (*/}
+        {/*      <div key={spec.id} className="text-center md:text-left">*/}
+        {/*        <span*/}
+        {/*          className="material-symbols-outlined text-secondary text-4xl mb-4 block"*/}
+        {/*          style={{ fontVariationSettings: "'FILL' 0" }}*/}
+        {/*        >*/}
+        {/*          {spec.icon}*/}
+        {/*        </span>*/}
+        {/*        <h4 className="font-headline font-bold text-primary mb-2">*/}
+        {/*          {spec.title}*/}
+        {/*        </h4>*/}
+        {/*        <p className="text-sm text-on-surface-variant font-body">*/}
+        {/*          {spec.description}*/}
+        {/*        </p>*/}
+        {/*      </div>*/}
+        {/*    ))}*/}
+        {/*  </div>*/}
+        {/*</section>*/}
       </main>
       <Footer />
     </>

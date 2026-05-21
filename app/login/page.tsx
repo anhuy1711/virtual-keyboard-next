@@ -7,6 +7,7 @@ import { loginAPI } from "@/app/services/authService";
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
 import "../components/login-form.css";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -146,9 +147,12 @@ export default function LoginPage() {
 
             {/* Forgot Password Link */}
             <div className="forgot-password">
-              <a href="#" onClick={handleForgotPassword}>
-                Quên mật khẩu? Nhấn vào <u>đây</u>
-              </a>
+              <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
             </div>
 
             {/* Sign In Button */}
@@ -158,29 +162,29 @@ export default function LoginPage() {
           </form>
 
           {/* Social Login Divider */}
-          <div className="divider">
-            <p>Hoặc đăng nhập bằng</p>
-          </div>
+          {/*<div className="divider">*/}
+          {/*  <p>Hoặc đăng nhập bằng</p>*/}
+          {/*</div>*/}
 
           {/* Social Login Buttons */}
-          <div className="social-login">
-            <button
-              type="button"
-              className="btn-facebook"
-              disabled={isLoading}
-              onClick={handleLoginWithFacebook}
-            >
-              <span className="social-icon">f</span> Facebook
-            </button>
-            <button
-              type="button"
-              className="btn-google"
-              disabled={isLoading}
-              onClick={handleLoginWithGoogle}
-            >
-              <span className="social-icon">+</span> Google
-            </button>
-          </div>
+          {/*<div className="social-login">*/}
+          {/*  <button*/}
+          {/*    type="button"*/}
+          {/*    className="btn-facebook"*/}
+          {/*    disabled={isLoading}*/}
+          {/*    onClick={handleLoginWithFacebook}*/}
+          {/*  >*/}
+          {/*    <span className="social-icon">f</span> Facebook*/}
+          {/*  </button>*/}
+          {/*  <button*/}
+          {/*    type="button"*/}
+          {/*    className="btn-google"*/}
+          {/*    disabled={isLoading}*/}
+          {/*    onClick={handleLoginWithGoogle}*/}
+          {/*  >*/}
+          {/*    <span className="social-icon">+</span> Google*/}
+          {/*  </button>*/}
+          {/*</div>*/}
         </div>
       </div>
     </div>

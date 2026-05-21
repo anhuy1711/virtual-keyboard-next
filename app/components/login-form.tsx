@@ -136,9 +136,12 @@ export default function LoginForm() {
 
             {/* Forgot Password Link */}
             <div className="forgot-password">
-              <a href="#" onClick={handleForgotPassword}>
-                Quên mật khẩu? Nhấn vào <u>đây</u>
-              </a>
+              <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-primary hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
             </div>
 
             {/* Sign In Button */}

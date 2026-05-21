@@ -22,6 +22,9 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 /**
@@ -277,3 +280,20 @@ export const updatePassword = async (
   }
 };
 
+export const forgotPasswordAPI = async (
+    request: ForgotPasswordRequest
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/user/forgot-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  const result: ApiResponse<void> = await response.json();
+
+  if (!response.ok || result.code !== 200) {
+    throw new Error(result.message || "Gửi yêu cầu quên mật khẩu thất bại");
+  }
+};

@@ -210,28 +210,28 @@ export default function SignupPage() {
                   </button>
                 </form>
 
-                <div className="divider">
-                  <p>Hoặc đăng ký bằng</p>
-                </div>
+                {/*<div className="divider">*/}
+                {/*  <p>Hoặc đăng ký bằng</p>*/}
+                {/*</div>*/}
 
-                <div className="social-login">
-                  <button
-                    type="button"
-                    className="btn-facebook"
-                    disabled={isLoading}
-                    onClick={() => toast.info("Đăng ký Facebook sẽ sớm được cập nhật")}
-                  >
-                    <span className="social-icon">f</span> Facebook
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-google"
-                    disabled={isLoading}
-                    onClick={() => toast.info("Đăng ký Google sẽ sớm được cập nhật")}
-                  >
-                    <span className="social-icon">+</span> Google
-                  </button>
-                </div>
+                {/*<div className="social-login">*/}
+                {/*  <button*/}
+                {/*    type="button"*/}
+                {/*    className="btn-facebook"*/}
+                {/*    disabled={isLoading}*/}
+                {/*    onClick={() => toast.info("Đăng ký Facebook sẽ sớm được cập nhật")}*/}
+                {/*  >*/}
+                {/*    <span className="social-icon">f</span> Facebook*/}
+                {/*  </button>*/}
+                {/*  <button*/}
+                {/*    type="button"*/}
+                {/*    className="btn-google"*/}
+                {/*    disabled={isLoading}*/}
+                {/*    onClick={() => toast.info("Đăng ký Google sẽ sớm được cập nhật")}*/}
+                {/*  >*/}
+                {/*    <span className="social-icon">+</span> Google*/}
+                {/*  </button>*/}
+                {/*</div>*/}
               </div>
             </div>
           </div>
