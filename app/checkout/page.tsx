@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { checkoutAPI, PaymentMethod } from '@/app/services/orderService';
 import { CartResponse, getMyCartAPI } from '@/app/services/cartService';
 import { getUserInfoAPI } from '@/app/services/userService';
+import { createVnPayPaymentAPI } from "@/app/services/paymentService";
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -19,8 +20,7 @@ export default function CheckoutPage() {
     const [receiverPhone, setReceiverPhone] = useState('');
     const [receiverAddress, setReceiverAddress] = useState('');
     const [note, setNote] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
-
+    const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
     useEffect(() => {
         const fetchCart = async () => {
             try {
@@ -100,26 +100,33 @@ export default function CheckoutPage() {
                 receiverAddress: receiverAddress.trim(),
                 note: note.trim() || undefined,
                 paymentMethod,
-                provider: paymentMethod === 'COD' ? 'COD' : 'MOCK',
             });
 
-            toast.success('Đặt hàng thành công!');
+            if (paymentMethod === "ONLINE") {
+                const payment = await createVnPayPaymentAPI(order.id);
 
-            if (
-                order.payment?.paymentMethod === 'ONLINE' &&
-                order.payment?.paymentUrl
-            ) {
-                window.location.href = order.payment.paymentUrl;
+                router.push(
+                    `/vnpay-payment?transactionCode=${encodeURIComponent(payment.transactionCode)}&orderId=${payment.orderId}&amount=${payment.amount}`
+                );
                 return;
             }
 
+            toast.success("Đặt hàng thành công!");
             router.push(`/orders/${order.id}`);
         } catch (error) {
             console.error(error);
-            toast.error('Đặt hàng thất bại');
+            toast.error(
+                error instanceof Error ? error.message : "Đặt hàng thất bại"
+            );
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const formatCurrency = (value?: number | string) => {
+        return `${new Intl.NumberFormat("vi-VN", {
+            maximumFractionDigits: 0,
+        }).format(Number(value || 0))} VNĐ`;
     };
 
     return (
@@ -312,26 +319,33 @@ export default function CheckoutPage() {
 
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-secondary">
-                          payments
-                        </span>
+      <span className="material-symbols-outlined text-secondary">
+        qr_code_2
+      </span>
+
                                                 <span className="font-headline font-bold text-primary">
-                          Thanh toán trực tuyến
-                        </span>
+        Thanh toán online qua VNPay
+      </span>
                                             </div>
 
-                                            <div className="flex gap-2">
-                        <span className="material-symbols-outlined text-on-surface/40 text-xl">
-                          credit_card
-                        </span>
-                                                <span className="material-symbols-outlined text-on-surface/40 text-xl">
-                          qr_code_2
-                        </span>
-                                            </div>
+                                            {paymentMethod === 'ONLINE' ? (
+                                                <span className="material-symbols-outlined text-primary">
+        check_circle
+      </span>
+                                            ) : (
+                                                <div className="flex gap-2">
+        <span className="material-symbols-outlined text-on-surface/40 text-xl">
+          credit_card
+        </span>
+                                                    <span className="material-symbols-outlined text-on-surface/40 text-xl">
+          qr_code_2
+        </span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <p className="mt-2 text-xs text-on-surface/60 font-body">
-                                            Demo thanh toán online bằng Mock Payment.
+                                            Quét mã QR hoặc xác nhận thanh toán qua cổng VNPay.
                                         </p>
                                     </label>
                                 </div>
@@ -404,7 +418,7 @@ export default function CheckoutPage() {
 
                                                 <div className="flex items-center">
                           <span className="font-headline font-semibold text-primary whitespace-nowrap">
-                            ${Number(item.price * item.quantity).toFixed(2)}
+                            {formatCurrency(item.price * item.quantity)}
                           </span>
                                                 </div>
                                             </div>
@@ -415,7 +429,7 @@ export default function CheckoutPage() {
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-on-surface/60 font-body">Subtotal</span>
                                             <span className="text-on-surface font-headline font-semibold">
-                        ${subtotal.toFixed(2)}
+                        {formatCurrency(subtotal)}
                       </span>
                                         </div>
 
@@ -433,7 +447,7 @@ export default function CheckoutPage() {
 
                                             <div className="flex flex-col items-end">
                         <span className="text-2xl font-extrabold text-primary font-headline">
-                          ${total.toFixed(2)}
+                          {formatCurrency(total)}
                         </span>
                                                 <span className="text-[10px] text-on-surface/40 font-body">
                           USD

@@ -222,7 +222,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 {/* Order Header */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-outline-variant/15 pb-8">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b border-outline-variant/15">
                     <div className="space-y-2">
             <span className="font-label text-xs font-bold uppercase tracking-[0.2em] text-secondary">
               Chi tiết đặt hàng
