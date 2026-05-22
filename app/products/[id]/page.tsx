@@ -213,6 +213,8 @@ export default function ProductDetailPage() {
     );
   }
 
+  const displayImage = matchingSku?.imageUrl || product.cover;
+
   return (
     <>
       <TopNav />
@@ -223,7 +225,7 @@ export default function ProductDetailPage() {
         <div className="lg:col-span-7 flex flex-col gap-6">
           <div className="bg-surface-container-lowest overflow-hidden rounded-xl">
             <img
-              src={product.cover}
+              src={displayImage}
               alt={product.name}
               className="w-full aspect-4/3 object-cover"
             />
@@ -235,7 +237,7 @@ export default function ProductDetailPage() {
                 className="bg-surface-container-low rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <img
-                  src={product.cover}
+                  src={displayImage}
                   alt={`${product.name} - ${i}`}
                   className="w-full aspect-square object-cover"
                 />

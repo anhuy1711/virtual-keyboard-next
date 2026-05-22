@@ -31,6 +31,7 @@ interface SKURow {
   combination: string;
   optionValueIndexes: number[];
   sku: string;
+  imageUrl?: string;
   price: number;
   stock: number;
   isActive?: boolean;
@@ -72,6 +73,7 @@ function generateSKUs(options: Option[]): SKURow[] {
         filled[oi].values.findIndex((v) => v.name === combo[oi])
     ),
     sku: slugSKU(combo, i),
+    imageUrl: '',
     price: 0,
     stock: 0,
     isActive: true,
@@ -164,6 +166,7 @@ export default function EditProductPage() {
               opt.values.findIndex(v => v.id === sku.optionValueIds[oi])
           ),
           sku: sku.sku,
+          imageUrl: sku.imageUrl,
           price: sku.price,
           stock: sku.quantity,
           isActive: sku.isActive,
@@ -261,7 +264,7 @@ export default function EditProductPage() {
         generated.map((g) => {
           const prev = existing.get(g.combination);
           return prev
-              ? { ...g, id: prev.id, price: prev.price, stock: prev.stock, label: prev.label, sku: prev.sku, isActive: prev.isActive }
+              ? { ...g, id: prev.id, price: prev.price, stock: prev.stock, label: prev.label, sku: prev.sku, imageUrl: prev.imageUrl, isActive: prev.isActive }
               : g;
         })
     );
@@ -282,6 +285,28 @@ export default function EditProductPage() {
 
   const removeSkuRow = (id: string | undefined) => {
     setSkus(skus.filter((s) => !(s.id?.toString() === id || (s.id === undefined && String(skus.indexOf(s)) === id))));
+  };
+
+  const handleSkuImageUpload = async (rowKey: string, file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh');
+      return;
+    }
+
+    try {
+      const imageUrl = await uploadProductImageAPI(file);
+      setSkus((current) =>
+          current.map((sku, index) => {
+            const key = sku.id?.toString() || String(index);
+            return key === rowKey ? { ...sku, imageUrl } : sku;
+          })
+      );
+      toast.success('Đã tải ảnh SKU');
+    } catch (error) {
+      console.error('Upload SKU image error:', error);
+      toast.error('Tải ảnh SKU thất bại');
+    }
   };
 
   // ── submit ────────────────────────────────────────────────────────────────
@@ -317,6 +342,8 @@ export default function EditProductPage() {
 
         skus: skus.map((sku) => ({
           id: sku.id,
+          sku: sku.sku,
+          imageUrl: sku.imageUrl,
           price: sku.price,
           quantity: sku.stock,
           optionValueIds: sku.optionValueIndexes
@@ -615,6 +642,7 @@ export default function EditProductPage() {
                       <thead>
                       <tr className="bg-surface-container-low border-b border-outline-variant/10">
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Biến thể</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Ảnh SKU</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">SKU</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Giá ($)</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Tồn kho</th>
@@ -635,7 +663,7 @@ export default function EditProductPage() {
                                       <input
                                           type="text"
                                           value={sku.label ?? ''}
-                                          onChange={(e) => updateSkuRow(sku.id, 'label', e.target.value)}
+                                          onChange={(e) => updateSkuRow(skuKey, 'label', e.target.value)}
                                           placeholder="Nhãn phụ (tùy chọn)"
                                           className="text-xs border border-outline-variant rounded px-2 py-0.5 w-40 focus:border-secondary focus:ring-1 focus:ring-secondary outline-none"
                                       />
@@ -645,11 +673,26 @@ export default function EditProductPage() {
                                 </div>
                               </td>
                               <td className="px-6 py-4">
+                                <label className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-outline-variant bg-surface-container-low hover:border-secondary">
+                                  {sku.imageUrl ? (
+                                      <img src={sku.imageUrl} alt={sku.sku} className="h-full w-full object-cover" />
+                                  ) : (
+                                      <span className="material-symbols-outlined text-text-light">add_photo_alternate</span>
+                                  )}
+                                  <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(event) => handleSkuImageUpload(skuKey, event.target.files?.[0])}
+                                  />
+                                </label>
+                              </td>
+                              <td className="px-6 py-4">
                                 <input
                                     className="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-secondary font-semibold outline-none"
                                     type="text"
                                     value={sku.sku}
-                                    onChange={(e) => updateSkuRow(sku.id, 'sku', e.target.value)}
+                                    onChange={(e) => updateSkuRow(skuKey, 'sku', e.target.value)}
                                 />
                               </td>
                               <td className="px-6 py-4">
@@ -659,7 +702,7 @@ export default function EditProductPage() {
                                     min={0}
                                     step={0.01}
                                     value={sku.price}
-                                    onChange={(e) => updateSkuRow(sku.id, 'price', e.target.value)}
+                                    onChange={(e) => updateSkuRow(skuKey, 'price', e.target.value)}
                                 />
                               </td>
                               <td className="px-6 py-4">
@@ -668,7 +711,7 @@ export default function EditProductPage() {
                                     type="number"
                                     min={0}
                                     value={sku.stock}
-                                    onChange={(e) => updateSkuRow(sku.id, 'stock', e.target.value)}
+                                    onChange={(e) => updateSkuRow(skuKey, 'stock', e.target.value)}
                                 />
                               </td>
                               <td className="px-6 py-4">
@@ -676,7 +719,7 @@ export default function EditProductPage() {
                                   <input
                                       type="checkbox"
                                       checked={sku.isActive ?? true}
-                                      onChange={(e) => updateSkuRow(sku.id, 'isActive', e.target.checked)}
+                                      onChange={(e) => updateSkuRow(skuKey, 'isActive', e.target.checked)}
                                       className="sr-only peer"
                                   />
                                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
@@ -694,7 +737,7 @@ export default function EditProductPage() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => removeSkuRow(sku.id)}
+                                    onClick={() => removeSkuRow(skuKey)}
                                     className="text-text-light hover:text-error inline-block transition-colors"
                                 >
                                   <span className="material-symbols-outlined text-lg">delete</span>

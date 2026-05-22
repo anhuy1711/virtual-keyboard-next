@@ -30,8 +30,12 @@ export interface ProductSkuCreateRequest {
   sizeAttributeId?: number;
   colorAttributeId?: number;
   layoutAttributeId?: number;
+  sku?: string;
+  imageUrl?: string;
   price: number;
   quantity: number;
+  optionValueIndexes?: number[];
+  optionValueIds?: number[];
 }
 
 export interface SKU {
@@ -66,6 +70,7 @@ export interface ProductSkuResponse {
   id: number;
   productId: number;
   sku: string;
+  imageUrl?: string;
   price: number;
   quantity: number;
   isActive: boolean;
@@ -109,16 +114,16 @@ export interface CreateProductRequest {
   options: {
     id?: number;
     name: string;
-    values: {
-      id?: number;
-      value: string;
-    }[];
+    values: ({ id?: number; value: string } | string)[];
   }[];
   skus: {
     id?: number;
+    sku?: string;
+    imageUrl?: string;
     price: number;
     quantity: number;
-    optionValueIds: number[];
+    optionValueIndexes?: number[];
+    optionValueIds?: number[];
   }[];
 }
 

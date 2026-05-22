@@ -23,6 +23,7 @@ interface SKURow {
   combination: string;          // "Black / Aluminum"
   optionValueIndexes: number[]; // indexes into each option's values array
   sku: string;
+  imageUrl?: string;
   price: number;
   stock: number;
   label?: string;               // optional sub-label, e.g. "Standard Edition"
@@ -66,6 +67,7 @@ function generateSKUs(options: Option[]): SKURow[] {
         filled[oi].values.findIndex((v) => v.name === combo[oi])
     ),
     sku: slugSKU(combo, i),
+    imageUrl: '',
     price: 0,
     stock: 0,
     label: '',
@@ -219,7 +221,7 @@ export default function CreateProductPage() {
     setSkus(
         generated.map((g) => {
           const prev = existing.get(g.combination);
-          return prev ? { ...g, id: prev.id, price: prev.price, stock: prev.stock, label: prev.label, sku: prev.sku } : g;
+          return prev ? { ...g, id: prev.id, price: prev.price, stock: prev.stock, label: prev.label, sku: prev.sku, imageUrl: prev.imageUrl } : g;
         })
     );
     toast.success('SKUs regenerated from options.');
@@ -231,6 +233,23 @@ export default function CreateProductPage() {
             ? { ...s, [field]: (field === 'price' || field === 'stock') ? parseFloat(String(value)) : value }
             : s
     ));
+  };
+
+  const handleSkuImageUpload = async (id: string, file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh');
+      return;
+    }
+
+    try {
+      const imageUrl = await uploadProductImageAPI(file);
+      updateSkuRow(id, 'imageUrl', imageUrl);
+      toast.success('Đã tải ảnh SKU');
+    } catch (error) {
+      console.error('Upload SKU image error:', error);
+      toast.error('Tải ảnh SKU thất bại');
+    }
   };
 
   const removeSkuRow = (id: string) => setSkus(skus.filter((s) => s.id !== id));
@@ -250,7 +269,7 @@ export default function CreateProductPage() {
         summary: summary || productName,
         cover: coverImage || 'https://via.placeholder.com/300',
         type: productType || 'KIT',
-        categoryId: 1,
+        categoryId: Number(categoryId) || 1,
 
         specifications: [],
 
@@ -265,12 +284,16 @@ export default function CreateProductPage() {
 
         skus: hasVariants
             ? skus.map((sku) => ({
+              sku: sku.sku,
+              imageUrl: sku.imageUrl,
               price: sku.price,
               quantity: sku.stock,
               optionValueIndexes: sku.optionValueIndexes,
             }))
             : [
               {
+                sku: productName ? `${productName.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase()}-001` : 'SKU-001',
+                imageUrl: coverImage,
                 price: defaultPrice,
                 quantity: defaultStock,
                 optionValueIndexes: [],
@@ -550,6 +573,7 @@ export default function CreateProductPage() {
                       <thead>
                       <tr className="bg-surface-container-low border-b border-outline-variant/10">
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Variant Combination</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Ảnh SKU</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">SKU Identifier</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Base Price ($)</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Stock Level</th>
@@ -578,6 +602,22 @@ export default function CreateProductPage() {
                                       sku.label && <span className="text-xs text-text-light">{sku.label}</span>
                                   )}
                                 </div>
+                              </td>
+
+                              <td className="px-6 py-4">
+                                <label className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-outline-variant bg-surface-container-low hover:border-secondary">
+                                  {sku.imageUrl ? (
+                                      <img src={sku.imageUrl} alt={sku.sku} className="h-full w-full object-cover" />
+                                  ) : (
+                                      <span className="material-symbols-outlined text-text-light">add_photo_alternate</span>
+                                  )}
+                                  <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(event) => handleSkuImageUpload(sku.id, event.target.files?.[0])}
+                                  />
+                                </label>
                               </td>
 
                               {/* SKU identifier */}

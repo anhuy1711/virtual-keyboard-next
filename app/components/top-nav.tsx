@@ -87,6 +87,7 @@ export default function TopNav() {
   // Build nav items with Trang Chủ first, then categories
   const navItems = [
     { id: "home", label: "Trang Chủ", href: "/" },
+    { id: "custom-keyboard", label: "Custom", href: "/custom-keyboard" },
     ...categories.map((cat) => ({
       id: `cat-${cat.id}`,
       label: cat.name,
