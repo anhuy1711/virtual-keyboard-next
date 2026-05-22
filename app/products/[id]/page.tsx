@@ -84,6 +84,9 @@ function isOptionValueAvailable(
     return sku.optionValueIds[optionIndex] === valueId;
   });
 }
+const formatCurrency = (value: number) => {
+  return Number(value || 0).toLocaleString('vi-VN') + '₫';
+};
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -253,7 +256,7 @@ export default function ProductDetailPage() {
             {matchingSku ? (
               <div className="flex items-center gap-4">
                 <p className="text-3xl font-light text-on-surface">
-                  ${matchingSku.price.toFixed(2)}
+                  {formatCurrency(matchingSku.price)}
                 </p>
                 <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
                   matchingSku.quantity > 0
@@ -392,7 +395,7 @@ export default function ProductDetailPage() {
                 }
                 className="w-full py-6 bg-primary text-on-primary rounded-md text-lg font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                {isAddingToCart ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
               </button>
             </div>
           </div>
@@ -413,7 +416,7 @@ export default function ProductDetailPage() {
                 : "border-transparent text-on-surface-variant/60 hover:text-on-surface"
             }`}
           >
-            Specifications
+            Thông số kỹ thuật
           </button>
           <button
             onClick={() => setActiveTab("description")}
@@ -423,7 +426,7 @@ export default function ProductDetailPage() {
                 : "border-transparent text-on-surface-variant/60 hover:text-on-surface"
             }`}
           >
-            Description
+            Mô tả sản phẩm
           </button>
           <button
               onClick={() => setActiveTab("reviews")}
@@ -479,7 +482,7 @@ export default function ProductDetailPage() {
                 <div className="lg:col-span-4 flex flex-col gap-8">
                   <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-6">
                     <h3 className="text-2xl font-extrabold tracking-tight text-primary mb-2">
-                      Customer Reviews
+
                     </h3>
 
                     <div className="flex items-end gap-3 mb-5">
@@ -493,7 +496,7 @@ export default function ProductDetailPage() {
                         </div>
 
                         <span className="text-xs font-medium text-on-surface-variant/60 uppercase tracking-widest mt-1">
-                Based on {reviewTotal} reviews
+                Dựa trên tổng số {reviewTotal} đánh giá
               </span>
                       </div>
                     </div>
@@ -520,20 +523,16 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
 
-                  <button
-                      type="button"
-                      onClick={() =>
-                          toast.info("Bạn có thể đánh giá sản phẩm trong màn chi tiết đơn hàng đã hoàn thành")
-                      }
-                      className="w-full py-4 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-on-primary transition-all"
-                  >
-                    Viết đánh giá
-                  </button>
+                  {/*<button*/}
+                  {/*    type="button"*/}
+                  {/*    onClick={() =>*/}
+                  {/*        toast.info("Bạn có thể đánh giá sản phẩm trong màn chi tiết đơn hàng đã hoàn thành")*/}
+                  {/*    }*/}
+                  {/*    className="w-full py-4 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary hover:text-on-primary transition-all"*/}
+                  {/*>*/}
+                  {/*  Viết đánh giá*/}
+                  {/*</button>*/}
 
-                  <p className="text-sm text-on-surface-variant/70 leading-relaxed">
-                    Chỉ khách hàng đã mua sản phẩm và có đơn hàng hoàn thành mới có thể
-                    viết đánh giá.
-                  </p>
                 </div>
 
                 {/* Review List */}

@@ -8,9 +8,10 @@ import TopNav from '@/app/components/top-nav';
 import Footer from '@/app/components/footer';
 import {
     cancelMyOrderAPI,
-    getMyOrderDetailAPI,
+    getMyOrderDetailAPI, OrderItemResponse,
     OrderResponse,
 } from '@/app/services/orderService';
+import { createReviewAPI } from "@/app/services/reviewService";
 
 export default function OrderDetailPage() {
     const router = useRouter();
@@ -21,7 +22,57 @@ export default function OrderDetailPage() {
     const [order, setOrder] = useState<OrderResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [reviewItem, setReviewItem] = useState<OrderItemResponse | null>(null);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState("");
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewedItemIds, setReviewedItemIds] = useState<number[]>([]);
 
+    const openReviewModal = (item: OrderItemResponse) => {
+        setReviewItem(item);
+        setRating(5);
+        setComment("");
+    };
+    const handleSubmitReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!reviewItem) return;
+
+        if (rating < 1 || rating > 5) {
+            toast.warning("Vui lòng chọn số sao từ 1 đến 5");
+            return;
+        }
+
+        if (!comment.trim()) {
+            toast.warning("Vui lòng nhập nội dung đánh giá");
+            return;
+        }
+
+        try {
+            setIsSubmittingReview(true);
+
+            await createReviewAPI({
+                productId: reviewItem.productId,
+                orderItemId: reviewItem.id,
+                rating,
+                comment: comment.trim(),
+            });
+
+            toast.success("Đánh giá sản phẩm thành công!");
+
+            setReviewedItemIds((prev) => [...prev, reviewItem.id]);
+            setReviewItem(null);
+            setComment("");
+            setRating(5);
+        } catch (error) {
+            console.error("Review error:", error);
+            toast.error(
+                error instanceof Error ? error.message : "Đánh giá sản phẩm thất bại"
+            );
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
     useEffect(() => {
         if (!orderId) return;
 
@@ -123,10 +174,6 @@ export default function OrderDetailPage() {
 
         if (order.payment.paymentMethod === 'COD') {
             return 'Thanh toán khi nhận hàng';
-        }
-
-        if (order.payment.provider === 'MOCK') {
-            return 'Thanh toán trực tuyến';
         }
 
         return order.payment.paymentMethod;
@@ -386,13 +433,37 @@ export default function OrderDetailPage() {
                                             </p>
                                         </div>
 
-                                        <div className="text-left sm:text-right">
-                                            <p className="text-xs text-on-surface-variant">
-                                                {formatCurrency(Number(item.price))} / sản phẩm
-                                            </p>
-                                            <p className="font-headline font-bold text-primary text-lg">
-                                                {formatCurrency(Number(item.totalPrice))}
-                                            </p>
+                                        <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-3">
+                                            <div>
+                                                <p className="text-xs text-on-surface-variant">
+                                                    {formatCurrency(Number(item.price))} / sản phẩm
+                                                </p>
+
+                                                <p className="font-headline font-bold text-primary text-lg">
+                                                    {formatCurrency(Number(item.totalPrice))}
+                                                </p>
+                                            </div>
+
+                                            {order.status === "COMPLETED" && (
+                                                <>
+                                                    {item.reviewed || reviewedItemIds.includes(item.id) ? (
+                                                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">
+          Đã đánh giá
+        </span>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openReviewModal(item)}
+                                                            className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white"
+                                                        >
+          <span className="material-symbols-outlined text-[18px]">
+            rate_review
+          </span>
+                                                            Đánh giá
+                                                        </button>
+                                                    )}
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -507,6 +578,118 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
             </main>
+            {reviewItem && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/30 px-4">
+                    <div
+                        className="rounded-2xl bg-white shadow-xl overflow-hidden"
+                        style={{
+                            width: "min(520px, calc(100vw - 32px))",
+                        }}
+                    >
+                        <div className="flex items-start justify-between border-b border-outline-variant/10 px-6 py-5">
+                            <div>
+                                <h2 className="text-xl font-extrabold text-blue-900">
+                                    Đánh giá sản phẩm
+                                </h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Chia sẻ trải nghiệm của bạn về sản phẩm.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setReviewItem(null)}
+                                disabled={isSubmittingReview}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmitReview}>
+                            <div className="space-y-5 px-6 py-6">
+                                <div className="flex gap-4">
+                                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                        <img
+                                            src={reviewItem.productImage || "/placeholder.png"}
+                                            alt={reviewItem.productName}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+                                        <p className="line-clamp-2 text-sm font-bold text-blue-900">
+                                            {reviewItem.productName}
+                                        </p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            Số lượng: {reviewItem.quantity}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                        Số sao
+                                    </label>
+
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setRating(star)}
+                                                disabled={isSubmittingReview}
+                                                className="flex h-10 w-10 items-center justify-center rounded-lg disabled:opacity-50"
+                                            >
+                  <span
+                      className={`material-symbols-outlined text-[30px] ${
+                          star <= rating ? "text-amber-400" : "text-slate-300"
+                      }`}
+                  >
+                    star
+                  </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                        Nội dung đánh giá
+                                    </label>
+
+                                    <textarea
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        disabled={isSubmittingReview}
+                                        placeholder="Nhập cảm nhận của bạn về sản phẩm..."
+                                        className="min-h-32 w-full resize-none rounded-xl border border-outline-variant/30 bg-surface-container-low px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 border-t border-outline-variant/10 bg-surface-container-low px-6 py-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setReviewItem(null)}
+                                    disabled={isSubmittingReview}
+                                    className="h-10 rounded-lg border border-outline-variant bg-white px-5 text-sm font-bold text-slate-600 disabled:opacity-50"
+                                >
+                                    Hủy
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingReview}
+                                    className="h-10 rounded-lg bg-primary px-5 text-sm font-bold text-white disabled:opacity-50"
+                                >
+                                    {isSubmittingReview ? "Đang gửi..." : "Gửi đánh giá"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </>

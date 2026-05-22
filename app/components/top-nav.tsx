@@ -15,7 +15,22 @@ export default function TopNav() {
   const [isMounted, setIsMounted] = useState(false);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    const keyword = searchKeyword.trim();
+
+    if (!keyword) {
+      setIsSearchOpen(false);
+      return;
+    }
+
+    router.push(`/products?name=${encodeURIComponent(keyword)}`);
+    setIsSearchOpen(false);
+  };
   // Mark component as mounted on client
   useEffect(() => {
     setIsMounted(true);
@@ -98,20 +113,78 @@ export default function TopNav() {
 
         {/* Icons & Buttons */}
         <div className="navbar-icons">
-          <button className="icon-btn" title="Search">
-            <i className="fas fa-search"></i>
-          </button>
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+            <div
+                className={`overflow-hidden transition-all duration-300 ${
+                    isSearchOpen ? "w-[240px] opacity-100" : "w-0 opacity-0"
+                }`}
+            >
+              <input
+                  type="text"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  placeholder="Tìm sản phẩm..."
+                  className="h-10 w-[240px] rounded-full border border-gray-300 bg-white px-4 text-sm text-black placeholder:text-gray-400 outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700"
+                  autoFocus={isSearchOpen}
+              />
+            </div>
+
+            <button
+                type={isSearchOpen ? "submit" : "button"}
+                className="icon-btn"
+                title="Search"
+                onClick={() => {
+                  if (!isSearchOpen) {
+                    setIsSearchOpen(true);
+                  }
+                }}
+            >
+              <i className="fas fa-search"></i>
+            </button>
+          </form>
 
           <Link href="/cart" className="icon-btn" title="Shopping Cart">
             <i className="fas fa-shopping-cart"></i>
           </Link>
 
-          {/* Account Button */}
-          {isLoggedIn && (
-            <Link href="/account" className="icon-btn user-icon" title="Account">
+          {/* Account/Login Icon */}
+          <div className="user-dropdown">
+            <button type="button" className="icon-btn user-icon" title="Account">
               <i className="fas fa-user-circle"></i>
-            </Link>
-          )}
+            </button>
+
+            <div className="user-dropdown-menu">
+              {!isLoggedIn ? (
+                  <>
+                    <Link href="/login" className="user-dropdown-item">
+                      <i className="fas fa-sign-in-alt"></i>
+                      Đăng nhập
+                    </Link>
+
+                    <Link href="/signup" className="user-dropdown-item">
+                      <i className="fas fa-user-plus"></i>
+                      Đăng ký
+                    </Link>
+                  </>
+              ) : (
+                  <>
+                    <Link href="/account" className="user-dropdown-item">
+                      <i className="fas fa-user"></i>
+                      Tài khoản
+                    </Link>
+
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="user-dropdown-item user-dropdown-logout"
+                    >
+                      <i className="fas fa-sign-out-alt"></i>
+                      Đăng xuất
+                    </button>
+                  </>
+              )}
+            </div>
+          </div>
 
           {/* Admin Button - Only show if user is admin */}
           {isLoggedIn && userRole === "ADMIN" && (
@@ -120,23 +193,7 @@ export default function TopNav() {
             </Link>
           )}
 
-          {/* Logout Button */}
-          {isLoggedIn && (
-            <button
-              className="btn-logout"
-              onClick={handleLogout}
-              title="Logout"
-            >
-              Logout
-            </button>
-          )}
-
           {/* Login/Sign In Button */}
-          {!isLoggedIn && (
-            <Link href="/login" className="btn-login">
-              Sign In
-            </Link>
-          )}
         </div>
       </div>
     </nav>

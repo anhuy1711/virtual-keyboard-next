@@ -15,35 +15,6 @@ import {
   getHomeComponentsAPI,
 } from "@/app/services/homeProductService";
 
-const SPECS = [
-  {
-    id: "cnc",
-    icon: "precision_manufacturing",
-    title: "CNC Machined",
-    description: "Aerospace-grade aluminum for zero-flex stability.",
-  },
-  {
-    id: "pvd",
-    icon: "palette",
-    title: "PVD Coating",
-    description:
-      "Deep, durable finishes that resist wear and enhance tactile resonance.",
-  },
-  {
-    id: "sound-profiles",
-    icon: "waves",
-    title: "Sound Profiles",
-    description:
-      "Engineered acoustic cavities for that perfect 'thocky' signature sound.",
-  },
-  {
-    id: "lifetime-support",
-    icon: "verified_user",
-    title: "Lifetime Support",
-    description:
-      "Dedicated enthusiast support for your building journey and beyond.",
-  },
-];
 
 export default function Home() {
   const [keyboardTab, setKeyboardTab] = useState("in-stock");
@@ -76,6 +47,9 @@ export default function Home() {
     fetchKeyboards();
   }, [keyboardTab]);
 
+  const formatCurrency = (value: number) => {
+    return Number(value || 0).toLocaleString('vi-VN') + '₫';
+  };
   useEffect(() => {
     const fetchComponents = async () => {
       try {
@@ -245,7 +219,7 @@ export default function Home() {
                         </h3>
 
                         <p className="text-on-surface-variant font-medium">
-                          ${Number(kb.price ?? 0).toFixed(2)}
+                          {formatCurrency(Number(kb.price))}
                         </p>
                       </Link>
                   ))
@@ -356,7 +330,7 @@ export default function Home() {
                         </h4>
 
                         <p className="text-xs md:text-sm text-on-surface-variant">
-                          ${Number(comp.price ?? 0).toFixed(2)}
+                          {formatCurrency(Number(comp.price))}
                         </p>
                       </Link>
                   ))

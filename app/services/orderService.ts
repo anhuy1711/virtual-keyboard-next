@@ -13,10 +13,11 @@ export interface OrderItemResponse {
     productId: number;
     productSkuId: number;
     productName: string;
-    productImage: string;
+    productImage?: string | null;
     quantity: number;
     price: number;
     totalPrice: number;
+    reviewed?: boolean;
 }
 
 export interface PaymentDetailResponse {

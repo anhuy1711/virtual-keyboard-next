@@ -6,6 +6,7 @@ import {
   filterProductsAPI,
   ProductResponse,
 } from "@/app/services/productService";
+import { useSearchParams } from "next/navigation";
 
 interface Product extends ProductResponse {
   isHighlight?: boolean;
@@ -21,6 +22,9 @@ export default function ProductsGrid() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const ITEMS_PER_PAGE = 12;
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name") || "";
+  const categoryId = searchParams.get("categoryId");
 
   useEffect(() => {
     const fetchProducts = async () => {
