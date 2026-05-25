@@ -7,49 +7,49 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>Virtual Keyboard</h3>
-            <p>A boutique experience for mechanical keyboard enthusiasts.</p>
+            <h3>Bàn phím ảo</h3>
+            <p>Trải nghiệm mua sắm tinh chọn cho người yêu bàn phím cơ.</p>
           </div>
           <div className="footer-section">
-            <h4>Liên Kết</h4>
+            <h4>Liên kết</h4>
             <ul>
               <li>
-                <Link href="/">Trang Chủ</Link>
+                <Link href="/">Trang chủ</Link>
               </li>
               <li>
-                <Link href="#about">Về Chúng Tôi</Link>
+                <Link href="#about">Về chúng tôi</Link>
               </li>
               <li>
-                <Link href="#contact">Liên Hệ</Link>
+                <Link href="#contact">Liên hệ</Link>
               </li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Pháp Lý</h4>
+            <h4>Pháp lý</h4>
             <ul>
               <li>
-                <Link href="#privacy">Chính Sách Bảo Mật</Link>
+                <Link href="#privacy">Chính sách bảo mật</Link>
               </li>
               <li>
-                <Link href="#terms">Điều Khoản Sử Dụng</Link>
+                <Link href="#terms">Điều khoản sử dụng</Link>
               </li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Kết Nối</h4>
-            <p>Subscribe to our newsletter for exclusive first access.</p>
+            <h4>Kết nối</h4>
+            <p>Đăng ký nhận tin để xem ưu đãi và sản phẩm mới sớm nhất.</p>
             <div className="newsletter-form">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
                 className="newsletter-input"
               />
-              <button className="btn-subscribe">Subscribe</button>
+              <button className="btn-subscribe">Đăng ký</button>
             </div>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2026 Virtual Keyboard. All rights reserved.</p>
+          <p>&copy; 2026 Bàn phím ảo. Đã đăng ký bản quyền.</p>
         </div>
       </div>
     </footer>

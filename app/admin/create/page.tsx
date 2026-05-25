@@ -331,7 +331,7 @@ export default function CreateProductPage() {
         {/* Main */}
         <main className="w-full pb-20 md:pb-0">
           {/*<header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 h-16 shadow-sm border-b border-outline-variant/10">*/}
-          {/*  <span className="text-xl font-bold tracking-tight text-blue-900 font-h2">Add New Product</span>*/}
+          {/*  <span className="text-xl font-bold tracking-tight text-blue-900 font-h2">Thêm sản phẩm mới</span>*/}
           {/*  <div className="flex items-center gap-6">*/}
           {/*    <button className="text-slate-500 hover:text-blue-600 relative">*/}
           {/*      <span className="material-symbols-outlined">notifications</span>*/}
@@ -356,15 +356,15 @@ export default function CreateProductPage() {
                   <div className="space-y-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-label-md font-label-md text-text-primary">Tên sản phẩm</label>
-                      <input value={productName} onChange={(e) => setProductName(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="e.g. Atelier Series-1 Custom Keyboard" type="text" />
+                      <input value={productName} onChange={(e) => setProductName(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="VD: Atelier Series-1 Custom Keyboard" type="text" />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-label-md font-label-md text-text-primary">Summary</label>
-                      <input value={summary} onChange={(e) => setSummary(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="A brief catchphrase for the product listing" type="text" />
+                      <label className="text-label-md font-label-md text-text-primary">Tóm tắt</label>
+                      <input value={summary} onChange={(e) => setSummary(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" placeholder="Một câu mô tả ngắn cho sản phẩm" type="text" />
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-label-md font-label-md text-text-primary">Mô tả</label>
-                      <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" rows={6} placeholder="Detailed product specifications and story..." />
+                      <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" rows={6} placeholder="Thông số chi tiết và câu chuyện sản phẩm..." />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2">
@@ -456,26 +456,26 @@ export default function CreateProductPage() {
             <section className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-h3 font-h3 text-primary flex items-center gap-2">
-                  <span className="material-symbols-outlined">tune</span>Oftions
+                  <span className="material-symbols-outlined">tune</span>Tùy chọn
                 </h3>
                 <button type="button" onClick={addOptionType} className="flex items-center gap-1 text-secondary font-label-md text-label-md hover:underline">
-                  <span className="material-symbols-outlined text-base">add_circle</span>Thêm Option
+                  <span className="material-symbols-outlined text-base">add_circle</span>Thêm tùy chọn
                 </button>
               </div>
               {options.length === 0 && (
                   <p className="text-body-sm text-text-light text-center py-6 border border-dashed border-outline-variant rounded-lg">
-                    No options yet. Click "Add Option Type" to get started.
+                    Chưa có tùy chọn nào. Bấm "Thêm tùy chọn" để bắt đầu.
                   </p>
               )}
               <div className="space-y-4">
                 {options.map((option, oi) => (
                     <div key={oi} className="p-6 bg-surface-ivory rounded-md border border-outline-variant/10 flex gap-6 relative group">
                       <div className="w-1/3 space-y-2 shrink-0">
-                        <label className="text-label-sm font-label-sm text-text-secondary">Option Type</label>
-                        <input className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-3 py-2 font-body-md" type="text" placeholder="e.g. Case Color" value={option.name} onChange={(e) => updateOptionName(oi, e.target.value)} />
+                        <label className="text-label-sm font-label-sm text-text-secondary">Loại tùy chọn</label>
+                        <input className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-3 py-2 font-body-md" type="text" placeholder="VD: Màu vỏ" value={option.name} onChange={(e) => updateOptionName(oi, e.target.value)} />
                       </div>
                       <div className="flex-1 space-y-2 min-w-0">
-                        <label className="text-label-sm font-label-sm text-text-secondary">Values</label>
+                        <label className="text-label-sm font-label-sm text-text-secondary">Giá trị</label>
                         <div className="flex flex-wrap gap-2 items-center">
                           {option.values.map((v, vi) => (
                               <div key={vi} className="flex items-center gap-1 bg-white border border-outline-variant px-3 py-1 rounded-full">
@@ -486,7 +486,7 @@ export default function CreateProductPage() {
                               </div>
                           ))}
                           <div className="flex items-center gap-1 bg-white border border-dashed border-outline-variant rounded-full px-2 py-1 focus-within:border-secondary transition-colors">
-                            <input type="text" className="bg-transparent border-none outline-none text-body-sm font-body-sm w-28 placeholder:text-text-light" placeholder="Add value…"
+                            <input type="text" className="bg-transparent border-none outline-none text-body-sm font-body-sm w-28 placeholder:text-text-light" placeholder="Thêm giá trị..."
                                    value={addValueInputs[oi] ?? ''}
                                    onChange={(e) => { const n = [...addValueInputs]; n[oi] = e.target.value; setAddValueInputs(n); }}
                                    onKeyDown={(e) => handleAddValueKeyDown(e, oi)}
@@ -496,7 +496,7 @@ export default function CreateProductPage() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-label-sm text-text-light">Press Enter or ✓ to confirm each value.</p>
+                        <p className="text-label-sm text-text-light">Nhấn Enter hoặc dấu xác nhận để thêm từng giá trị.</p>
                       </div>
                       <button type="button" onClick={() => removeOptionType(oi)} className="absolute -top-2.5 -right-2.5 bg-white text-error border border-error rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
                         <span className="material-symbols-outlined text-sm">delete</span>
@@ -507,7 +507,7 @@ export default function CreateProductPage() {
             </section>
 
             {/* ═══════════════════════════════════════════════════════════════════
-              Section 3: SKU Management  — ĐÃ SỬA
+              Section 3: SKU management
           ═══════════════════════════════════════════════════════════════════ */}
 
             <section className="bg-white p-8 rounded-lg border border-outline-variant/10 shadow-sm space-y-6">
@@ -562,9 +562,9 @@ export default function CreateProductPage() {
               ) : skus.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-outline-variant rounded-lg">
                     <span className="material-symbols-outlined text-4xl text-text-light block mb-2">inventory_2</span>
-                    <p className="text-body-sm text-text-light">No SKUs yet.</p>
+                    <p className="text-body-sm text-text-light">Chưa có SKU nào.</p>
                     <p className="text-label-sm text-text-light mt-1">
-                      Define options above then click <strong>Regenerate SKUs</strong>.
+                      Hãy khai báo tùy chọn phía trên rồi bấm <strong>Tạo lại SKU</strong>.
                     </p>
                   </div>
               ) : (
@@ -572,12 +572,12 @@ export default function CreateProductPage() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                       <tr className="bg-surface-container-low border-b border-outline-variant/10">
-                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Variant Combination</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Tổ hợp biến thể</th>
                         <th className="px-6 py-4 text-label-md font-label-md text-primary">Ảnh SKU</th>
-                        <th className="px-6 py-4 text-label-md font-label-md text-primary">SKU Identifier</th>
-                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Base Price ($)</th>
-                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Stock Level</th>
-                        <th className="px-6 py-4 text-label-md font-label-md text-primary text-right">Actions</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Mã SKU</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Giá cơ bản ($)</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary">Tồn kho</th>
+                        <th className="px-6 py-4 text-label-md font-label-md text-primary text-right">Hành động</th>
                       </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant/10">
@@ -595,7 +595,7 @@ export default function CreateProductPage() {
                                           type="text"
                                           value={sku.label ?? ''}
                                           onChange={(e) => updateSkuRow(sku.id, 'label', e.target.value)}
-                                          placeholder="Sub-label (optional)"
+                                          placeholder="Nhãn phụ (tùy chọn)"
                                           className="text-xs border border-outline-variant rounded px-2 py-0.5 w-40 focus:border-secondary focus:ring-1 focus:ring-secondary outline-none"
                                       />
                                   ) : (
@@ -669,7 +669,7 @@ export default function CreateProductPage() {
                                     type="button"
                                     onClick={() => removeSkuRow(sku.id)}
                                     className="text-text-light hover:text-error inline-block transition-colors"
-                                    title="Remove SKU"
+                                    title="Xóa SKU"
                                 >
                                   <span className="material-symbols-outlined text-lg">delete</span>
                                 </button>

@@ -13,7 +13,7 @@ export default function AdminTopbar() {
                 <div className="relative w-80 hidden md:block">
                     <input
                         className="w-full h-10 pl-10 pr-4 bg-surface-container-high border-none rounded-full text-sm focus:ring-2 focus:ring-secondary/20 transition-all outline-none"
-                        placeholder="Search..."
+                        placeholder="Tìm kiếm..."
                         type="text"
                     />
                     <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-sm">
@@ -37,8 +37,8 @@ export default function AdminTopbar() {
                     </div>
 
                     <div className="hidden lg:block">
-                        <p className="text-xs font-bold text-on-surface">Admin Profile</p>
-                        <p className="text-[10px] text-on-surface-variant">System Master</p>
+                        <p className="text-xs font-bold text-on-surface">Hồ sơ quản trị</p>
+                        <p className="text-[10px] text-on-surface-variant">Quản trị hệ thống</p>
                     </div>
                 </div>
             </div>

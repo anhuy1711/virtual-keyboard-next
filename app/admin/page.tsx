@@ -159,9 +159,9 @@ export default function AdminDashboard() {
             <section className="admin-section-header">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                  Admin Overview
+                  Tổng quan quản trị
                 </p>
-                <h1 className="admin-title mt-2">Dashboard</h1>
+                <h1 className="admin-title mt-2">Bảng điều khiển</h1>
                 <p className="admin-subtitle">
                   Tổng quan doanh thu, đơn hàng, sản phẩm và khách hàng trong hệ
                   thống.
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
                           <thead className="admin-table-head">
                           <tr>
                             <th className="admin-table-th">Mã đơn</th>
-                            <th className="admin-table-th">User</th>
+                            <th className="admin-table-th">Người dùng</th>
                             <th className="admin-table-th text-right">
                               Tổng tiền
                             </th>
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                                     </td>
 
                                     <td className="admin-table-td text-sm text-slate-700">
-                                      User #{order.userId}
+                                      Người dùng #{order.userId}
                                     </td>
 
                                     <td className="admin-table-td text-sm text-right font-semibold">
@@ -508,7 +508,7 @@ export default function AdminDashboard() {
               }`}
           >
             <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Tổng quan</span>
           </Link>
 
           <Link
@@ -520,7 +520,7 @@ export default function AdminDashboard() {
               }`}
           >
             <span className="material-symbols-outlined">keyboard</span>
-            <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Sản phẩm</span>
           </Link>
 
           <Link
@@ -532,7 +532,7 @@ export default function AdminDashboard() {
               }`}
           >
             <span className="material-symbols-outlined">shopping_cart</span>
-            <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Đơn hàng</span>
           </Link>
 
           <Link
@@ -544,7 +544,7 @@ export default function AdminDashboard() {
               }`}
           >
             <span className="material-symbols-outlined">group</span>
-            <span className="text-[10px] uppercase font-label-sm mt-1">Users</span>
+            <span className="text-[10px] uppercase font-label-sm mt-1">Người dùng</span>
           </Link>
         </nav>
       </div>

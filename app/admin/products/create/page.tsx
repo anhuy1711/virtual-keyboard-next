@@ -192,7 +192,7 @@
 //       <aside className="w-64 border-r border-slate-200 bg-[#FDFCFB] flex flex-col p-4 space-y-2 sticky top-0 h-screen">
 //         <div className="mb-8 px-2">
 //           <h1 className="text-xl font-bold text-primary font-headline tracking-tight">The Atelier</h1>
-//           <p className="text-sm text-text-secondary">Management Console</p>
+//           <p className="text-sm text-text-secondary">Bảng quản lý</p>
 //         </div>
 //         <nav className="flex-1 space-y-1">
 //           <a
@@ -200,7 +200,7 @@
 //             className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-blue-700 hover:bg-blue-50/50 transition-colors rounded-lg"
 //           >
 //             <span className="material-symbols-outlined">dashboard</span>
-//             <span className="font-label-md">Dashboard</span>
+//             <span className="font-label-md">Tổng quan</span>
 //           </a>
 //           <a
 //             href="/admin"
@@ -209,28 +209,28 @@
 //             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
 //               keyboard
 //             </span>
-//             <span className="font-label-md">Products</span>
+//             <span className="font-label-md">Sản phẩm</span>
 //           </a>
 //           <a
 //             href="/admin"
 //             className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-blue-700 hover:bg-blue-50/50 transition-colors rounded-lg"
 //           >
 //             <span className="material-symbols-outlined">shopping_cart</span>
-//             <span className="font-label-md">Orders</span>
+//             <span className="font-label-md">Đơn hàng</span>
 //           </a>
 //           <a
 //             href="/admin"
 //             className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-blue-700 hover:bg-blue-50/50 transition-colors rounded-lg"
 //           >
 //             <span className="material-symbols-outlined">inventory_2</span>
-//             <span className="font-label-md">Inventory</span>
+//             <span className="font-label-md">Kho</span>
 //           </a>
 //           <a
 //             href="/admin"
 //             className="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-blue-700 hover:bg-blue-50/50 transition-colors rounded-lg"
 //           >
 //             <span className="material-symbols-outlined">settings</span>
-//             <span className="font-label-md">Settings</span>
+//             <span className="font-label-md">Cài đặt</span>
 //           </a>
 //         </nav>
 //         <div className="mt-auto p-2">
@@ -257,7 +257,7 @@
 //             >
 //               <span className="material-symbols-outlined">arrow_back</span>
 //             </button>
-//             <h2 className="font-semibold text-slate-900 text-lg">Add New Product</h2>
+//             <h2 className="font-semibold text-slate-900 text-lg">Thêm sản phẩm mới</h2>
 //           </div>
 //           <div className="flex items-center gap-3">
 //             <button

@@ -63,7 +63,7 @@ export default function CustomKeyboardPage() {
   const [selectedSwitchSkuId, setSelectedSwitchSkuId] = useState<number | null>(null);
   const [selectedKeycapSkuId, setSelectedKeycapSkuId] = useState<number | null>(null);
   const [kitOptions, setKitOptions] = useState<Record<string, string>>({});
-  const [buildName, setBuildName] = useState("My custom keyboard");
+  const [buildName, setBuildName] = useState("Bàn phím tùy chỉnh của tôi");
   const [quote, setQuote] = useState<CustomKeyboardQuote | null>(null);
   const [builds, setBuilds] = useState<KeyboardBuild[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +78,7 @@ export default function CustomKeyboardPage() {
         setSelectedSwitchSkuId(data.switches[0]?.skuId || null);
         setSelectedKeycapSkuId(data.keycaps[0]?.skuId || null);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Cannot load custom catalog");
+        toast.error(error instanceof Error ? error.message : "Không thể tải danh mục tùy chỉnh");
       } finally {
         setLoading(false);
       }
@@ -214,10 +214,10 @@ export default function CustomKeyboardPage() {
     setSaving(true);
     try {
       await saveCustomKeyboardBuildAPI(payload);
-      toast.success("Build saved to collection");
+      toast.success("Đã lưu cấu hình vào bộ sưu tập");
       await loadBuilds();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Please login to save this build");
+      toast.error(error instanceof Error ? error.message : "Vui lòng đăng nhập để lưu cấu hình này");
     } finally {
       setSaving(false);
     }
@@ -227,10 +227,10 @@ export default function CustomKeyboardPage() {
     if (!payload) return;
     try {
       await addCustomKeyboardComboToCartAPI(payload);
-      toast.success("Combo added to cart");
+      toast.success("Đã thêm combo vào giỏ hàng");
       router.push(goCheckout ? "/checkout" : "/cart");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Please login to add combo to cart");
+      toast.error(error instanceof Error ? error.message : "Vui lòng đăng nhập để thêm combo vào giỏ hàng");
     }
   };
 
@@ -243,24 +243,24 @@ export default function CustomKeyboardPage() {
       <main className="custom-builder-page">
         <section className="custom-builder-header">
           <div>
-            <p className="custom-builder-eyebrow">Keyboard Builder</p>
-            <h1>Custom ban phim theo kit, switch va keycap</h1>
+            <p className="custom-builder-eyebrow">Bộ dựng bàn phím</p>
+            <h1>Tùy chỉnh bàn phím theo kit, switch và keycap</h1>
             <p>
-              Chon kit lam goc, cau hinh option trong kit, sau do chon switch va keycap phu hop.
+              Chọn kit làm gốc, cấu hình tùy chọn trong kit, sau đó chọn switch và keycap phù hợp.
             </p>
           </div>
           <div className="custom-builder-header-metrics">
-            <span>{catalog?.kits.length || 0} kits</span>
-            <span>{catalog?.switches.length || 0} switches</span>
-            <span>{catalog?.keycaps.length || 0} keycaps</span>
+            <span>{catalog?.kits.length || 0} kit</span>
+            <span>{catalog?.switches.length || 0} switch</span>
+            <span>{catalog?.keycaps.length || 0} keycap</span>
           </div>
         </section>
 
-        {loading && <div className="custom-builder-empty">Loading custom builder...</div>}
+        {loading && <div className="custom-builder-empty">Đang tải bộ dựng bàn phím...</div>}
 
         {!loading && !hasCatalog && (
           <div className="custom-builder-empty">
-            Can co it nhat 1 product type KIT, 1 SWITCH va 1 KEYCAP co SKU active de build combo.
+            Cần có ít nhất 1 sản phẩm loại KIT, 1 SWITCH và 1 KEYCAP có SKU đang hoạt động để tạo combo.
           </div>
         )}
 
@@ -268,8 +268,8 @@ export default function CustomKeyboardPage() {
           <div className="custom-builder-layout">
             <div className="custom-builder-main">
               <BuilderSection
-                title="1. Choose kit"
-                subtitle="Kit quyet dinh layout, option va so luong switch can dung."
+                title="1. Chọn kit"
+                subtitle="Kit quyết định layout, tùy chọn và số lượng switch cần dùng."
                 products={catalog.kits}
                 selectedSkuId={selectedKitSkuId}
                 onSelect={setSelectedKitSkuId}
@@ -279,8 +279,8 @@ export default function CustomKeyboardPage() {
                 <section className="builder-section">
                   <div className="builder-section-heading">
                     <div>
-                      <h2>2. Configure kit</h2>
-                      <p>Option hien thi theo kit dang chon.</p>
+                      <h2>2. Cấu hình kit</h2>
+                      <p>Tùy chọn hiển thị theo kit đang chọn.</p>
                     </div>
                   </div>
 
@@ -310,16 +310,16 @@ export default function CustomKeyboardPage() {
               )}
 
               <BuilderSection
-                title="3. Choose switch"
-                subtitle="So luong switch duoc tinh tu dong theo kit."
+                title="3. Chọn switch"
+                subtitle="Số lượng switch được tính tự động theo kit."
                 products={catalog.switches}
                 selectedSkuId={selectedSwitchSkuId}
                 onSelect={setSelectedSwitchSkuId}
               />
 
               <BuilderSection
-                title="4. Choose keycap"
-                subtitle="Keycap duoc validate theo layout cua kit."
+                title="4. Chọn keycap"
+                subtitle="Keycap được kiểm tra theo layout của kit."
                 products={catalog.keycaps}
                 selectedSkuId={selectedKeycapSkuId}
                 onSelect={setSelectedKeycapSkuId}
@@ -328,7 +328,7 @@ export default function CustomKeyboardPage() {
 
             <aside className="custom-summary">
               <label className="build-name-field">
-                <span>Build name</span>
+                <span>Tên cấu hình</span>
                 <input value={buildName} onChange={(event) => setBuildName(event.target.value)} />
               </label>
 
@@ -338,7 +338,7 @@ export default function CustomKeyboardPage() {
                 price={quote?.kitPrice}
                 imageUrl={selectedKitSku?.imageUrl || selectedKit?.cover}
               />
-              <SummaryRow label="Kit options" value="Selected options" price={quote?.kitOptionPrice} />
+              <SummaryRow label="Tùy chọn kit" value="Các tùy chọn đã chọn" price={quote?.kitOptionPrice} />
               <SummaryRow
                 label="Switch"
                 value={`${selectedSwitch?.name || "-"} x ${quote?.switchQuantity || 0}`}
@@ -353,7 +353,7 @@ export default function CustomKeyboardPage() {
               />
 
               <div className="summary-total">
-                <span>Total</span>
+                <span>Tổng tiền</span>
                 <strong>{money(quote?.totalPrice)}</strong>
               </div>
 
@@ -361,26 +361,26 @@ export default function CustomKeyboardPage() {
                 <div className={quote.validation.valid ? "validation-ok" : "validation-error"}>
                   {quote.validation.valid
                     ? "Combo hop le va co the mua."
-                    : `Loi: ${quote.validation.errors.join(", ")}`}
+                    : `Lỗi: ${quote.validation.errors.join(", ")}`}
                 </div>
               )}
 
               <div className="summary-actions">
                 <button type="button" onClick={saveBuild} disabled={!quote?.validation.valid || saving}>
-                  Save collection
+                  Lưu bộ sưu tập
                 </button>
                 <button type="button" onClick={() => addToCart(false)} disabled={!quote?.validation.valid}>
-                  Add combo to cart
+                  Thêm combo vào giỏ
                 </button>
                 <button type="button" onClick={() => addToCart(true)} disabled={!quote?.validation.valid}>
-                  Buy now
+                  Mua ngay
                 </button>
               </div>
 
               <div className="collection-list">
-                <h3>Collection</h3>
+                <h3>Bộ sưu tập</h3>
                 {builds.length === 0 ? (
-                  <p>Chua co build nao duoc luu.</p>
+                  <p>Chưa có cấu hình nào được lưu.</p>
                 ) : (
                   builds.slice(0, 4).map((build) => (
                     <div key={build.id} className="collection-item">
@@ -439,11 +439,11 @@ function BuilderSection({
             </div>
             <div>
               <h3>{product.name}</h3>
-              <p>{product.summary || "Ready for custom combo"}</p>
+              <p>{product.summary || "Sẵn sàng để tạo combo tùy chỉnh"}</p>
               <div className="builder-product-meta">
                 <span>{money(product.price)}</span>
-                <span>Stock {product.stock}</span>
-                {product.requiredSwitchCount && <span>{product.requiredSwitchCount} switches</span>}
+                <span>Tồn kho {product.stock}</span>
+                {product.requiredSwitchCount && <span>{product.requiredSwitchCount} switch</span>}
               </div>
             </div>
           </button>

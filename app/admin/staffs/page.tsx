@@ -275,7 +275,7 @@ export default function UsersPage() {
 
                             <div>
                                 <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
-                                    Username
+                                    Tên đăng nhập
                                 </label>
                                 <input
                                     value={username}
@@ -503,7 +503,7 @@ export default function UsersPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">
-                                            Username <span className="text-red-500">*</span>
+                                            Tên đăng nhập <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             value={createUsername}
@@ -782,7 +782,7 @@ export default function UsersPage() {
                     className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
                 >
                     <span className="material-symbols-outlined">dashboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Tổng quan</span>
                 </Link>
 
                 <Link
@@ -790,7 +790,7 @@ export default function UsersPage() {
                     className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
                 >
                     <span className="material-symbols-outlined">keyboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Sản phẩm</span>
                 </Link>
 
                 <Link
@@ -798,7 +798,7 @@ export default function UsersPage() {
                     className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg"
                 >
                     <span className="material-symbols-outlined">shopping_cart</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Đơn hàng</span>
                 </Link>
 
                 <Link
@@ -806,7 +806,7 @@ export default function UsersPage() {
                     className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-blue-900 font-bold"
                 >
                     <span className="material-symbols-outlined">group</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Users</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Người dùng</span>
                 </Link>
             </nav>
         </div>

@@ -241,7 +241,7 @@ export default function InventoryPage() {
                   </li>
                 </ol>
               </nav>
-              <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">Product Management</h1>
+              <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">Quản lý sản phẩm</h1>
             </div>
             <div className="flex gap-4">
               <Link href="/admin/create" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:shadow-lg transition-all active:scale-95">

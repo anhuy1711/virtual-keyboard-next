@@ -102,14 +102,14 @@ export default function SignupPage() {
                   {/* Username Input */}
                   <div className="form-group">
                     <label htmlFor="username">
-                      Username <span className="required">*</span>
+                      Tên đăng nhập <span className="required">*</span>
                     </label>
                     <input
                         id="username"
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Nhập username"
+                        placeholder="Nhập tên đăng nhập"
                         required
                         disabled={isLoading}
                         className="input-field"

@@ -188,13 +188,13 @@ export default function AuditLogPage() {
                     </span>
                                     </li>
                                     <li>
-                                        <span className="text-primary font-bold">Audit Log</span>
+                                        <span className="text-primary font-bold">Nhật ký</span>
                                     </li>
                                 </ol>
                             </nav>
 
                             <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
-                                Audit Log
+                                Nhật ký hệ thống
                             </h1>
 
                             <p className="mt-2 text-sm text-slate-500">
@@ -407,7 +407,7 @@ export default function AuditLogPage() {
                     className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
                 >
                     <span className="material-symbols-outlined">dashboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Tổng quan</span>
                 </Link>
 
                 <Link
@@ -415,7 +415,7 @@ export default function AuditLogPage() {
                     className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400"
                 >
                     <span className="material-symbols-outlined">keyboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Sản phẩm</span>
                 </Link>
 
                 <Link
@@ -425,7 +425,7 @@ export default function AuditLogPage() {
           <span className="material-symbols-outlined">
             assignment_turned_in
           </span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Logs</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Nhật ký</span>
                 </Link>
             </nav>
         </div>

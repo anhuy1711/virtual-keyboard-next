@@ -18,41 +18,41 @@ export default function DebugPage() {
       try {
         setUser(JSON.parse(userStr));
       } catch (e) {
-        setUser({ error: "Failed to parse user" });
+        setUser({ error: "Không thể đọc dữ liệu người dùng" });
       }
     }
   }, []);
 
-  if (!mounted) return <div>Loading...</div>;
+  if (!mounted) return <div>Đang tải...</div>;
 
   return (
     <div style={{ padding: "20px", fontFamily: "monospace" }}>
-      <h1>🔍 Debug - User Info</h1>
+      <h1>Debug - Thông tin người dùng</h1>
       
       <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "5px" }}>
-        <h3>Token:</h3>
+        <h3>Mã xác thực:</h3>
         <pre style={{ fontSize: "12px", overflow: "auto", maxHeight: "100px" }}>
-          {token ? `✅ ${token.substring(0, 50)}...` : "❌ No token found"}
+          {token ? `Có mã: ${token.substring(0, 50)}...` : "Không tìm thấy mã xác thực"}
         </pre>
       </div>
 
       <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "5px" }}>
-        <h3>User Object:</h3>
+        <h3>Dữ liệu người dùng:</h3>
         <pre style={{ fontSize: "12px", overflow: "auto", maxHeight: "150px", backgroundColor: "#f5f5f5" }}>
-          {user ? JSON.stringify(user, null, 2) : "❌ No user found"}
+          {user ? JSON.stringify(user, null, 2) : "Không tìm thấy người dùng"}
         </pre>
       </div>
 
       <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "5px" }}>
-        <h3>Role Check:</h3>
+        <h3>Kiểm tra vai trò:</h3>
         <p>
           {user?.role ? (
             <>
-              <strong>Role:</strong> {user.role} <br />
-              <strong>Is Admin?</strong> {user.role.toLowerCase() === "admin" ? "✅ YES" : "❌ NO"}
+              <strong>Vai trò:</strong> {user.role} <br />
+              <strong>Là quản trị viên?</strong> {user.role.toLowerCase() === "admin" ? "Có" : "Không"}
             </>
           ) : (
-            "❌ No role found in user object"
+            "Không tìm thấy vai trò trong dữ liệu người dùng"
           )}
         </p>
       </div>

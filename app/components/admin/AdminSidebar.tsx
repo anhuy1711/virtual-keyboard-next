@@ -7,7 +7,7 @@ import { logoutAPI } from '@/app/services/authService';
 
 const menuItems = [
     {
-        label: 'Dashboard',
+        label: 'Tổng quan',
         href: '/admin',
         icon: 'dashboard',
     },
@@ -32,7 +32,7 @@ const menuItems = [
         icon: 'group',
     },
     {
-        label: 'Nhân viên ',
+        label: 'Nhân viên',
         href: '/admin/staffs',
         icon: 'group',
     },

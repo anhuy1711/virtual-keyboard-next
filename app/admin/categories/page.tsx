@@ -259,7 +259,7 @@ export default function CategoriesPage() {
                             </nav>
 
                             <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
-                                Category Management
+                                Quản lý danh mục
                             </h1>
                         </div>
 
@@ -270,7 +270,7 @@ export default function CategoriesPage() {
                                 className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary-hover transition-all active:scale-95"
                             >
                                 <span className="material-symbols-outlined text-sm">add</span>
-                                Add Category
+                                Thêm danh mục
                             </button>
                         </div>
                     </section>
@@ -653,22 +653,22 @@ export default function CategoriesPage() {
             <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-around items-center py-3 border-t border-surface-container-highest z-50">
                 <Link href="/admin" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400">
                     <span className="material-symbols-outlined">dashboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Dash</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Tổng quan</span>
                 </Link>
 
                 <Link href="/admin/inventory" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-slate-400">
                     <span className="material-symbols-outlined">keyboard</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Items</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Sản phẩm</span>
                 </Link>
 
                 <Link href="/admin/categories" className="flex flex-col items-center py-2 px-4 rounded-lg transition-colors text-blue-900 font-bold">
                     <span className="material-symbols-outlined">category</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Category</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Danh mục</span>
                 </Link>
 
                 <Link href="#" className="flex flex-col items-center text-slate-400 py-2 px-4 rounded-lg">
                     <span className="material-symbols-outlined">shopping_cart</span>
-                    <span className="text-[10px] uppercase font-label-sm mt-1">Orders</span>
+                    <span className="text-[10px] uppercase font-label-sm mt-1">Đơn hàng</span>
                 </Link>
             </nav>
         </div>

@@ -133,7 +133,7 @@ export default function TopNav() {
             <button
                 type={isSearchOpen ? "submit" : "button"}
                 className="icon-btn"
-                title="Search"
+                title="Tìm kiếm"
                 onClick={() => {
                   if (!isSearchOpen) {
                     setIsSearchOpen(true);
@@ -144,13 +144,13 @@ export default function TopNav() {
             </button>
           </form>
 
-          <Link href="/cart" className="icon-btn" title="Shopping Cart">
+          <Link href="/cart" className="icon-btn" title="Giỏ hàng">
             <i className="fas fa-shopping-cart"></i>
           </Link>
 
           {/* Account/Login Icon */}
           <div className="user-dropdown">
-            <button type="button" className="icon-btn user-icon" title="Account">
+            <button type="button" className="icon-btn user-icon" title="Tài khoản">
               <i className="fas fa-user-circle"></i>
             </button>
 
@@ -189,8 +189,8 @@ export default function TopNav() {
 
           {/* Admin Button - Only show if user is admin */}
           {isLoggedIn && userRole === "ADMIN" && (
-            <Link href="/admin" className="btn-admin" title="Admin Panel">
-              <i className="fas fa-shield-alt"></i> Admin
+            <Link href="/admin" className="btn-admin" title="Trang quản trị">
+              <i className="fas fa-shield-alt"></i> Quản trị
             </Link>
           )}
 

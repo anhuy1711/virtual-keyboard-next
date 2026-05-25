@@ -337,7 +337,7 @@ export default function AccountPage() {
 
               <div className="profile-info">
                 <h3 className="profile-name">{user.fullName || user.username}</h3>
-                <p className="profile-tier">Premium Member</p>
+                <p className="profile-tier">Thành viên cao cấp</p>
               </div>
             </div>
 
@@ -347,7 +347,7 @@ export default function AccountPage() {
                   onClick={() => setActiveTab("profile")}
               >
                 <i className="fas fa-user"></i>
-                <span>Profile</span>
+                <span>Hồ sơ</span>
               </button>
 
               <button
@@ -355,7 +355,7 @@ export default function AccountPage() {
                   onClick={() => setActiveTab("orders")}
               >
                 <i className="fas fa-box"></i>
-                <span>Orders</span>
+                <span>Đơn hàng</span>
               </button>
             </nav>
 
@@ -373,7 +373,7 @@ export default function AccountPage() {
             {activeTab === "profile" && (
                 <section className="tab-content">
                   <div className="content-header">
-                    <h1>Profile</h1>
+                    <h1>Hồ sơ</h1>
                   </div>
 
                   <div className="profile-section">
@@ -406,14 +406,14 @@ export default function AccountPage() {
                             </div>
 
                             <div className="info-item">
-                              <label>Username</label>
+                              <label>Tên đăng nhập</label>
                               <p>{user.username}</p>
                             </div>
                           </div>
 
                           <div className="action-buttons">
                             <button className="btn btn-primary" onClick={handleEditProfile}>
-                              Sửa profile
+                              Sửa hồ sơ
                             </button>
 
                             <button className="btn btn-secondary" onClick={handleUpdatePassword}>
@@ -521,7 +521,7 @@ export default function AccountPage() {
             {activeTab === "orders" && (
                 <section className="tab-content">
                   <div className="content-header">
-                    <h1>Order History</h1>
+                    <h1>Lịch sử đơn hàng</h1>
                     <p>Xem và theo dõi các đơn hàng trước đây của bạn.</p>
                   </div>
 
@@ -556,16 +556,16 @@ export default function AccountPage() {
 
                               <div className="order-details">
                                 <p>
-                                  <strong>Items:</strong> {order.items?.length || 0}
+                                  <strong>Sản phẩm:</strong> {order.items?.length || 0}
                                 </p>
 
                                 <p>
-                                  <strong>Total:</strong>{" "}
+                                  <strong>Tổng tiền:</strong>{" "}
                                   {Number(order.total ?? 0).toLocaleString("vi-VN")}₫
                                 </p>
 
                                 <p>
-                                  <strong>Payment:</strong>{" "}
+                                  <strong>Thanh toán:</strong>{" "}
                                   {getPaymentStatusLabel(order.payment?.status)}
                                 </p>
                               </div>

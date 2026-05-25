@@ -264,7 +264,7 @@ export default function OrderDetailPage() {
                         className="inline-flex items-center gap-2 text-sm font-bold text-secondary uppercase tracking-widest hover:text-primary transition-colors"
                     >
                         <span className="material-symbols-outlined text-base">arrow_back</span>
-                        Back to My Orders
+                        Quay lại đơn hàng của tôi
                     </button>
                 </div>
 

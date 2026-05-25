@@ -140,7 +140,7 @@ export default function CheckoutPage() {
 
                     <div className="flex items-center gap-6">
             <span className="text-sm font-medium text-on-surface/60 font-label tracking-wide uppercase">
-              Secure Checkout
+              Thanh toán bảo mật
             </span>
                         <span className="material-symbols-outlined text-primary">lock</span>
                     </div>
@@ -158,7 +158,7 @@ export default function CheckoutPage() {
                   1
                 </span>
                                 <span className="font-headline font-semibold text-primary whitespace-nowrap">
-                  Shipping Information
+                  Thông tin giao hàng
                 </span>
                             </div>
 
@@ -370,7 +370,7 @@ export default function CheckoutPage() {
                     <aside className="lg:col-span-5">
                         <div className="sticky top-32 p-8 md:p-10 bg-surface-container-low rounded-xl">
                             <h3 className="text-xl font-bold tracking-tight text-primary mb-8 font-headline">
-                                Order Summary
+                                Tóm tắt đơn hàng
                             </h3>
 
                             {isLoadingCart ? (
@@ -427,16 +427,16 @@ export default function CheckoutPage() {
 
                                     <div className="space-y-4 border-t border-outline-variant/30 pt-8">
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-on-surface/60 font-body">Subtotal</span>
+                                            <span className="text-on-surface/60 font-body">Tạm tính</span>
                                             <span className="text-on-surface font-headline font-semibold">
                         {formatCurrency(subtotal)}
                       </span>
                                         </div>
 
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-on-surface/60 font-body">Shipping</span>
+                                            <span className="text-on-surface/60 font-body">Phí vận chuyển</span>
                                             <span className="text-on-surface font-headline font-semibold">
-                        Free
+                        Miễn phí
                       </span>
                                         </div>
 

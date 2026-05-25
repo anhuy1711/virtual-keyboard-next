@@ -268,10 +268,10 @@ export default function CartPage() {
         {/* Page Header */}
         <div className="mb-16">
           <span className="font-label text-xs uppercase tracking-[0.2em] text-secondary font-bold mb-4 block">
-            Your Selection
+            Sản phẩm bạn chọn
           </span>
           <h1 className="text-5xl font-extrabold tracking-tighter text-primary">
-            Shopping Cart
+            Giỏ hàng
           </h1>
         </div>
 
@@ -357,7 +357,7 @@ export default function CartPage() {
                               className="text-xs uppercase tracking-widest font-bold text-on-surface-variant hover:text-error transition-colors flex items-center gap-2"
                           >
                             <span className="material-symbols-outlined text-sm">delete</span>
-                            Remove
+                            Xóa
                           </button>
                         </div>
                       </div>
@@ -395,7 +395,7 @@ export default function CartPage() {
         <div className="pt-2 space-y-3">
           {discount > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-on-surface-variant">Discount (10%)</span>
+                <span className="text-on-surface-variant">Giảm giá (10%)</span>
                 <span className="font-bold text-secondary">
                           -{discount.toFixed(2)}
                         </span>
