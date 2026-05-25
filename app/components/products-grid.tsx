@@ -25,6 +25,13 @@ export default function ProductsGrid() {
   const searchParams = useSearchParams();
   const name = searchParams.get("name") || "";
   const categoryId = searchParams.get("categoryId");
+  const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+  const selectedCategoryId = Number.isFinite(parsedCategoryId) ? parsedCategoryId : undefined;
+
+  useEffect(() => {
+    setSearchQuery(name);
+    setCurrentPage(1);
+  }, [name, categoryId]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -34,6 +41,7 @@ export default function ProductsGrid() {
         const response = await filterProductsAPI(
           {
             name: searchQuery || undefined,
+            categoryId: selectedCategoryId,
             sortBy: sortBy !== "newest" ? sortBy : undefined,
           },
           currentPage - 1,
@@ -53,7 +61,7 @@ export default function ProductsGrid() {
     };
 
     fetchProducts();
-  }, [currentPage, sortBy, searchQuery]);
+  }, [currentPage, sortBy, searchQuery, selectedCategoryId]);
 
   const sortOptions = [
     { id: "newest", label: "Mới nhất" },
@@ -65,7 +73,7 @@ export default function ProductsGrid() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#fcf9f8" }}>
-      <div className="pt-32 pb-20 px-12 max-w-480 mx-auto">
+      <div className="layout-container pt-12 pb-20">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8">
           <div className="space-y-2">
@@ -96,7 +104,7 @@ export default function ProductsGrid() {
         )}
 
         {/* Sorting/Filtering Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6 border-y border-outline-variant/15 mb-12">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-6 border-y border-outline-variant/15 ">
           <div className="flex items-center gap-4 overflow-x-auto w-full sm:w-auto">
             <span className="text-xs font-bold tracking-widest text-primary/60 uppercase font-label whitespace-nowrap">
               Sắp xếp:

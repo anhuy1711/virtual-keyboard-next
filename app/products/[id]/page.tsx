@@ -101,6 +101,9 @@ export default function ProductDetailPage() {
   const [reviews, setReviews] = useState<ProductReviewResponse[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [reviewTotal, setReviewTotal] = useState(0);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [thumbnailStart, setThumbnailStart] = useState(0);
+  const [hasUserSelectedOption, setHasUserSelectedOption] = useState(false);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }).map((_, index) => (
@@ -142,6 +145,9 @@ export default function ProductDetailPage() {
           const data = await getProductDetailAPI(productId);
           setProduct(data);
           setSelectedOptions(getInitialSelectedOptions(data.options));
+          setSelectedImage(data.cover);
+          setThumbnailStart(0);
+          setHasUserSelectedOption(false);
         }
       } catch (err) {
         const errorMsg =
@@ -168,6 +174,34 @@ export default function ProductDetailPage() {
     const matching = findMatchingSKU(selectedOptions, product.skus, product.options);
     setMatchingSku(matching);
   }, [selectedOptions, product]);
+
+  useEffect(() => {
+    if (!hasUserSelectedOption) return;
+    setSelectedImage(matchingSku?.imageUrl || product?.cover || "");
+  }, [hasUserSelectedOption, matchingSku, product]);
+
+  useEffect(() => {
+    if (!product || !hasUserSelectedOption || !matchingSku?.imageUrl) return;
+
+    const images = (product.skus || [])
+      .filter((sku) => !!sku.imageUrl)
+      .filter(
+        (sku, index, self) =>
+          self.findIndex((item) => item.imageUrl === sku.imageUrl) === index
+      );
+
+    if (images.length <= 4) return;
+
+    const matchingIndex = images.findIndex((sku) => sku.imageUrl === matchingSku.imageUrl);
+    if (matchingIndex < 0) return;
+
+    setThumbnailStart((current) => {
+      if (matchingIndex >= current && matchingIndex < current + 4) {
+        return current;
+      }
+      return Math.min(matchingIndex, images.length - 4);
+    });
+  }, [hasUserSelectedOption, matchingSku, product]);
 
   const loadReviews = async () => {
     try {
@@ -213,7 +247,15 @@ export default function ProductDetailPage() {
     );
   }
 
-  const displayImage = matchingSku?.imageUrl || product.cover;
+  const skuImages = (product.skus || [])
+    .filter((sku) => !!sku.imageUrl)
+    .filter(
+      (sku, index, self) =>
+        self.findIndex((item) => item.imageUrl === sku.imageUrl) === index
+    );
+  const visibleSkuImages = skuImages.slice(thumbnailStart, thumbnailStart + 4);
+  const canSlideThumbnails = skuImages.length > 4;
+  const displayImage = selectedImage || product.cover;
 
   return (
     <>
@@ -230,19 +272,51 @@ export default function ProductDetailPage() {
               className="w-full aspect-4/3 object-cover"
             />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="bg-surface-container-low rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+          <div className="flex items-center gap-3">
+            {canSlideThumbnails && (
+              <button
+                type="button"
+                onClick={() => setThumbnailStart((current) => Math.max(0, current - 1))}
+                disabled={thumbnailStart === 0}
+                className="h-11 w-11 shrink-0 rounded-full border border-outline-variant/30 bg-surface-container-lowest flex items-center justify-center text-primary hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Anh SKU truoc"
               >
-                <img
-                  src={displayImage}
-                  alt={`${product.name} - ${i}`}
-                  className="w-full aspect-square object-cover"
-                />
-              </div>
-            ))}
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+            )}
+
+            <div className="grid grid-cols-4 gap-4 flex-1">
+              {visibleSkuImages.map((sku) => (
+                <button
+                  type="button"
+                  key={sku.id}
+                  onClick={() => setSelectedImage(sku.imageUrl || product.cover)}
+                  className={`bg-surface-container-low rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border-2 ${
+                    selectedImage === sku.imageUrl ? "border-secondary" : "border-transparent"
+                  }`}
+                >
+                  <img
+                    src={sku.imageUrl}
+                    alt={`${product.name} - ${sku.sku}`}
+                    className="w-full aspect-square object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+
+            {canSlideThumbnails && (
+              <button
+                type="button"
+                onClick={() =>
+                  setThumbnailStart((current) => Math.min(skuImages.length - 4, current + 1))
+                }
+                disabled={thumbnailStart >= skuImages.length - 4}
+                className="h-11 w-11 shrink-0 rounded-full border border-outline-variant/30 bg-surface-container-lowest flex items-center justify-center text-primary hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Anh SKU tiep theo"
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -303,6 +377,7 @@ export default function ProductDetailPage() {
                                   key={value.id}
                                   onClick={() => {
                                     if (!isDisabled) {
+                                      setHasUserSelectedOption(true);
                                       setSelectedOptions((prev) => ({
                                         ...prev,
                                         [option.id]: value.id,

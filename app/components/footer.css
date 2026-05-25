@@ -18,12 +18,17 @@
   margin-bottom: 2rem;
 }
 
-.footer-section h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0 0 10px 0;
-  color: #00236f;
-  font-family: 'Manrope', sans-serif;
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.footer-logo {
+  display: block;
+  width: auto;
+  height: 96px;
+  object-fit: contain;
 }
 
 .footer-section h4 {
@@ -142,8 +147,8 @@
     gap: 1.5rem;
   }
 
-  .footer-section h3 {
-    font-size: 16px;
+  .footer-logo {
+    height: 72px;
   }
 
   .newsletter-form {

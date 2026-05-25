@@ -229,7 +229,7 @@ export default function UsersPage() {
                             </nav>
 
                             <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
-                                Customer Management
+                                Quản lý khách hàng
                             </h1>
                         </div>
 

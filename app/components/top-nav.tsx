@@ -8,6 +8,23 @@ import { logoutAPI } from "@/app/services/authService";
 import { getCategoriesAPI, CategoryResponse } from "@/app/services/productService";
 import "./top-nav.css";
 
+const normalizeText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+
+const findCategoryId = (categories: CategoryResponse[], keywords: string[]) => {
+  const matched = categories.find((category) => {
+    const name = normalizeText(category.name || "");
+    return keywords.some((keyword) => name.includes(keyword));
+  });
+
+  return matched?.id;
+};
+
 export default function TopNav() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -84,24 +101,37 @@ export default function TopNav() {
     setIsLoggedIn(false);
   };
 
-  // Build nav items with Trang Chủ first, then categories
+  const keyboardCategoryId = findCategoryId(categories, ["ban phim", "keyboard"]);
+  const switchCategoryId = findCategoryId(categories, ["switch"]);
+  const keycapCategoryId = findCategoryId(categories, ["keycap"]);
+
   const navItems = [
     { id: "home", label: "Trang Chủ", href: "/" },
+    {
+      id: "keyboards",
+      label: "Bàn phím",
+      href: keyboardCategoryId ? `/products?categoryId=${keyboardCategoryId}` : "/products",
+    },
+    {
+      id: "switches",
+      label: "Switch",
+      href: switchCategoryId ? `/products?categoryId=${switchCategoryId}` : "/products",
+    },
+    {
+      id: "keycaps",
+      label: "Keycap",
+      href: keycapCategoryId ? `/products?categoryId=${keycapCategoryId}` : "/products",
+    },
     { id: "custom-keyboard", label: "Custom", href: "/custom-keyboard" },
-    ...categories.map((cat) => ({
-      id: `cat-${cat.id}`,
-      label: cat.name,
-      href: `/products?categoryId=${cat.id}`,
-    })),
   ];
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
         {/* Logo */}
-        <div className="navbar-brand">
-          <h1>Clack Keebs</h1>
-        </div>
+        <Link href="/" className="navbar-brand" aria-label="Clack Keebs">
+          <img src="/logo.png" alt="Clack Keebs" className="navbar-logo" />
+        </Link>
 
         {/* Desktop Menu */}
         <div className="navbar-menu">
@@ -190,7 +220,7 @@ export default function TopNav() {
           {/* Admin Button - Only show if user is admin */}
           {isLoggedIn && userRole === "ADMIN" && (
             <Link href="/admin" className="btn-admin" title="Trang quản trị">
-              <i className="fas fa-shield-alt"></i> Quản trị
+              <i className="fas fa-shield-alt"></i>
             </Link>
           )}
 

@@ -240,7 +240,7 @@ export default function UsersPage() {
                             </nav>
 
                             <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
-                                Customer Management
+                                Quản lý nhân viên
                             </h1>
                         </div>
 
@@ -250,7 +250,7 @@ export default function UsersPage() {
                             className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg active:scale-95 transition-all"
                         >
                             <span className="material-symbols-outlined text-sm">add</span>
-                            Add User
+                            Thêm tài khoản
                         </button>
                     </section>
 

@@ -22,15 +22,17 @@
 
 .navbar-brand {
     margin: 0;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    text-decoration: none;
 }
 
-.navbar-brand h1 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: #00236f;
-    letter-spacing: -0.5px;
-    font-family: 'Manrope', sans-serif;
+.navbar-logo {
+    display: block;
+    width: auto;
+    height: 48px;
+    object-fit: contain;
 }
 
 .navbar-menu {
@@ -228,8 +230,8 @@
         gap: 16px;
     }
 
-    .navbar-brand h1 {
-        font-size: 16px;
+    .navbar-logo {
+        height: 40px;
     }
 
     .nav-link {

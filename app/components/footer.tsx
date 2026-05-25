@@ -7,8 +7,9 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>Bàn phím ảo</h3>
-            <p>Trải nghiệm mua sắm tinh chọn cho người yêu bàn phím cơ.</p>
+            <Link href="/" className="footer-brand" aria-label="Clack Keebs">
+              <img src="/logo.png" alt="Clack Keebs" className="footer-logo" />
+            </Link>
           </div>
           <div className="footer-section">
             <h4>Liên kết</h4>

@@ -257,7 +257,7 @@ export default function AdminOrdersPage() {
                             </nav>
 
                             <h1 className="text-4xl font-extrabold tracking-tight text-blue-900 leading-none">
-                                Order Management
+                                Quản lý đơn hàng
                             </h1>
                         </div>
                     </section>

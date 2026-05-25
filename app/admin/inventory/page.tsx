@@ -246,7 +246,7 @@ export default function InventoryPage() {
             <div className="flex gap-4">
               <Link href="/admin/create" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:shadow-lg transition-all active:scale-95">
                 <span className="material-symbols-outlined text-sm">add</span>
-                Add Product
+                Thêm sản phẩm
               </Link>
             </div>
           </section>
