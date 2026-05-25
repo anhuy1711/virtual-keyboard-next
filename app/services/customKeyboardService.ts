@@ -80,8 +80,10 @@ export interface KeyboardBuild {
   switchQuantity: number;
   priceSnapshot: number;
   availabilityStatus: string;
+  kitOptionsJson?: string;
   buildSnapshotJson?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface ApiResponse<T> {
@@ -137,6 +139,17 @@ export const saveCustomKeyboardBuildAPI = (payload: CustomKeyboardBuildRequest) 
 
 export const getMyCustomKeyboardBuildsAPI = () =>
   request<KeyboardBuild[]>("/custom-keyboards/builds");
+
+export const updateCustomKeyboardBuildAPI = (id: number, payload: CustomKeyboardBuildRequest) =>
+  request<KeyboardBuild>(`/custom-keyboards/builds/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+export const deleteCustomKeyboardBuildAPI = (id: number) =>
+  request<void>(`/custom-keyboards/builds/${id}`, {
+    method: "DELETE",
+  });
 
 export const addCustomKeyboardComboToCartAPI = (payload: CustomKeyboardBuildRequest) =>
   request<void>("/custom-keyboards/cart", {

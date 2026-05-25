@@ -69,11 +69,9 @@ export default function ProductsGrid() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8">
           <div className="space-y-2">
-            <span className="text-xs font-bold tracking-[0.2em] text-secondary uppercase font-label">
-              The Collection
-            </span>
+
             <h1 className="text-5xl font-extrabold text-primary tracking-tighter">
-              Precision Implements
+              Bàn phím
             </h1>
           </div>
           <div className="text-sm text-on-surface-variant font-medium">

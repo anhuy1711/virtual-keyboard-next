@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import TopNav from "@/app/components/top-nav";
@@ -319,7 +320,6 @@ export default function CustomKeyboardPage() {
 
               <BuilderSection
                 title="4. Chọn keycap"
-                subtitle="Keycap được kiểm tra theo layout của kit."
                 products={catalog.keycaps}
                 selectedSkuId={selectedKeycapSkuId}
                 onSelect={setSelectedKeycapSkuId}
@@ -389,6 +389,9 @@ export default function CustomKeyboardPage() {
                     </div>
                   ))
                 )}
+                <Link href="/custom-keyboard/collection" className="collection-link">
+                  Quan ly collection
+                </Link>
               </div>
             </aside>
           </div>
