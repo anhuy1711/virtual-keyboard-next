@@ -7,7 +7,6 @@ import { toast } from 'react-toastify';
 import { checkoutAPI, PaymentMethod } from '@/app/services/orderService';
 import { CartResponse, getMyCartAPI } from '@/app/services/cartService';
 import { getUserInfoAPI } from '@/app/services/userService';
-import { createVnPayPaymentAPI } from "@/app/services/paymentService";
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -20,7 +19,7 @@ export default function CheckoutPage() {
     const [receiverPhone, setReceiverPhone] = useState('');
     const [receiverAddress, setReceiverAddress] = useState('');
     const [note, setNote] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
     useEffect(() => {
         const fetchCart = async () => {
             try {
@@ -103,11 +102,13 @@ export default function CheckoutPage() {
             });
 
             if (paymentMethod === "ONLINE") {
-                const payment = await createVnPayPaymentAPI(order.id);
+                const paymentUrl = order.payment?.paymentUrl;
 
-                router.push(
-                    `/vnpay-payment?transactionCode=${encodeURIComponent(payment.transactionCode)}&orderId=${payment.orderId}&amount=${payment.amount}`
-                );
+                if (!paymentUrl) {
+                    throw new Error("Khong tao duoc link thanh toan VNPay");
+                }
+
+                window.location.href = paymentUrl;
                 return;
             }
 

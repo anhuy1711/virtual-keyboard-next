@@ -357,13 +357,6 @@ export default function CustomKeyboardPage() {
                 <strong>{money(quote?.totalPrice)}</strong>
               </div>
 
-              {quote && (
-                <div className={quote.validation.valid ? "validation-ok" : "validation-error"}>
-                  {quote.validation.valid
-                    ? "Combo hop le va co the mua."
-                    : `Lỗi: ${quote.validation.errors.join(", ")}`}
-                </div>
-              )}
 
               <div className="summary-actions">
                 <button type="button" onClick={saveBuild} disabled={!quote?.validation.valid || saving}>
@@ -377,22 +370,7 @@ export default function CustomKeyboardPage() {
                 </button>
               </div>
 
-              <div className="collection-list">
-                <h3>Bộ sưu tập</h3>
-                {builds.length === 0 ? (
-                  <p>Chưa có cấu hình nào được lưu.</p>
-                ) : (
-                  builds.slice(0, 4).map((build) => (
-                    <div key={build.id} className="collection-item">
-                      <span>{build.name}</span>
-                      <strong>{money(build.priceSnapshot)}</strong>
-                    </div>
-                  ))
-                )}
-                <Link href="/custom-keyboard/collection" className="collection-link">
-                  Quan ly collection
-                </Link>
-              </div>
+
             </aside>
           </div>
         )}
