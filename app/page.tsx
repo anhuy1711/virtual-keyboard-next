@@ -111,7 +111,7 @@ export default function Home() {
                       <div className="absolute inset-0 flex items-center px-6 md:px-12 lg:px-24">
                         <div className="max-w-2xl text-on-primary">
                           {banner.description && (
-                              <span className="font-label text-xs md:text-sm uppercase tracking-[0.2em] mb-4 block font-semibold">
+                              <span className="font-label text-xs md:text-sm uppercase tracking-[0.2em] mb-4 block font-semibold text-accent-fixed">
               {banner.description}
             </span>
                           )}
@@ -123,7 +123,7 @@ export default function Home() {
                           {banner.buttonText && (
                               <Link
                                   href={banner.link || "/products"}
-                                  className="inline-block px-8 py-4 bg-primary-container text-on-primary-container rounded-md font-semibold hover:scale-95 transition-transform"
+                                  className="inline-block px-8 py-4 bg-accent text-on-accent rounded-md font-semibold hover:bg-accent-hover hover:scale-95 transition-all"
                               >
                                 {banner.buttonText}
                               </Link>
@@ -147,7 +147,7 @@ export default function Home() {
                       <div
                           key={banner.id}
                           className={`w-3 h-3 rounded-full ${
-                              index === 0 ? "bg-primary" : "bg-primary/30"
+                              index === 0 ? "bg-accent" : "bg-white/50"
                           }`}
                       ></div>
                   ))}
@@ -179,8 +179,8 @@ export default function Home() {
                     onClick={() => setKeyboardTab("hot")}
                     className={`pb-4 font-medium tracking-tight border-b-2 transition-all ${
                       keyboardTab === "hot"
-                        ? "text-primary border-primary"
-                        : "text-on-surface-variant border-transparent hover:text-primary"
+                        ? "text-accent border-accent"
+                        : "text-on-surface-variant border-transparent hover:text-accent"
                     }`}
                   >
                     Hot
@@ -189,7 +189,7 @@ export default function Home() {
               </div>
               <Link
                 href="/products"
-                className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-primary border-b-2 border-primary/20 hover:border-primary transition-all pb-1 mb-1"
+                className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-accent border-b-2 border-accent/20 hover:border-accent transition-all pb-1 mb-1"
               >
                 View All Keyboards
               </Link>
@@ -255,7 +255,7 @@ export default function Home() {
                       {secondaryBanner.buttonText && (
                           <Link
                               href={secondaryBanner.link || "/products"}
-                              className="inline-block bg-surface text-primary px-8 md:px-10 py-3 md:py-4 rounded-md font-bold hover:bg-secondary-fixed transition-colors"
+                              className="inline-block bg-accent text-on-accent px-8 md:px-10 py-3 md:py-4 rounded-md font-bold hover:bg-accent-hover transition-colors"
                           >
                             {secondaryBanner.buttonText}
                           </Link>
@@ -300,7 +300,7 @@ export default function Home() {
               </div>
               <Link
                 href="/products"
-                className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-primary border-b-2 border-primary/20 hover:border-primary transition-all pb-1 mb-1"
+                className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-accent border-b-2 border-accent/20 hover:border-accent transition-all pb-1 mb-1"
               >
                 Explore All Components
               </Link>

@@ -54,7 +54,7 @@
 }
 
 .nav-link:hover {
-    color: #00236f;
+    color: var(--accent, #f9735b);
 }
 
 .navbar-icons {
@@ -77,7 +77,8 @@
 }
 
 .icon-btn:hover {
-    background: rgba(0, 35, 111, 0.08);
+    background: var(--accent-container, #fff1ed);
+    color: var(--accent, #f9735b);
     transform: scale(1.05);
 }
 
@@ -110,12 +111,12 @@
 }
 
 .btn-login:hover {
-    background: #1e3a8a;
+    background: var(--accent, #f9735b);
     transform: scale(0.98);
 }
 
 .btn-login:active {
-    background: #0f1d4d;
+    background: var(--accent-hover, #ef5b43);
 }
 
 .btn-logout {
@@ -162,8 +163,8 @@
 }
 
 .user-menu a:hover {
-    background: rgba(0, 35, 111, 0.08);
-    color: #00236f;
+    background: var(--accent-container, #fff1ed);
+    color: var(--accent, #f9735b);
 }
 
 .user-menu hr {
@@ -293,8 +294,8 @@
 }
 
 .nav-search-input:focus {
-    border-color: #0a4ea1;
-    box-shadow: 0 0 0 1px #0a4ea1;
+    border-color: var(--accent, #f9735b);
+    box-shadow: 0 0 0 1px var(--accent, #f9735b);
 }
 
 @media (max-width: 768px) {

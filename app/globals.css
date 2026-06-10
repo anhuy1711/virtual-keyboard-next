@@ -19,6 +19,10 @@
 
   --banner-bg: #eef2ff;
   --banner-accent: #3b82f6;
+
+  --accent: #f9735b;
+  --accent-hover: #ef5b43;
+  --accent-container: #fff1ed;
 }
 
 /* =========================================================
@@ -70,6 +74,16 @@
   --color-on-secondary-container: #1e3a8a;
   --color-on-secondary-fixed: #001a42;
   --color-on-secondary-fixed-variant: #004395;
+
+  /* Accent */
+  --color-accent: #f9735b;
+  --color-accent-hover: #ef5b43;
+  --color-accent-container: #fff1ed;
+  --color-accent-fixed: #ffd8cf;
+  --color-accent-fixed-dim: #ffb7a8;
+
+  --color-on-accent: #ffffff;
+  --color-on-accent-container: #7a1f12;
 
   /* Tertiary */
   --color-tertiary: #555555;

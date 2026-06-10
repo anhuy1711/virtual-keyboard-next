@@ -18,7 +18,7 @@ export default function PromoBanner({
   return (
     <section className="py-24 bg-surface dark:bg-inverse-surface">
       <div className="container mx-auto px-12">
-        <div className="bg-primary-container dark:bg-primary rounded-2xl overflow-hidden relative flex items-center p-16 min-h-[400px]">
+        <div className="bg-accent-container dark:bg-primary rounded-2xl overflow-hidden relative flex items-center p-16 min-h-[400px]">
           <div className="absolute right-0 top-0 w-1/2 h-full opacity-30 mix-blend-overlay">
             <img
               className="w-full h-full object-cover"
@@ -28,15 +28,15 @@ export default function PromoBanner({
           </div>
 
           <div className="relative z-10 max-w-xl">
-            <h2 className="font-headline text-5xl font-bold text-on-primary mb-6">
+            <h2 className="font-headline text-5xl font-bold text-primary mb-6">
               {title}
             </h2>
-            <p className="font-body text-primary-fixed dark:text-surface text-lg mb-10 leading-relaxed">
+            <p className="font-body text-on-accent-container dark:text-surface text-lg mb-10 leading-relaxed">
               {description}
             </p>
             <button
               onClick={onButtonClick}
-              className="bg-surface dark:bg-inverse-surface text-primary dark:text-primary px-10 py-4 rounded-md font-bold hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors"
+              className="bg-accent dark:bg-inverse-surface text-on-accent dark:text-primary px-10 py-4 rounded-md font-bold hover:bg-accent-hover dark:hover:bg-surface-container transition-colors"
             >
               {buttonText}
             </button>
