@@ -88,6 +88,7 @@ export default function CreateProductPage() {
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('KIT');
+  const [requiredSwitchCount, setRequiredSwitchCount] = useState<number | ''>('');
   const [categoryId, setCategoryId] = useState<number | ''>('');
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -270,6 +271,9 @@ export default function CreateProductPage() {
         cover: coverImage || 'https://via.placeholder.com/300',
         type: productType || 'KIT',
         categoryId: Number(categoryId) || 1,
+        requiredSwitchCount: productType === 'KIT' && requiredSwitchCount !== ''
+            ? Number(requiredSwitchCount)
+            : undefined,
 
         specifications: [],
 
@@ -373,6 +377,19 @@ export default function CreateProductPage() {
                           <option>KIT</option><option>PREBUILT</option><option>KEYCAP</option><option>SWITCH</option>
                         </select>
                       </div>
+                      {productType === 'KIT' && (
+                          <div className="flex flex-col gap-2">
+                            <label className="text-label-md font-label-md text-text-primary">So switch can dung</label>
+                            <input
+                                value={requiredSwitchCount}
+                                onChange={(e) => setRequiredSwitchCount(e.target.value === '' ? '' : Number(e.target.value))}
+                                className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md"
+                                min={1}
+                                placeholder="VD: 67"
+                                type="number"
+                            />
+                          </div>
+                      )}
                       <div className="flex flex-col gap-2">
                         <label className="text-label-md font-label-md text-text-primary">
                           Danh mục
@@ -464,7 +481,7 @@ export default function CreateProductPage() {
               </div>
               {options.length === 0 && (
                   <p className="text-body-sm text-text-light text-center py-6 border border-dashed border-outline-variant rounded-lg">
-                    Chưa có tùy chọn nào. Bấm "Thêm tùy chọn" để bắt đầu.
+                    Chưa có tùy chọn nào. Bấm &quot;Thêm tùy chọn&quot; để bắt đầu.
                   </p>
               )}
               <div className="space-y-4">

@@ -98,6 +98,7 @@ export default function EditProductPage() {
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
   const [productType, setProductType] = useState('KIT');
+  const [requiredSwitchCount, setRequiredSwitchCount] = useState<number | ''>('');
   const [category, setCategory] = useState('Custom Mechanical');
   const [coverImage, setCoverImage] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -137,6 +138,8 @@ export default function EditProductPage() {
         setSummary(product.summary);
         setDescription(product.description);
         setCoverImage(product.cover);
+        setProductType(product.type || 'KIT');
+        setRequiredSwitchCount(product.requiredSwitchCount || '');
 
         // Load specifications
         setSpecifications(
@@ -325,6 +328,9 @@ export default function EditProductPage() {
         cover: coverImage || 'https://via.placeholder.com/300',
         type: productType || 'KIT',
         categoryId: 1,
+        requiredSwitchCount: productType === 'KIT' && requiredSwitchCount !== ''
+            ? Number(requiredSwitchCount)
+            : undefined,
 
         specifications: specifications.map((spec) => ({
           name: spec.name,
@@ -419,6 +425,27 @@ export default function EditProductPage() {
                     <div className="flex flex-col gap-2">
                       <label className="text-label-md font-label-md text-text-primary">Mô tả chi tiết</label>
                       <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md" rows={6} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-label-md font-label-md text-text-primary">Loai san pham</label>
+                        <select value={productType} onChange={(e) => setProductType(e.target.value)} className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md">
+                          <option>KIT</option><option>PREBUILT</option><option>KEYCAP</option><option>SWITCH</option>
+                        </select>
+                      </div>
+                      {productType === 'KIT' && (
+                          <div className="flex flex-col gap-2">
+                            <label className="text-label-md font-label-md text-text-primary">So switch can dung</label>
+                            <input
+                                value={requiredSwitchCount}
+                                onChange={(e) => setRequiredSwitchCount(e.target.value === '' ? '' : Number(e.target.value))}
+                                className="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg bg-white px-4 py-2 font-body-md"
+                                min={1}
+                                placeholder="VD: 67"
+                                type="number"
+                            />
+                          </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -569,7 +596,7 @@ export default function EditProductPage() {
               </div>
               {options.length === 0 && (
                   <p className="text-body-sm text-text-light text-center py-6 border border-dashed border-outline-variant rounded-lg">
-                    Chưa có tùy chọn nào. Nhấp "Thêm thuộc tính" để bắt đầu.
+                    Chưa có tùy chọn nào. Nhấp &quot;Thêm thuộc tính&quot; để bắt đầu.
                   </p>
               )}
               <div className="space-y-4">

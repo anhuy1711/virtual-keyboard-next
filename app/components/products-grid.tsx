@@ -4,13 +4,55 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   filterProductsAPI,
+  getProductDetailAPI,
   ProductResponse,
 } from "@/app/services/productService";
 import { useSearchParams } from "next/navigation";
 
 interface Product extends ProductResponse {
   isHighlight?: boolean;
+  price?: number;
+  minPrice?: number;
+  maxPrice?: number;
 }
+
+const formatCurrency = (value: number) => {
+  return Number(value || 0).toLocaleString("vi-VN") + "₫";
+};
+
+const getProductPriceLabel = (product: Product) => {
+  if (typeof product.minPrice === "number" && Number.isFinite(product.minPrice)) {
+    if (
+      typeof product.maxPrice === "number" &&
+      Number.isFinite(product.maxPrice) &&
+      product.maxPrice > product.minPrice
+    ) {
+      return `${formatCurrency(product.minPrice)}`;
+    }
+
+    return formatCurrency(product.minPrice);
+  }
+
+  if (typeof product.price === "number" && Number.isFinite(product.price)) {
+    return formatCurrency(product.price);
+  }
+
+  const skuPrices = (product.skus || [])
+    .filter((sku) => sku.isActive !== false)
+    .map((sku) => Number(sku.price))
+    .filter((price) => Number.isFinite(price));
+
+  if (skuPrices.length === 0) {
+    return null;
+  }
+
+  const minPrice = Math.min(...skuPrices);
+  const maxPrice = Math.max(...skuPrices);
+
+  return minPrice === maxPrice
+    ? formatCurrency(minPrice)
+    : `${formatCurrency(minPrice)}`;
+};
 
 export default function ProductsGrid() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,7 +89,36 @@ export default function ProductsGrid() {
           currentPage - 1,
           ITEMS_PER_PAGE
         );
-        setProducts(response.content as Product[]);
+        const productsWithPrices = await Promise.all(
+          response.content.map(async (product) => {
+            const productWithOptionalPrice = product as Product;
+
+            if (
+              typeof productWithOptionalPrice.price === "number" ||
+              typeof productWithOptionalPrice.minPrice === "number" ||
+              (productWithOptionalPrice.skus?.length ?? 0) > 0
+            ) {
+              return productWithOptionalPrice;
+            }
+
+            try {
+              const detail = await getProductDetailAPI(product.id);
+
+              return {
+                ...productWithOptionalPrice,
+                skus: detail.skus,
+              };
+            } catch (detailError) {
+              console.error(
+                `Error fetching product price for ${product.id}:`,
+                detailError
+              );
+              return productWithOptionalPrice;
+            }
+          })
+        );
+
+        setProducts(productsWithPrices);
         setTotalPages(response.totalPages);
         setTotalElements(response.totalElements);
       } catch (err) {
@@ -162,24 +233,33 @@ export default function ProductsGrid() {
           <>
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-16">
-              {products.map((product) => (
-                <Link key={product.id} href={`/products/${product.id}`}>
-                  <div className="group flex flex-col space-y-6 cursor-pointer">
-                    <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl">
-                      <img
-                        src={product.cover}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
+              {products.map((product) => {
+                const priceLabel = getProductPriceLabel(product);
+
+                return (
+                  <Link key={product.id} href={`/products/${product.id}`}>
+                    <div className="group flex flex-col space-y-6 cursor-pointer">
+                      <div className="relative aspect-square bg-surface-container-low overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-2xl">
+                        <img
+                          src={product.cover}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="space-y-2 px-1">
+                        <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
+                          {product.name}
+                        </h2>
+                        {priceLabel && (
+                          <p className="text-base font-semibold text-primary">
+                            {priceLabel}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-2 px-1">
-                      <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-secondary transition-colors">
-                        {product.name}
-                      </h2>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Pagination */}

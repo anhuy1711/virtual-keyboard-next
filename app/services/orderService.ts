@@ -6,6 +6,9 @@ export interface CheckoutRequest {
     receiverAddress: string;
     note?: string;
     paymentMethod: PaymentMethod;
+    toDistrictId: number;
+    toWardCode: string;
+    ghnServiceId?: number;
 }
 
 export interface OrderItemResponse {
@@ -33,6 +36,7 @@ export interface OrderResponse {
     id: number;
     orderCode: string;
     total: number;
+    shippingFee?: number;
     status: string;
     receiverName: string;
     receiverPhone: string;

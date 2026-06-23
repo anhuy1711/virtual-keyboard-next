@@ -45,7 +45,7 @@ export interface SKU {
   price?: number;
   stock?: number;
   image?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProductResponse {
@@ -95,6 +95,8 @@ export interface ProductDetailResponse {
   summary: string;
   cover: string;
   categoryId: number;
+  type?: string;
+  requiredSwitchCount?: number;
   specifications: ProductSpecificationResponse[];
   skus: ProductSkuResponse[];
   options: ProductOptionResponse[];
@@ -107,6 +109,7 @@ export interface CreateProductRequest {
   cover: string;
   type: string;
   categoryId: number;
+  requiredSwitchCount?: number;
   specifications: {
     name: string;
     value: string;

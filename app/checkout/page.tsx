@@ -7,6 +7,16 @@ import { toast } from 'react-toastify';
 import { checkoutAPI, PaymentMethod } from '@/app/services/orderService';
 import { CartResponse, getMyCartAPI } from '@/app/services/cartService';
 import { getUserInfoAPI } from '@/app/services/userService';
+import {
+    calculateGhnFeeAPI,
+    getGhnDistrictsAPI,
+    getGhnProvincesAPI,
+    getGhnWardsAPI,
+    GhnDistrict,
+    GhnFeeResponse,
+    GhnProvince,
+    GhnWard,
+} from '@/app/services/ghnService';
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -17,9 +27,20 @@ export default function CheckoutPage() {
 
     const [receiverName, setReceiverName] = useState('');
     const [receiverPhone, setReceiverPhone] = useState('');
-    const [receiverAddress, setReceiverAddress] = useState('');
+    const [addressDetail, setAddressDetail] = useState('');
     const [note, setNote] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+    const [provinces, setProvinces] = useState<GhnProvince[]>([]);
+    const [districts, setDistricts] = useState<GhnDistrict[]>([]);
+    const [wards, setWards] = useState<GhnWard[]>([]);
+    const [selectedProvinceId, setSelectedProvinceId] = useState('');
+    const [selectedDistrictId, setSelectedDistrictId] = useState('');
+    const [selectedWardCode, setSelectedWardCode] = useState('');
+    const [shippingQuote, setShippingQuote] = useState<GhnFeeResponse | null>(null);
+    const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
+    const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
+    const [isLoadingWards, setIsLoadingWards] = useState(false);
+    const [isLoadingShippingFee, setIsLoadingShippingFee] = useState(false);
     useEffect(() => {
         const fetchCart = async () => {
             try {
@@ -44,7 +65,7 @@ export default function CheckoutPage() {
 
                 setReceiverName(user.fullName ?? '');
                 setReceiverPhone(user.phone ?? '');
-                setReceiverAddress(user.address ?? '');
+                setAddressDetail(user.address ?? '');
             } catch (error) {
                 console.error(error);
                 toast.error('Không thể tải thông tin người dùng');
@@ -54,11 +75,129 @@ export default function CheckoutPage() {
         fetchUserInfo();
     }, []);
 
+    useEffect(() => {
+        const fetchProvinces = async () => {
+            try {
+                setIsLoadingProvinces(true);
+                setProvinces(await getGhnProvincesAPI());
+            } catch (error) {
+                console.error(error);
+                toast.error('Không thể tải danh sách tỉnh/thành');
+            } finally {
+                setIsLoadingProvinces(false);
+            }
+        };
+
+        fetchProvinces();
+    }, []);
+
+    useEffect(() => {
+        if (!selectedProvinceId) {
+            setDistricts([]);
+            setSelectedDistrictId('');
+            return;
+        }
+
+        const fetchDistricts = async () => {
+            try {
+                setIsLoadingDistricts(true);
+                setDistricts(await getGhnDistrictsAPI(Number(selectedProvinceId)));
+            } catch (error) {
+                console.error(error);
+                toast.error('Không thể tải danh sách quận/huyện');
+            } finally {
+                setIsLoadingDistricts(false);
+            }
+        };
+
+        setDistricts([]);
+        setWards([]);
+        setSelectedDistrictId('');
+        setSelectedWardCode('');
+        setShippingQuote(null);
+        fetchDistricts();
+    }, [selectedProvinceId]);
+
+    useEffect(() => {
+        if (!selectedDistrictId) {
+            setWards([]);
+            setSelectedWardCode('');
+            return;
+        }
+
+        const fetchWards = async () => {
+            try {
+                setIsLoadingWards(true);
+                setWards(await getGhnWardsAPI(Number(selectedDistrictId)));
+            } catch (error) {
+                console.error(error);
+                toast.error('Không thể tải danh sách phường/xã');
+            } finally {
+                setIsLoadingWards(false);
+            }
+        };
+
+        setWards([]);
+        setSelectedWardCode('');
+        setShippingQuote(null);
+        fetchWards();
+    }, [selectedDistrictId]);
+
     const subtotal = useMemo(() => {
         return Number(cart?.totalPrice ?? 0);
     }, [cart]);
 
-    const shippingFee = 0;
+    useEffect(() => {
+        if (!selectedDistrictId || !selectedWardCode || !cart || cart.items.length === 0) {
+            setShippingQuote(null);
+            return;
+        }
+
+        const calculateShippingFee = async () => {
+            try {
+                setIsLoadingShippingFee(true);
+                const quote = await calculateGhnFeeAPI({
+                    toDistrictId: Number(selectedDistrictId),
+                    toWardCode: selectedWardCode,
+                    insuranceValue: subtotal,
+                });
+                setShippingQuote(quote);
+            } catch (error) {
+                console.error(error);
+                setShippingQuote(null);
+                toast.error('Không thể tính phí vận chuyển GHN');
+            } finally {
+                setIsLoadingShippingFee(false);
+            }
+        };
+
+        calculateShippingFee();
+    }, [cart, selectedDistrictId, selectedWardCode, subtotal]);
+
+    const selectedProvince = useMemo(() => {
+        return provinces.find((province) => String(province.provinceId) === selectedProvinceId);
+    }, [provinces, selectedProvinceId]);
+
+    const selectedDistrict = useMemo(() => {
+        return districts.find((district) => String(district.districtId) === selectedDistrictId);
+    }, [districts, selectedDistrictId]);
+
+    const selectedWard = useMemo(() => {
+        return wards.find((ward) => ward.wardCode === selectedWardCode);
+    }, [wards, selectedWardCode]);
+
+    const receiverAddress = useMemo(() => {
+        return [
+            addressDetail.trim(),
+            selectedWard?.wardName,
+            selectedDistrict?.districtName,
+            selectedProvince?.provinceName,
+        ]
+            .filter(Boolean)
+            .join(', ');
+    }, [addressDetail, selectedDistrict, selectedProvince, selectedWard]);
+
+    const shippingFee = Number(shippingQuote?.total ?? 0);
     const total = subtotal + shippingFee;
 
     const validateForm = () => {
@@ -72,8 +211,18 @@ export default function CheckoutPage() {
             return false;
         }
 
-        if (!receiverAddress.trim()) {
+        if (!addressDetail.trim()) {
             toast.warning('Vui lòng nhập địa chỉ nhận hàng');
+            return false;
+        }
+
+        if (!selectedProvinceId || !selectedDistrictId || !selectedWardCode) {
+            toast.warning('Vui lòng chọn đủ tỉnh/thành, quận/huyện và phường/xã');
+            return false;
+        }
+
+        if (!shippingQuote) {
+            toast.warning('Vui lòng chờ tính phí vận chuyển GHN');
             return false;
         }
 
@@ -99,6 +248,9 @@ export default function CheckoutPage() {
                 receiverAddress: receiverAddress.trim(),
                 note: note.trim() || undefined,
                 paymentMethod,
+                toDistrictId: Number(selectedDistrictId),
+                toWardCode: selectedWardCode,
+                ghnServiceId: shippingQuote.serviceId,
             });
 
             if (paymentMethod === "ONLINE") {
@@ -230,13 +382,82 @@ export default function CheckoutPage() {
                                             Địa chỉ nhận hàng
                                         </label>
                                         <input
-                                            value={receiverAddress}
-                                            onChange={(e) => setReceiverAddress(e.target.value)}
+                                            value={addressDetail}
+                                            onChange={(e) => setAddressDetail(e.target.value)}
                                             className="h-14 px-4 bg-surface-container-low border-none focus:ring-0 focus:bg-surface-container-lowest transition-all border-b-2 border-transparent focus:border-secondary text-on-surface font-body outline-none"
-                                            placeholder="123 Nguyễn Huệ, Quận 1, TP.HCM"
+                                            placeholder="123 Nguyễn Huệ"
                                             type="text"
                                         />
                                     </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="font-label text-xs font-semibold text-on-surface/60 uppercase tracking-wider">
+                                            Tỉnh/Thành
+                                        </label>
+                                        <select
+                                            value={selectedProvinceId}
+                                            onChange={(e) => setSelectedProvinceId(e.target.value)}
+                                            disabled={isLoadingProvinces}
+                                            className="h-14 px-4 bg-surface-container-low border-none focus:ring-0 focus:bg-surface-container-lowest transition-all border-b-2 border-transparent focus:border-secondary text-on-surface font-body outline-none disabled:opacity-60"
+                                        >
+                                            <option value="">
+                                                {isLoadingProvinces ? 'Đang tải...' : 'Chọn tỉnh/thành'}
+                                            </option>
+                                            {provinces.map((province) => (
+                                                <option key={province.provinceId} value={province.provinceId}>
+                                                    {province.provinceName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="font-label text-xs font-semibold text-on-surface/60 uppercase tracking-wider">
+                                            Quận/Huyện
+                                        </label>
+                                        <select
+                                            value={selectedDistrictId}
+                                            onChange={(e) => setSelectedDistrictId(e.target.value)}
+                                            disabled={!selectedProvinceId || isLoadingDistricts}
+                                            className="h-14 px-4 bg-surface-container-low border-none focus:ring-0 focus:bg-surface-container-lowest transition-all border-b-2 border-transparent focus:border-secondary text-on-surface font-body outline-none disabled:opacity-60"
+                                        >
+                                            <option value="">
+                                                {isLoadingDistricts ? 'Đang tải...' : 'Chọn quận/huyện'}
+                                            </option>
+                                            {districts.map((district) => (
+                                                <option key={district.districtId} value={district.districtId}>
+                                                    {district.districtName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="md:col-span-2 flex flex-col gap-2">
+                                        <label className="font-label text-xs font-semibold text-on-surface/60 uppercase tracking-wider">
+                                            Phường/Xã
+                                        </label>
+                                        <select
+                                            value={selectedWardCode}
+                                            onChange={(e) => setSelectedWardCode(e.target.value)}
+                                            disabled={!selectedDistrictId || isLoadingWards}
+                                            className="h-14 px-4 bg-surface-container-low border-none focus:ring-0 focus:bg-surface-container-lowest transition-all border-b-2 border-transparent focus:border-secondary text-on-surface font-body outline-none disabled:opacity-60"
+                                        >
+                                            <option value="">
+                                                {isLoadingWards ? 'Đang tải...' : 'Chọn phường/xã'}
+                                            </option>
+                                            {wards.map((ward) => (
+                                                <option key={ward.wardCode} value={ward.wardCode}>
+                                                    {ward.wardName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {receiverAddress && (
+                                        <div className="md:col-span-2 text-xs text-on-surface/60 font-body">
+                                            Địa chỉ giao hàng: {receiverAddress}
+                                        </div>
+                                    )}
 
                                     <div className="md:col-span-2 flex flex-col gap-2">
                                         <label className="font-label text-xs font-semibold text-on-surface/60 uppercase tracking-wider">
@@ -355,7 +576,14 @@ export default function CheckoutPage() {
                             <div className="pt-4">
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting || isLoadingCart || !cart || cart.items.length === 0}
+                                    disabled={
+                                        isSubmitting ||
+                                        isLoadingCart ||
+                                        isLoadingShippingFee ||
+                                        !cart ||
+                                        cart.items.length === 0 ||
+                                        !shippingQuote
+                                    }
                                     className="group relative px-10 h-16 bg-primary text-on-primary font-headline font-bold rounded-md flex items-center justify-center gap-3 overflow-hidden transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <span>{isSubmitting ? 'Đang đặt hàng...' : 'Đặt hàng'}</span>
@@ -437,7 +665,11 @@ export default function CheckoutPage() {
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-on-surface/60 font-body">Phí vận chuyển</span>
                                             <span className="text-on-surface font-headline font-semibold">
-                        Miễn phí
+                        {isLoadingShippingFee
+                            ? 'Đang tính...'
+                            : shippingQuote
+                                ? formatCurrency(shippingFee)
+                                : 'Chọn địa chỉ GHN'}
                       </span>
                                         </div>
 
