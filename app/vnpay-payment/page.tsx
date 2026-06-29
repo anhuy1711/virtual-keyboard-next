@@ -39,8 +39,8 @@ function VnPayPaymentResult() {
                             <h1 className="text-2xl font-bold text-slate-900">
                                 {hasResult
                                     ? isSuccess
-                                        ? "Thanh toan VNPay thanh cong"
-                                        : "Thanh toan VNPay that bai"
+                                        ? "Thanh toán thành công"
+                                        : "Thanh toán thất bại"
                                     : "Khong tim thay ket qua thanh toan"}
                             </h1>
 
@@ -57,14 +57,14 @@ function VnPayPaymentResult() {
                     <div className="mt-8 space-y-3 rounded-lg bg-slate-50 p-4 text-sm text-slate-700">
                         {orderId && (
                             <div className="flex justify-between gap-4">
-                                <span className="text-slate-500">Ma don hang</span>
+                                <span className="text-slate-500">Mã đơn hàng</span>
                                 <span className="font-semibold">#{orderId}</span>
                             </div>
                         )}
 
                         {transactionCode && (
                             <div className="flex justify-between gap-4">
-                                <span className="text-slate-500">Ma giao dich</span>
+                                <span className="text-slate-500">Mã giao dịch</span>
                                 <span className="break-all text-right font-semibold">
                                     {transactionCode}
                                 </span>
@@ -85,7 +85,7 @@ function VnPayPaymentResult() {
                                 href={`/orders/${orderId}`}
                                 className="inline-flex h-12 items-center justify-center rounded-md bg-[#0a4ea1] px-6 text-sm font-bold text-white"
                             >
-                                Xem chi tiet don hang
+                                Xem chi tiết đơn hàng
                             </Link>
                         )}
 
@@ -93,7 +93,7 @@ function VnPayPaymentResult() {
                             href="/account"
                             className="inline-flex h-12 items-center justify-center rounded-md bg-slate-100 px-6 text-sm font-semibold text-slate-700"
                         >
-                            Ve tai khoan
+                            Về tài khoản
                         </Link>
                     </div>
                 </section>

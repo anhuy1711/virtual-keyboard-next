@@ -50,13 +50,20 @@ const findSkuBySelectedOptions = (
     return product.skus[0];
   }
 
-  return (
-    product.skus.find((sku) => {
+  const exactMatch = product.skus.find((sku) => {
       const skuValueIds = [...(sku.optionValueIds || [])].sort((a, b) => a - b);
       return (
         skuValueIds.length === selectedValueIds.length &&
         skuValueIds.every((id, index) => id === selectedValueIds[index])
       );
+    });
+
+  if (exactMatch) return exactMatch;
+
+  return (
+    product.skus.find((sku) => {
+      const skuValueIds = sku.optionValueIds || [];
+      return selectedValueIds.every((id) => skuValueIds.includes(id));
     }) || null
   );
 };
@@ -69,12 +76,63 @@ const findProductBySkuId = (products: CustomKeyboardProduct[] = [], skuId: numbe
     (item) => item.skuId === skuId || item.skus?.some((sku) => sku.id === skuId)
   ) || null;
 
+const productImageForSku = (
+  product: CustomKeyboardProduct | null,
+  sku: CustomKeyboardSku | null
+) => {
+  if (!product) return "";
+  const productSkuImage =
+    product.skus?.find((item) => item.id === sku?.id)?.imageUrl ||
+    product.skus?.find((item) => item.id === product.skuId)?.imageUrl ||
+    product.skus?.[0]?.imageUrl;
+
+  return sku?.imageUrl || productSkuImage || product.cover || product.imageUrl || "";
+};
+
+const skuOptionLabel = (
+  product: CustomKeyboardProduct,
+  sku: CustomKeyboardSku | null
+) => {
+  if (!sku?.optionValueIds?.length || !product.optionGroups?.length) return sku?.sku || "";
+
+  const names = sku.optionValueIds
+    .map((id) => {
+      for (const group of product.optionGroups || []) {
+        const option = group.options.find((item) => Number(item.id) === id);
+        if (option) return option.name;
+      }
+      return "";
+    })
+    .filter(Boolean);
+
+  return names.length > 0 ? names.join(" / ") : sku.sku;
+};
+
 const defaultOptionsFor = (product: CustomKeyboardProduct | null) => {
   const defaults: Record<string, string> = {};
   product?.optionGroups?.forEach((group) => {
     defaults[group.id] = group.options[0]?.id || "";
   });
   return defaults;
+};
+
+const optionsForSku = (
+  product: CustomKeyboardProduct | null,
+  sku: CustomKeyboardSku | null
+) => {
+  const options = defaultOptionsFor(product);
+  if (!product?.optionGroups?.length || !sku?.optionValueIds?.length) return options;
+
+  product.optionGroups.forEach((group) => {
+    const matchedOption = group.options.find((option) =>
+      sku.optionValueIds.includes(Number(option.id))
+    );
+    if (matchedOption) {
+      options[group.id] = matchedOption.id;
+    }
+  });
+
+  return options;
 };
 
 const optionSummary = (
@@ -470,14 +528,17 @@ function ProductStep({
     if (!normalizedSearch) return true;
     return `${product.name} ${product.summary || ""}`.toLowerCase().includes(normalizedSearch);
   });
+  const displaySku = findSkuBySelectedOptions(selectedProduct, selectedOptions) || selectedSku;
+  const selectedProductImage = productImageForSku(selectedProduct, displaySku);
 
   return (
     <div className="builder-step-layout">
       <aside className="builder-preview-panel">
         <div className="builder-preview-image">
-          {selectedSku?.imageUrl || selectedProduct?.cover || selectedProduct?.imageUrl ? (
+          {selectedProductImage ? (
             <img
-              src={selectedSku?.imageUrl || selectedProduct?.cover || selectedProduct?.imageUrl}
+              key={displaySku?.id || selectedProduct?.skuId || selectedProductImage}
+              src={selectedProductImage}
               alt={selectedProduct?.name || title}
             />
           ) : (
@@ -488,7 +549,7 @@ function ProductStep({
           <span>{title}</span>
           <h2>{selectedProduct?.name || "Chưa chọn sản phẩm"}</h2>
           <p>{optionSummary(selectedProduct, selectedOptions)}</p>
-          <strong>{money(price ?? selectedSku?.price ?? selectedProduct?.price)}</strong>
+          <strong>{money(price ?? displaySku?.price ?? selectedProduct?.price)}</strong>
           {quantity && <em>Số lượng switch: {quantity}</em>}
         </div>
       </aside>
@@ -515,12 +576,40 @@ function ProductStep({
           />
         )}
 
+        {selectedProduct?.skus && selectedProduct.skus.length > 1 && (
+          <div className="builder-option-panel builder-sku-panel">
+            <label className="kit-option-field">
+              <span>SKU</span>
+              <select
+                value={selectedSkuId || ""}
+                onChange={(event) => {
+                  const skuId = Number(event.target.value);
+                  const sku = findSkuById(selectedProduct, skuId);
+                  onProductSelect(skuId);
+                  onOptionChange(optionsForSku(selectedProduct, sku));
+                }}
+              >
+                {selectedProduct.skus.map((sku) => {
+                  const label = skuOptionLabel(selectedProduct, sku);
+                  return (
+                    <option key={sku.id} value={sku.id}>
+                      {label ? `${sku.sku} - ${label}` : sku.sku}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          </div>
+        )}
+
         <div className="builder-choice-scroll">
           <div className="builder-product-list">
             {filteredProducts.map((product) => {
               const selected =
                 selectedSkuId === product.skuId ||
                 product.skus?.some((sku) => sku.id === selectedSkuId);
+              const cardSku = selected ? displaySku : findSkuById(product, product.skuId);
+              const cardImage = productImageForSku(product, cardSku);
 
               return (
                 <button
@@ -530,8 +619,12 @@ function ProductStep({
                   onClick={() => onProductSelect(product.skuId)}
                 >
                   <div className="builder-product-image">
-                    {product.cover || product.imageUrl ? (
-                      <img src={product.cover || product.imageUrl} alt={product.name} />
+                    {cardImage ? (
+                      <img
+                        key={`${product.skuId}-${cardSku?.id || "default"}`}
+                        src={cardImage}
+                        alt={product.name}
+                      />
                     ) : (
                       <span>KB</span>
                     )}
@@ -642,6 +735,11 @@ function SummaryStep({
   onAddToCart: () => void;
 }) {
   const isValid = !!quote?.validation.valid;
+  const displayKitSku = findSkuBySelectedOptions(selectedKit, kitOptions) || selectedKitSku;
+  const displaySwitchSku =
+    findSkuBySelectedOptions(selectedSwitch, switchOptions) || selectedSwitchSku;
+  const displayKeycapSku =
+    findSkuBySelectedOptions(selectedKeycap, keycapOptions) || selectedKeycapSku;
 
   return (
     <div className="builder-summary-step">
@@ -661,14 +759,14 @@ function SummaryStep({
           <SummaryCard
             label="Kit"
             product={selectedKit}
-            sku={selectedKitSku}
+            sku={displayKitSku}
             options={optionSummary(selectedKit, kitOptions)}
             price={quote?.kitPrice}
           />
           <SummaryCard
             label="Switch"
             product={selectedSwitch}
-            sku={selectedSwitchSku}
+            sku={displaySwitchSku}
             options={optionSummary(selectedSwitch, switchOptions)}
             price={quote?.switchTotalPrice}
             note={`Số lượng: ${quote?.switchQuantity || 0}`}
@@ -676,7 +774,7 @@ function SummaryStep({
           <SummaryCard
             label="Keycap"
             product={selectedKeycap}
-            sku={selectedKeycapSku}
+            sku={displayKeycapSku}
             options={optionSummary(selectedKeycap, keycapOptions)}
             price={quote?.keycapPrice}
           />
@@ -729,12 +827,16 @@ function SummaryCard({
   price?: number;
   note?: string;
 }) {
-  const imageUrl = sku?.imageUrl || product?.cover || product?.imageUrl;
+  const imageUrl = productImageForSku(product, sku);
 
   return (
     <article className="summary-product-card">
       <div className="summary-product-image">
-        {imageUrl ? <img src={imageUrl} alt={product?.name || label} /> : <span>{label}</span>}
+        {imageUrl ? (
+          <img key={sku?.id || imageUrl} src={imageUrl} alt={product?.name || label} />
+        ) : (
+          <span>{label}</span>
+        )}
       </div>
       <div>
         <span>{label}</span>
