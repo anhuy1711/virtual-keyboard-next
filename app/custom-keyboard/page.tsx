@@ -89,50 +89,12 @@ const productImageForSku = (
   return sku?.imageUrl || productSkuImage || product.cover || product.imageUrl || "";
 };
 
-const skuOptionLabel = (
-  product: CustomKeyboardProduct,
-  sku: CustomKeyboardSku | null
-) => {
-  if (!sku?.optionValueIds?.length || !product.optionGroups?.length) return sku?.sku || "";
-
-  const names = sku.optionValueIds
-    .map((id) => {
-      for (const group of product.optionGroups || []) {
-        const option = group.options.find((item) => Number(item.id) === id);
-        if (option) return option.name;
-      }
-      return "";
-    })
-    .filter(Boolean);
-
-  return names.length > 0 ? names.join(" / ") : sku.sku;
-};
-
 const defaultOptionsFor = (product: CustomKeyboardProduct | null) => {
   const defaults: Record<string, string> = {};
   product?.optionGroups?.forEach((group) => {
     defaults[group.id] = group.options[0]?.id || "";
   });
   return defaults;
-};
-
-const optionsForSku = (
-  product: CustomKeyboardProduct | null,
-  sku: CustomKeyboardSku | null
-) => {
-  const options = defaultOptionsFor(product);
-  if (!product?.optionGroups?.length || !sku?.optionValueIds?.length) return options;
-
-  product.optionGroups.forEach((group) => {
-    const matchedOption = group.options.find((option) =>
-      sku.optionValueIds.includes(Number(option.id))
-    );
-    if (matchedOption) {
-      options[group.id] = matchedOption.id;
-    }
-  });
-
-  return options;
 };
 
 const optionSummary = (
@@ -489,7 +451,7 @@ function StepNav({
 function ProductStep({
   step,
   title,
-  description,
+  description = "",
   products,
   selectedProduct,
   selectedSku,
@@ -507,7 +469,7 @@ function ProductStep({
 }: {
   step: BuilderStep;
   title: string;
-  description: string;
+  description?: string;
   products: CustomKeyboardProduct[];
   selectedProduct: CustomKeyboardProduct | null;
   selectedSku: CustomKeyboardSku | null;
@@ -574,32 +536,6 @@ function ProductStep({
             selectedOptions={selectedOptions}
             onChange={onOptionChange}
           />
-        )}
-
-        {selectedProduct?.skus && selectedProduct.skus.length > 1 && (
-          <div className="builder-option-panel builder-sku-panel">
-            <label className="kit-option-field">
-              <span>SKU</span>
-              <select
-                value={selectedSkuId || ""}
-                onChange={(event) => {
-                  const skuId = Number(event.target.value);
-                  const sku = findSkuById(selectedProduct, skuId);
-                  onProductSelect(skuId);
-                  onOptionChange(optionsForSku(selectedProduct, sku));
-                }}
-              >
-                {selectedProduct.skus.map((sku) => {
-                  const label = skuOptionLabel(selectedProduct, sku);
-                  return (
-                    <option key={sku.id} value={sku.id}>
-                      {label ? `${sku.sku} - ${label}` : sku.sku}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-          </div>
         )}
 
         <div className="builder-choice-scroll">

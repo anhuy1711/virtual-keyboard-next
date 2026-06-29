@@ -6,6 +6,7 @@ import { getProductDetailAPI, ProductDetailResponse } from "@/app/services/produ
 import TopNav from "@/app/components/top-nav";
 import Footer from "@/app/components/footer";
 import {toast} from "react-toastify";
+import { buildProductGalleryImages } from "@/app/products/product-images.mjs";
 import {
   getProductReviewsAPI,
   ProductReviewResponse,
@@ -183,16 +184,11 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product || !hasUserSelectedOption || !matchingSku?.imageUrl) return;
 
-    const images = (product.skus || [])
-      .filter((sku) => !!sku.imageUrl)
-      .filter(
-        (sku, index, self) =>
-          self.findIndex((item) => item.imageUrl === sku.imageUrl) === index
-      );
+    const images = buildProductGalleryImages(product);
 
     if (images.length <= 4) return;
 
-    const matchingIndex = images.findIndex((sku) => sku.imageUrl === matchingSku.imageUrl);
+    const matchingIndex = images.findIndex((image) => image.imageUrl === matchingSku.imageUrl);
     if (matchingIndex < 0) return;
 
     setThumbnailStart((current) => {
@@ -247,14 +243,9 @@ export default function ProductDetailPage() {
     );
   }
 
-  const skuImages = (product.skus || [])
-    .filter((sku) => !!sku.imageUrl)
-    .filter(
-      (sku, index, self) =>
-        self.findIndex((item) => item.imageUrl === sku.imageUrl) === index
-    );
-  const visibleSkuImages = skuImages.slice(thumbnailStart, thumbnailStart + 4);
-  const canSlideThumbnails = skuImages.length > 4;
+  const galleryImages = buildProductGalleryImages(product);
+  const visibleGalleryImages = galleryImages.slice(thumbnailStart, thumbnailStart + 4);
+  const canSlideThumbnails = galleryImages.length > 4;
   const displayImage = selectedImage || product.cover;
 
   return (
@@ -286,18 +277,22 @@ export default function ProductDetailPage() {
             )}
 
             <div className="grid grid-cols-4 gap-4 flex-1">
-              {visibleSkuImages.map((sku) => (
+              {visibleGalleryImages.map((image) => (
                 <button
                   type="button"
-                  key={sku.id}
-                  onClick={() => setSelectedImage(sku.imageUrl || product.cover)}
+                  key={`${image.type}-${image.id}`}
+                  onClick={() => setSelectedImage(image.imageUrl)}
                   className={`bg-surface-container-low rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border-2 ${
-                    selectedImage === sku.imageUrl ? "border-secondary" : "border-transparent"
+                    selectedImage === image.imageUrl ? "border-secondary" : "border-transparent"
                   }`}
                 >
                   <img
-                    src={sku.imageUrl}
-                    alt={`${product.name} - ${sku.sku}`}
+                    src={image.imageUrl}
+                    alt={
+                      image.type === "cover"
+                        ? `${product.name} - anh bia`
+                        : `${product.name} - ${image.sku || "SKU"}`
+                    }
                     className="w-full aspect-square object-cover"
                   />
                 </button>
@@ -308,9 +303,9 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setThumbnailStart((current) => Math.min(skuImages.length - 4, current + 1))
+                  setThumbnailStart((current) => Math.min(galleryImages.length - 4, current + 1))
                 }
-                disabled={thumbnailStart >= skuImages.length - 4}
+                disabled={thumbnailStart >= galleryImages.length - 4}
                 className="h-11 w-11 shrink-0 rounded-full border border-outline-variant/30 bg-surface-container-lowest flex items-center justify-center text-primary hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Anh SKU tiep theo"
               >

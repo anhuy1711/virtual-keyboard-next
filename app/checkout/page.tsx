@@ -675,7 +675,7 @@ export default function CheckoutPage() {
 
                                         <div className="flex justify-between items-center pt-4 border-t border-outline-variant/30">
                       <span className="text-lg font-bold text-primary font-headline uppercase tracking-tighter">
-                        Total
+                        Tổng
                       </span>
 
                                             <div className="flex flex-col items-end">
@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                           {formatCurrency(total)}
                         </span>
                                                 <span className="text-[10px] text-on-surface/40 font-body">
-                          USD
+                          VNĐ
                         </span>
                                             </div>
                                         </div>

@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  CategoryResponse,
   filterProductsAPI,
+  getCategoriesAPI,
   getProductDetailAPI,
   ProductResponse,
 } from "@/app/services/productService";
 import { useSearchParams } from "next/navigation";
+import { getProductsGridTitle } from "@/app/components/products-grid-title.mjs";
 
 interface Product extends ProductResponse {
   isHighlight?: boolean;
@@ -63,6 +66,7 @@ export default function ProductsGrid() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const ITEMS_PER_PAGE = 12;
   const searchParams = useSearchParams();
   const name = searchParams.get("name") || "";
@@ -74,6 +78,20 @@ export default function ProductsGrid() {
     setSearchQuery(name);
     setCurrentPage(1);
   }, [name, categoryId]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getCategoriesAPI(0, 100);
+        setCategories(response.content || []);
+      } catch (categoryError) {
+        console.error("Error fetching categories:", categoryError);
+        setCategories([]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -106,7 +124,7 @@ export default function ProductsGrid() {
 
               return {
                 ...productWithOptionalPrice,
-                skus: detail.skus,
+                skus: detail.skus as unknown as Product["skus"],
               };
             } catch (detailError) {
               console.error(
@@ -142,6 +160,12 @@ export default function ProductsGrid() {
     { id: "name-desc", label: "Tên Z - A" },
   ];
 
+  const pageTitle = getProductsGridTitle({
+    searchName: searchQuery,
+    selectedCategoryId,
+    categories,
+  });
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#fcf9f8" }}>
       <div className="layout-container pt-12 pb-20">
@@ -150,7 +174,7 @@ export default function ProductsGrid() {
           <div className="space-y-2">
 
             <h1 className="text-5xl font-extrabold text-primary tracking-tighter">
-              Bàn phím
+              {pageTitle}
             </h1>
           </div>
           <div className="text-sm text-on-surface-variant font-medium">

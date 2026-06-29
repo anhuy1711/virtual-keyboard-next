@@ -49,7 +49,7 @@ function slugSKU(names: string[], index: number): string {
           .map((w) => w.slice(0, 3).toUpperCase())
           .join('')
   );
-  return [...parts, String(index + 1).padStart(3, '0')].join('-');
+  return [...parts, String(index + 1).padStart(3, '0')].join('-');np
 }
 
 /** Generate all SKU rows from current options */

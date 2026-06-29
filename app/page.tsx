@@ -162,7 +162,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
               <div>
                 <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
-                  Keyboards
+                  Bàn phím
                 </h2>
                 <div className="flex gap-8 border-b border-outline-variant">
                   <button
@@ -173,7 +173,7 @@ export default function Home() {
                         : "text-on-surface-variant border-transparent hover:text-primary"
                     }`}
                   >
-                    In-stock
+                    Sẵn hàng
                   </button>
                   <button
                     onClick={() => setKeyboardTab("hot")}
@@ -191,7 +191,7 @@ export default function Home() {
                 href="/products"
                 className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-accent border-b-2 border-accent/20 hover:border-accent transition-all pb-1 mb-1"
               >
-                View All Keyboards
+                Xem tất cả
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
@@ -273,7 +273,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
               <div>
                 <h2 className="font-headline text-3xl md:text-4xl font-bold text-primary tracking-tight mb-4">
-                  Components
+                  Phụ kiện
                 </h2>
                 <div className="flex gap-8 border-b border-outline-variant">
                   <button
@@ -302,7 +302,7 @@ export default function Home() {
                 href="/products"
                 className="font-label font-bold text-xs md:text-sm uppercase tracking-widest text-accent border-b-2 border-accent/20 hover:border-accent transition-all pb-1 mb-1"
               >
-                Explore All Components
+                Xem tất cả
               </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
